@@ -709,19 +709,62 @@
     .edu-courses { font-size: 13.5px; color: rgba(232,228,214,0.58); line-height: 1.9; }
     .edu-courses strong { color: var(--sage-light); }
     .edu-gpa-block { text-align: center; }
-    .gpa-ring { width: 120px; height: 120px; margin: 0 auto 14px; position: relative; }
-    .gpa-ring svg { width: 120px; height: 120px; transform: rotate(-90deg); }
-    .gpa-ring circle { fill: none; stroke-width: 5; cx: 60; cy: 60; r: 52; }
-    .gpa-track { stroke: rgba(255,255,255,0.07); }
+    .gpa-ring { width: 140px; height: 140px; margin: 0 auto 16px; position: relative; }
+    .gpa-ring svg { width: 140px; height: 140px; transform: rotate(-90deg); overflow: visible; }
+    .gpa-ring circle { fill: none; cx: 70; cy: 70; r: 58; }
+    .gpa-track { stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+
+    /* Main arc */
     .gpa-fill {
-      stroke: var(--sage-light); stroke-dasharray: 326;
-      stroke-dashoffset: 326; stroke-linecap: round;
-      transition: stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1);
+      stroke: var(--sage-light); stroke-width: 4;
+      stroke-dasharray: 364;
+      stroke-dashoffset: 364;
+      stroke-linecap: round;
     }
-    .gpa-fill.animated { stroke-dashoffset: 49; }
-    .gpa-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .gpa-num { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: var(--cream); }
-    .gpa-label { font-size: 9px; color: rgba(232,228,214,0.45); letter-spacing: 1px; text-transform: uppercase; }
+    .gpa-fill.animated {
+      animation: drawArc 1.8s cubic-bezier(.4,0,.2,1) forwards,
+                 arcPulse 3s ease-in-out 2s infinite;
+    }
+    @keyframes drawArc {
+      to { stroke-dashoffset: 50; }
+    }
+    @keyframes arcPulse {
+      0%, 100% { stroke: var(--sage-light); stroke-width: 4; }
+      50%       { stroke: #c8e8c8;           stroke-width: 5; }
+    }
+
+    /* Glowing travelling dot */
+    .gpa-dot {
+      r: 5; fill: var(--gold);
+      filter: url(#glow);
+      opacity: 0;
+    }
+    .gpa-dot.animated {
+      animation: dotAppear 0.3s ease 1.6s forwards,
+                 orbitDot 4s linear 1.9s infinite;
+    }
+    @keyframes dotAppear { to { opacity: 1; } }
+    @keyframes orbitDot {
+      0%   { transform: rotate(0deg)   translate(58px) rotate(0deg); }
+      100% { transform: rotate(360deg) translate(58px) rotate(-360deg); }
+    }
+
+    /* Text fade up */
+    .gpa-text {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; transform: translateY(6px);
+    }
+    .gpa-text.animated {
+      animation: textUp 0.6s ease 1.4s forwards;
+    }
+    @keyframes textUp {
+      to { opacity: 1; transform: none; }
+    }
+
+    .gpa-num { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: var(--cream); }
+    .gpa-label { font-size: 9px; color: rgba(232,228,214,0.45); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
     .edu-activities span { display: block; font-size: 12.5px; color: rgba(232,228,214,0.5); margin-bottom: 4px; }
 
     /* ─── CONTACT ─── */
@@ -1228,11 +1271,21 @@
       </div>
       <div class="edu-gpa-block">
         <div class="gpa-ring">
-          <svg viewBox="0 0 120 120">
-            <circle class="gpa-track" cx="60" cy="60" r="52"/>
-            <circle class="gpa-fill" id="gpaCircle" cx="60" cy="60" r="52"/>
+          <svg viewBox="0 0 140 140" overflow="visible">
+            <defs>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <!-- Track -->
+            <circle class="gpa-track" cx="70" cy="70" r="58"/>
+            <!-- Animated arc -->
+            <circle class="gpa-fill" id="gpaCircle" cx="70" cy="70" r="58"/>
+            <!-- Travelling dot (starts at top = 12 o'clock, same as -90deg rotate origin) -->
+            <circle class="gpa-dot" id="gpaDot" cx="70" cy="12" r="5"/>
           </svg>
-          <div class="gpa-text">
+          <div class="gpa-text" id="gpaText">
             <span class="gpa-num">Dec</span>
             <span class="gpa-label">Grad 2027</span>
           </div>
@@ -1395,9 +1448,18 @@ counters.forEach(c => counterObs.observe(c));
 
 // ─── GPA RING ───
 const gpaCircle = document.getElementById('gpaCircle');
+const gpaDot    = document.getElementById('gpaDot');
+const gpaText   = document.getElementById('gpaText');
 const gpaObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
-    if (e.isIntersecting) { setTimeout(() => gpaCircle.classList.add('animated'), 300); gpaObs.unobserve(e.target); }
+    if (e.isIntersecting) {
+      setTimeout(() => {
+        gpaCircle.classList.add('animated');
+        gpaDot.classList.add('animated');
+        gpaText.classList.add('animated');
+      }, 300);
+      gpaObs.unobserve(e.target);
+    }
   });
 }, { threshold: 0.5 });
 gpaObs.observe(gpaCircle);
