@@ -1000,15 +1000,13 @@
     <span class="ticker-item"><strong>HackMIT 2025</strong> <span class="ticker-sep">◆</span> Selected from 5,000+ Applicants</span>
     <span class="ticker-item"><strong>ColorStack</strong> <span class="ticker-sep">◆</span> StackedUp Summit · San Francisco</span>
     <span class="ticker-item"><strong>Barclays</strong> <span class="ticker-sep">◆</span> Equity Research Competition · CRWD / ELF</span>
-    <span class="ticker-item"><strong>Harvard</strong> <span class="ticker-sep">◆</span> Harvard WECode Conference · Boston</span>
-    <span class="ticker-item"><strong>Goldman Sachs</strong> <span class="ticker-sep">◆</span> HireVue · IB &amp; Asset Management</span>
+    <span class="ticker-item"><strong>Harvard WeCode</strong> <span class="ticker-sep">◆</span> Harvard WECode Conference · Boston</span>
     <span class="ticker-item"><strong>GTIS Partners</strong> <span class="ticker-sep">◆</span> Private Equity · Summer 2025</span>
     <span class="ticker-item"><strong>StackHacks</strong> <span class="ticker-sep">◆</span> Co-Founder and President</span>
     <span class="ticker-item"><strong>HackMIT 2025</strong> <span class="ticker-sep">◆</span> Selected from 5,000+ Applicants</span>
     <span class="ticker-item"><strong>ColorStack</strong> <span class="ticker-sep">◆</span> StackedUp Summit · San Francisco</span>
     <span class="ticker-item"><strong>Barclays</strong> <span class="ticker-sep">◆</span> Equity Research Competition · CRWD / ELF</span>
-    <span class="ticker-item"><strong>Harvard</strong> <span class="ticker-sep">◆</span> Harvard WECode Conference · Boston</span>
-    <span class="ticker-item"><strong>Goldman Sachs</strong> <span class="ticker-sep">◆</span> HireVue · IB &amp; Asset Management</span>
+    <span class="ticker-item"><strong>Harvard WeCode</strong> <span class="ticker-sep">◆</span> Harvard WECode Conference · Boston</span>
   </div>
 </div>
 
@@ -1303,7 +1301,7 @@
 <section class="section contact-section" id="contact">
   <div class="container">
     <div class="contact-content reveal">
-      <div class="section-label">Let's Connect :)</div>
+      <div class="section-label">Let's Connect</div>
       <h2 class="section-title">Ready to make<br><em>an impact</em></h2>
       <p class="section-sub" style="margin:16px auto 0;text-align:center;">I'm actively seeking Summer 2026 and 2027 opportunities in investment banking, asset management, private equity, and quantitative finance. Let's talk about how I can contribute to your team.</p>
       <div class="contact-buttons">
@@ -1371,7 +1369,7 @@ window.addEventListener('scroll', () => {
   document.getElementById('header').classList.toggle('scrolled', scrollTop > 60);
   scrollBtn.classList.toggle('visible', scrollTop > 400);
   sideNav.classList.toggle('visible', scrollTop > 200);
-  quickView.classList.toggle('show', scrollTop > 600);
+  quickView.classList.toggle('show', scrollTop > 600 && scrollTop < docH - 300);
   updateSideDots();
 });
 
