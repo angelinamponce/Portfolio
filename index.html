@@ -769,12 +769,9 @@
         <span class="stat-num" data-target="600">0</span><span class="stat-num">%</span>
         <span class="stat-label">Org Growth</span>
       </div>
-      <span class="stat-num" data-text-target="Top">---</span>
-
-
-      
       <div class="stat">
-        <span class="stat-num">Top</span>
+        <!-- CHANGED: "Top" now uses data-text-target for scramble animation, starts as "---" -->
+        <span class="stat-num" data-text-target="Top">---</span>
         <span class="stat-label">10% - HackMIT</span>
       </div>
     </div>
@@ -789,13 +786,13 @@
     <span class="ticker-item"><strong>HackMIT 2025</strong> <span class="ticker-sep">|</span> Selected from 5,000+ Applicants</span>
     <span class="ticker-item"><strong>ColorStack</strong> <span class="ticker-sep">|</span> StackedUp Summit · San Francisco</span>
     <span class="ticker-item"><strong>Barclays</strong> <span class="ticker-sep">|</span> Equity Research Competition · CRWD / ELF</span>
-    <span class="ticker-item"><strong>Harvard</strong> <span class="ticker-sep">|</span> HarvardWeCode Conference · Boston, MA</span>
+    <span class="ticker-item"><strong>Harvard</strong> <span class="ticker-sep">|</span> Harvard WeCode Conference · Boston</span>
     <span class="ticker-item"><strong>GTIS Partners</strong> <span class="ticker-sep">|</span> Private Equity · Summer 2025</span>
     <span class="ticker-item"><strong>StackHacks</strong> <span class="ticker-sep">|</span> CEO &amp; Co-Founder</span>
     <span class="ticker-item"><strong>HackMIT 2025</strong> <span class="ticker-sep">|</span> Selected from 5,000+ Applicants</span>
     <span class="ticker-item"><strong>ColorStack</strong> <span class="ticker-sep">|</span> StackedUp Summit · San Francisco</span>
     <span class="ticker-item"><strong>Barclays</strong> <span class="ticker-sep">|</span> Equity Research Competition · CRWD / ELF</span>
-    <span class="ticker-item"><strong>Harvard</strong> <span class="ticker-sep">|</span> HarvardWeCode Conference · Boston, MA</span>
+    <span class="ticker-item"><strong>Harvard</strong> <span class="ticker-sep">|</span> Harvard WeCode Conference · Boston</span>
   </div>
 </div>
 
@@ -1140,7 +1137,7 @@
 <section class="section contact-section" id="contact">
   <div class="container">
     <div class="contact-content reveal">
-      <div class="section-label">Let's Connect</div>
+      <div class="section-label">Let's Connect :)</div>
       <h2 class="section-title">Ready to make<br><em>an impact</em></h2>
       <p class="section-sub" style="margin-top:16px;">I'm actively seeking Summer 2026 and 2027 opportunities in investment banking, asset management, private equity, and quantitative finance. Let's talk about how I can contribute to your team.</p>
       <div class="contact-buttons">
@@ -1228,7 +1225,7 @@
     roles[roleIdx].classList.add('active');
   }, 3000);
 
-  // ─── Stat Counter Animation ───
+  // ─── Stat Counter Animation (numbers) ───
   const counters = document.querySelectorAll('[data-target]');
   const counterObs = new IntersectionObserver((entries) => {
     entries.forEach(e => {
@@ -1248,6 +1245,45 @@
     });
   }, { threshold: 0.5 });
   counters.forEach(c => counterObs.observe(c));
+
+  // ─── Text Scramble Animation (mirrors number counter) ───
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const textCounters = document.querySelectorAll('[data-text-target]');
+  const textCounterObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const target = e.target.dataset.textTarget;
+        const duration = 1800;          // same duration as number counter
+        const totalFrames = Math.round(duration / 16);
+        let frame = 0;
+
+        const update = () => {
+          const progress = frame / totalFrames;
+
+          if (progress >= 1) {
+            e.target.textContent = target; // lock in final value
+          } else {
+            // Reveal each character left-to-right as progress advances
+            const revealedCount = Math.floor(progress * target.length);
+            let display = '';
+            for (let i = 0; i < target.length; i++) {
+              if (i < revealedCount) {
+                display += target[i];     // character settled
+              } else {
+                display += chars[Math.floor(Math.random() * chars.length)]; // still cycling
+              }
+            }
+            e.target.textContent = display;
+            frame++;
+            requestAnimationFrame(update);
+          }
+        };
+        requestAnimationFrame(update);
+        textCounterObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  textCounters.forEach(c => textCounterObs.observe(c));
 
   // ─── GPA Circle Animation ───
   const gpaCircle = document.getElementById('gpaCircle');
