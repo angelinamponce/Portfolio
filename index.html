@@ -380,6 +380,43 @@
       position: relative;
     }
 
+    /* ─── PAGE ENTRANCE ANIMATIONS ─── */
+    /* Elements start invisible; JS adds .page-loaded to body after a short delay */
+    .hero-enter {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.85s cubic-bezier(.22,1,.36,1),
+                  transform 0.85s cubic-bezier(.22,1,.36,1);
+    }
+    body.page-loaded .hero-enter { opacity: 1; transform: none; }
+
+    /* Each piece gets a staggered delay */
+    .hero-enter-1  { transition-delay: 0.05s; }
+    .hero-enter-2  { transition-delay: 0.18s; }
+    .hero-enter-3  { transition-delay: 0.30s; }
+    .hero-enter-4  { transition-delay: 0.40s; }
+    .hero-enter-5  { transition-delay: 0.50s; }
+    .hero-enter-6  { transition-delay: 0.62s; }
+
+    /* Header slides down */
+    header {
+      transform: translateY(-8px);
+      transition: transform 0.7s cubic-bezier(.22,1,.36,1) 0.05s,
+                  background 0.4s ease,
+                  box-shadow 0.3s ease;
+    }
+    body.page-loaded header { transform: none; }
+
+    /* Right panel fades in slightly later */
+    .hero-right-enter {
+      opacity: 0;
+      transform: translateX(16px);
+      transition: opacity 0.9s cubic-bezier(.22,1,.36,1) 0.35s,
+                  transform 0.9s cubic-bezier(.22,1,.36,1) 0.35s;
+    }
+    body.page-loaded .hero-right-enter { opacity: 1; transform: none; }
+
+    /* ─── HEADSHOT HOVER ─── */
     .headshot-wrap {
       position: relative; width: 280px; margin-bottom: 32px;
     }
@@ -391,6 +428,8 @@
       width: 100%; height: 100%;
       border: 1px solid rgba(180,150,96,0.5);
       z-index: 0;
+      transition: transform 0.5s cubic-bezier(.34,1.2,.64,1),
+                  border-color 0.4s ease;
     }
     .headshot-wrap::after {
       content: '';
@@ -399,17 +438,80 @@
       width: 100%; height: 100%;
       border: 1px solid rgba(78,128,96,0.35);
       z-index: 0;
+      transition: transform 0.5s cubic-bezier(.34,1.2,.64,1),
+                  border-color 0.4s ease;
     }
+    /* Offset frames drift apart on hover */
+    .headshot-wrap:hover::before {
+      transform: translate(4px, 4px);
+      border-color: rgba(180,150,96,0.75);
+    }
+    .headshot-wrap:hover::after {
+      transform: translate(-4px, -4px);
+      border-color: rgba(78,128,96,0.6);
+    }
+
     .headshot {
       width: 280px; height: 360px;
       object-fit: cover;
       border: 1px solid rgba(14,31,22,0.15);
       position: relative; z-index: 1;
       box-shadow: var(--shadow-xl);
-      transition: transform 0.5s cubic-bezier(.34,1.2,.64,1);
+      transition: transform 0.55s cubic-bezier(.34,1.2,.64,1),
+                  box-shadow 0.55s ease;
       display: block;
     }
-    .headshot-wrap:hover .headshot { transform: translateY(-6px); }
+    .headshot-wrap:hover .headshot {
+      transform: translateY(-7px);
+      box-shadow: 0 40px 80px rgba(14,31,22,0.22), 0 8px 24px rgba(14,31,22,0.1);
+    }
+
+    /* Green tint overlay on hover */
+    .headshot-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      background: linear-gradient(
+        to top,
+        rgba(14,31,22,0.82) 0%,
+        rgba(14,31,22,0.25) 45%,
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      pointer-events: none;
+    }
+    .headshot-wrap:hover .headshot-overlay { opacity: 1; }
+
+    /* Name card slides up from bottom */
+    .headshot-namecard {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+      padding: 22px 20px 18px;
+      transform: translateY(10px);
+      opacity: 0;
+      transition: transform 0.45s cubic-bezier(.34,1.2,.64,1),
+                  opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .headshot-wrap:hover .headshot-namecard {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .headshot-namecard-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px; font-weight: 600;
+      color: var(--cream); line-height: 1.1;
+      letter-spacing: 0.2px;
+    }
+    .headshot-namecard-role {
+      font-size: 10px; font-weight: 500;
+      color: var(--sage-light);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-top: 5px;
+    }
+    .headshot-namecard-line {
+      width: 24px; height: 1px;
+      background: var(--sage);
+      margin-bottom: 8px;
+    }
 
     /* Luxury stat cards */
     .stats-row { display: flex; gap: 12px; width: 280px; }
@@ -1003,26 +1105,32 @@
     <div class="hero-spotlight" id="heroSpotlight"></div>
     <div class="hero-corner">Angelina Ponce · 2026</div>
     <div class="hero-content">
-      <div class="hero-eyebrow">
+      <div class="hero-eyebrow hero-enter hero-enter-1">
         <div class="eyebrow-line"></div>
         <span class="eyebrow-text">Open to Summer 2027 Internships</span>
         <div class="eyebrow-dot"></div>
       </div>
-      <h1 class="hero-name">Angelina<br><em>Ponce</em></h1>
-      <div class="hero-role-wrap">
+      <h1 class="hero-name hero-enter hero-enter-2">Angelina<br><em>Ponce</em></h1>
+      <div class="hero-role-wrap hero-enter hero-enter-3">
         <p class="hero-role"><span id="typewriter"></span><span class="cursor-blink" style="color:var(--sage)">|</span></p>
       </div>
-      <div class="hero-divider"></div>
-      <p class="hero-desc">Junior at Binghamton University bridging finance and technology, from PE deal pipelines to large-scale engineering organizations. Analytical by training, entrepreneurial by nature.</p>
-      <div class="hero-btns">
+      <div class="hero-divider hero-enter hero-enter-4"></div>
+      <p class="hero-desc hero-enter hero-enter-5">Junior at Binghamton University bridging finance and technology, from PE deal pipelines to large-scale engineering organizations. Analytical by training, entrepreneurial by nature.</p>
+      <div class="hero-btns hero-enter hero-enter-6">
         <a href="Resume.pdf" target="_blank" class="btn-mag btn-primary-mag">↓ Download Resume</a>
         <a href="#contact" class="btn-mag btn-ghost-mag">Let's Connect →</a>
       </div>
     </div>
   </div>
-  <div class="hero-right">
+  <div class="hero-right hero-right-enter">
     <div class="headshot-wrap">
       <img src="Headshot.jpg" alt="Angelina Ponce" class="headshot" onerror="this.style.background='#eaf2ec';this.style.height='360px'">
+      <div class="headshot-overlay"></div>
+      <div class="headshot-namecard">
+        <div class="headshot-namecard-line"></div>
+        <div class="headshot-namecard-name">Angelina Ponce</div>
+        <div class="headshot-namecard-role">Economics &amp; Finance · BU '27</div>
+      </div>
     </div>
     <div class="stats-row">
       <div class="stat-flip">
@@ -1391,6 +1499,18 @@
 </footer>
 
 <script>
+// ─── PAGE ENTRANCE ───
+// Block scroll during entrance, then release
+document.documentElement.style.overflow = 'hidden';
+window.addEventListener('load', () => {
+  // Short breath — let fonts/assets settle
+  setTimeout(() => {
+    document.body.classList.add('page-loaded');
+    // Re-enable scroll after the slowest element finishes (~0.62s delay + 0.85s transition)
+    setTimeout(() => { document.documentElement.style.overflow = ''; }, 1600);
+  }, 80);
+});
+
 // ─── CURSOR ───
 const dot  = document.getElementById('cursor-dot');
 const ring = document.getElementById('cursor-ring');
