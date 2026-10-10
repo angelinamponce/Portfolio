@@ -1265,6 +1265,7 @@
       color: var(--gold-text) !important; font-style: italic; font-size: 13px !important;
     }
     .modal-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(78,128,96,0.14); }
+    .modal-links:empty { display: none; }
     .modal-link {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px; border-radius: 8px;
@@ -1273,7 +1274,6 @@
     }
     .modal-link:hover { background: var(--sage); transform: translateY(-2px); }
     .modal-link .i { width: 15px; height: 15px; }
-    .modal-link.is-todo { background: transparent; color: var(--gold); border: 1px dashed rgba(180,150,96,0.6); pointer-events: none; }
 
     /* ─── LIGHTBOX ─── */
     .lightbox {
@@ -1381,7 +1381,7 @@
     [data-theme="dark"] .story-step p { color: var(--d-muted); }
     [data-theme="dark"] .modal-close { background: rgba(140,189,158,0.12); color: var(--cream); }
     [data-theme="dark"] .modal-shot { background: var(--d-surface-2); }
-    [data-theme="dark"] .modal-link:not(.is-todo) { background: var(--sage); }
+    [data-theme="dark"] .modal-link { background: var(--sage); }
     [data-theme="dark"] .modal-links { border-top-color: var(--d-line); }
     .theme-anim, .theme-anim *, .theme-anim *::before, .theme-anim *::after {
       transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease !important;
@@ -1908,7 +1908,7 @@
       <button type="button" class="filter-note-clear" id="filterNoteClear">Clear <svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <div class="projects-grid">
-      <div class="project-card reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Prosperity: view project details">
+      <div class="project-card reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" data-shot="Assets/img/prosperity.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Prosperity: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-wallet"/></svg></div>
         <h3>Prosperity</h3>
         <p class="project-meta">HackMIT 2025 · Financial Literacy Platform</p>
@@ -1916,7 +1916,7 @@
         <div class="project-tags"><span class="tag">Python</span><span class="tag">JavaScript</span><span class="tag">React</span><span class="tag">Financial APIs</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-shot="Assets/img/promptforward.png" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
+      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-shot="Assets/img/promptforward.png" data-github="https://github.com/some-kim/PromptForward" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></div>
         <h3>PromptForward</h3>
         <p class="project-meta">HackMIT 2026 · AI Literacy Platform</p>
@@ -1925,7 +1925,7 @@
         <div class="project-tags"><span class="tag">AI Literacy</span><span class="tag">Prompt Engineering</span><span class="tag">Gamification</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-2" data-cat="finance research" data-id="equity" data-shot="Assets/img/lnth.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
+      <div class="project-card reveal reveal-delay-2" data-cat="finance research" data-id="equity" data-shot="Assets/img/equity-lnth.png" data-shot-alt="Cover slide of the Lantheus (NASDAQ: LNTH) equity research report" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
         <h3>Equity Research Analysis</h3>
         <p class="project-meta">Barclays Equity Research Case Competition · Vestal, NY · Jan–Apr 2026</p>
@@ -1933,7 +1933,7 @@
         <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">WACC</span><span class="tag">Equity Research</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-3" data-cat="research tech" data-id="polyhedge" data-shot="Assets/img/polyhedge.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
+      <div class="project-card reveal reveal-delay-3" data-cat="research tech" data-id="polyhedge" data-shot="Assets/img/polyhedge.jpg" data-github="https://github.com/janesanjana4/PolyHedge" data-demo="https://devpost.com/software/polyhedge-alpha-engine-for-prediction-markets" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></div>
         <h3>PolyHedge</h3>
         <p class="project-meta">YHack 2026 · Prediction Markets & AI</p>
@@ -1965,8 +1965,9 @@
       </div>
     </div>
 
-    <!-- Project case studies. Links and screenshots: add data-github / data-demo / data-shot on the matching
-         .project-card (e.g. data-github="https://github.com/…"); empty ones show as "add" placeholders. -->
+    <!-- Project case studies. Links and screenshots: add data-github / data-demo / data-shot (+ optional data-shot-alt) on the
+         matching .project-card (e.g. data-github="https://github.com/…"). Missing links are simply left out; a missing
+         screenshot shows an "add" placeholder. -->
     <template id="story-prosperity">
       <section class="story-step"><h4>Problem</h4><p>Financial instability affects people across all demographics, and many people struggle with money management without realizing their spending patterns. Quality financial education is often accessible only to those who can afford expensive professional services. We believed financial literacy shouldn't be a privilege but a right, and wanted to break down those barriers for communities that have been historically underserved.</p></section>
       <section class="story-step"><h4>What I did</h4><p>Full-stack financial planning platform built in 24 hours at MIT.</p></section>
@@ -2663,15 +2664,18 @@ function openProject(card) {
   const shot = document.getElementById('modalShot');
   if (card.dataset.shot) {
     shot.className = 'modal-shot';
-    shot.innerHTML = `<img src="${card.dataset.shot}" alt="Screenshot of ${card.querySelector('h3').textContent}">`;
+    shot.innerHTML = `<img src="${card.dataset.shot}" alt="${card.dataset.shotAlt || 'Screenshot of ' + card.querySelector('h3').textContent}">`;
   } else {
     shot.className = 'modal-shot is-empty';
     shot.innerHTML = '<svg class="i" aria-hidden="true"><use href="#i-image"/></svg><span>Add a screenshot (data-shot)</span>';
   }
+  // Only links that exist are shown; with none, the row is empty and hidden by .modal-links:empty
   const link = (href, icon, label) => href
     ? `<a class="modal-link" href="${href}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-${icon}"/></svg>${label}</a>`
-    : `<span class="modal-link is-todo"><svg class="i" aria-hidden="true"><use href="#i-${icon}"/></svg>Add ${label} link</span>`;
-  document.getElementById('modalLinks').innerHTML = link(card.dataset.github, 'github', 'GitHub') + link(card.dataset.demo, 'external-link', 'Live demo');
+    : '';
+  const { github, demo } = card.dataset;
+  const demoLabel = /devpost\.com/i.test(demo || '') ? 'Devpost' : 'Live demo';
+  document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel);
   modal.lastCard = card;
   openDialog(modal);
   modal.scrollTop = 0;
