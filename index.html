@@ -1237,9 +1237,10 @@
     .modal-head .project-meta { margin: 0; }
     .modal-shot {
       border-radius: 12px; overflow: hidden; margin-bottom: 28px;
-      aspect-ratio: 16 / 8; background: var(--sage-pale);
+      background: var(--sage-pale);
     }
-    .modal-shot img { width: 100%; height: 100%; object-fit: cover; }
+    /* Screenshots keep their own shape (no cropping); tall ones are capped and letterboxed on the frame colour */
+    .modal-shot img { display: block; width: 100%; height: auto; max-height: min(60vh, 460px); object-fit: contain; }
     .modal-shot.is-empty {
       aspect-ratio: 16 / 5;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
@@ -1915,7 +1916,16 @@
         <div class="project-tags"><span class="tag">Python</span><span class="tag">JavaScript</span><span class="tag">React</span><span class="tag">Financial APIs</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-2" data-cat="finance research" data-id="equity" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
+      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-shot="Assets/img/promptforward.png" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
+        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></div>
+        <h3>PromptForward</h3>
+        <p class="project-meta">HackMIT 2026 · AI Literacy Platform</p>
+        <p>AI literacy platform that teaches prompt engineering through two modes. Training Mode helps professionals and college students build real prompting skill. Game Mode is a 1v1 party game where players race to recreate images with one prompt each. Every prompt is scored on efficiency, rewarding clear prompts with fewer tokens and fewer wasted generations.</p>
+        <!-- TODO: add tech-stack tags (e.g. React, Python) once confirmed, and add promptforward to the matching skill chips' data-projects -->
+        <div class="project-tags"><span class="tag">AI Literacy</span><span class="tag">Prompt Engineering</span><span class="tag">Gamification</span></div>
+        <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+      </div>
+      <div class="project-card reveal reveal-delay-2" data-cat="finance research" data-id="equity" data-shot="Assets/img/lnth.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
         <h3>Equity Research Analysis</h3>
         <p class="project-meta">Barclays Equity Research Case Competition · Vestal, NY · Jan–Apr 2026</p>
@@ -1923,7 +1933,7 @@
         <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">WACC</span><span class="tag">Equity Research</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-3" data-cat="research tech" data-id="polyhedge" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
+      <div class="project-card reveal reveal-delay-3" data-cat="research tech" data-id="polyhedge" data-shot="Assets/img/polyhedge.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></div>
         <h3>PolyHedge</h3>
         <p class="project-meta">YHack 2026 · Prediction Markets & AI</p>
@@ -1937,23 +1947,15 @@
         </div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Nike Digital Transformation: view project details">
+      <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" data-shot="Assets/img/nike.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Nike Digital Transformation: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-compass"/></svg></div>
         <h3>Nike Digital Transformation</h3>
-        <p class="project-meta">EY TechX Case Competition</p>
-        <p>Comprehensive strategy addressing Nike's weakening consumer connection and $80B market cap decline. Four strategic recommendations: AI-powered Hub, Nike+ 2.0 loyalty program, omni-channel integration, and performance-first repositioning.</p>
-        <div class="project-tags"><span class="tag">Tech Consulting</span><span class="tag">Digital Strategy</span><span class="tag">Competitive Analysis</span></div>
+        <p class="project-meta">EY TechX Case Competition · Digital Strategy</p>
+        <p>Led a three-person team in building a digital transformation strategy for Nike, whose stock fell from ~$170 to ~$90–100 as direct sales declined 14%. Diagnosed a fragmented digital ecosystem, benchmarked Nike against Adidas, Lululemon, and Apple, and proposed an AI-powered 'Nike Hub' with a three-point plan, an 18-month rollout, and a risk and change-management framework.</p>
+        <div class="project-tags"><span class="tag">Tech Consulting</span><span class="tag">Digital Strategy</span><span class="tag">Competitive Analysis</span><span class="tag">AI Strategy</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-5" data-cat="research tech" data-id="polls" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Crisis at the Polls: view project details">
-        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-vote"/></svg></div>
-        <h3>Crisis at the Polls</h3>
-        <p class="project-meta">Civic Engagement Research · Data Analyst</p>
-        <p>Analyzed voter registration trends across U.S. states 2016–2022 to quantify COVID-19's impact on civic participation. Used Python geospatial analysis; identified Virginia as a successful policy case study.</p>
-        <div class="project-tags"><span class="tag">Python</span><span class="tag">Pandas</span><span class="tag">Geospatial</span><span class="tag">Policy Analysis</span></div>
-        <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
-      </div>
-      <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Brand Partnership Campaign: view project details">
+      <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" data-shot="Assets/img/edikted.png" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Brand Partnership Campaign: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-camera"/></svg></div>
         <h3>Brand Partnership Campaign</h3>
         <p class="project-meta">Edikted · Social Media & Design</p>
@@ -1966,7 +1968,7 @@
     <!-- Project case studies. Links and screenshots: add data-github / data-demo / data-shot on the matching
          .project-card (e.g. data-github="https://github.com/…"); empty ones show as "add" placeholders. -->
     <template id="story-prosperity">
-      <section class="story-step"><h4>Problem</h4><p class="todo">Add: what problem Prosperity set out to solve.</p></section>
+      <section class="story-step"><h4>Problem</h4><p>Financial instability affects people across all demographics, and many people struggle with money management without realizing their spending patterns. Quality financial education is often accessible only to those who can afford expensive professional services. We believed financial literacy shouldn't be a privilege but a right, and wanted to break down those barriers for communities that have been historically underserved.</p></section>
       <section class="story-step"><h4>What I did</h4><p>Full-stack financial planning platform built in 24 hours at MIT.</p></section>
       <section class="story-step"><h4>Result</h4><p>Analyzes 20+ personal finance data points with real-time modeling, personalized insights, and 5+ interactive visualizations including cash flow waterfalls and compound growth charts.</p></section>
     </template>
@@ -1976,23 +1978,23 @@
       <section class="story-step"><h4>Result</h4><p>BUY recommendation with a $130.00 price target, representing 25.0% upside from the $104.00 current trading price.</p></section>
     </template>
     <template id="story-polyhedge">
-      <section class="story-step"><h4>Problem</h4><p class="todo">Add: the problem PolyHedge addresses for prediction-market users.</p></section>
+      <section class="story-step"><h4>Problem</h4><p>Prediction markets are hard to reason about the way traders reason about options or perpetuals. It's difficult to see how a position performs across probability, price, and time, and there are few tools for hedging a speculative position with a prediction-market contract. Traders coming from traditional finance and crypto derivatives lack payoff visualizations, scenario analysis, and risk tools, so they take positions without a clear view of their downside before placing a trade.</p></section>
       <section class="story-step"><h4>What I did</h4><p>Full-stack prediction markets platform built with React/Vite and a Node.js backend, integrating the Polymarket API for live market data and K2 Think V2 via the Lava endpoint for AI-powered position analysis. Hex was used for real-time data pipelines and analytics.</p></section>
       <section class="story-step"><h4>Result</h4><p>Selected for in-person main-track live judging finals across five sponsor tracks.</p></section>
     </template>
     <template id="story-nike">
-      <section class="story-step"><h4>Problem</h4><p>Comprehensive strategy addressing Nike's weakening consumer connection and $80B market cap decline.</p></section>
-      <section class="story-step"><h4>What I did</h4><p>Four strategic recommendations: AI-powered Hub, Nike+ 2.0 loyalty program, omni-channel integration, and performance-first repositioning.</p></section>
-      <section class="story-step"><h4>Result</h4><p class="todo">Add: placement, judges' feedback, or another outcome.</p></section>
+      <section class="story-step"><h4>Problem</h4><p>Nike's core challenge was a weakening connection with consumers, driven by gaps in its digital ecosystem and brand positioning. Direct sales declined 14%, and experiences were siloed across SNKRS, Nike Run Club, and the main store, with no personalization and no cohesive community. A competitive benchmark against Adidas, Lululemon, and Apple on community integration, loyalty strength, and personalized experience showed Nike scoring lowest of the four.</p></section>
+      <section class="story-step"><h4>What I did</h4><p>Built a consulting-style strategy as part of a three-person team. The recommendation was a single integrated Nike Hub that centralizes shopping, content, community, and fitness tracking, backed by a three-point plan: unified Hub, AI-driven personalization of products, content, and loyalty rewards, and predictive analytics for demand forecasting and inventory. Allocated the Hub investment across a Personalization Core (66.7%), Community Platform (22.2%), and UI/UX Integration (11.1%), and mapped delivery to an 18-month, three-phase roadmap (Foundation, Integration, Optimization). Addressed data privacy, supply chain, and technology-adoption risks with mitigation plans, and defined how the change lands for customers, workforce, stores, and supply chain.</p></section>
+      <section class="story-step"><h4>Result</h4><p>Delivered a full end-to-end strategy covering diagnosis, competitive benchmarking, recommendations, implementation roadmap, risk mitigation, and change management, with projected improvement across five KPIs: consumer loyalty, conversion rate, engagement, profitability, and inventory efficiency.</p></section>
     </template>
-    <template id="story-polls">
-      <section class="story-step"><h4>Problem</h4><p class="todo">Add: why this question mattered.</p></section>
-      <section class="story-step"><h4>What I did</h4><p>Analyzed voter registration trends across U.S. states 2016–2022 to quantify COVID-19's impact on civic participation.</p></section>
-      <section class="story-step"><h4>Result</h4><p>Used Python geospatial analysis; identified Virginia as a successful policy case study.</p></section>
+    <template id="story-promptforward">
+      <section class="story-step"><h4>Problem</h4><p>AI is now part of nearly every job, classroom, and daily task, but almost nobody is taught how to talk to it. Most people either avoid prompting because it feels intimidating or use it badly and never learn why their results are inconsistent or wasteful. We wanted to close that literacy gap for professionals and college students building workplace prompting skill, and for the incoming generation that will grow up working alongside AI.</p></section>
+      <section class="story-step"><h4>What I did</h4><p>Built PromptForward with two modes. Training Mode shows a target image, evaluates your prompt before any generation is spent, and tells you what's missing (subject, composition, lighting). Game Mode turns prompting into a competition: two players each write one prompt to recreate a set of images, and the clearer, more efficient prompt wins. Users can submit their own images to the game.</p></section>
+      <section class="story-step"><h4>Result</h4><p>Designed a scoring system that treats efficient, well-crafted prompting as a skill to be measured and taught. Efficiency is calculated deterministically on the backend from accuracy, prompt quality and length, and token usage, so the platform teaches energy-conscious AI use alongside prompting skill.</p></section>
     </template>
     <template id="story-brand">
-      <section class="story-step"><h4>Problem</h4><p class="todo">Add: the brand's goal for the partnership.</p></section>
-      <section class="story-step"><h4>What I did</h4><p class="todo">Add: what you designed and posted.</p></section>
+      <section class="story-step"><h4>Problem</h4><p>Edikted, a leading women's apparel brand, selected me as a paid brand partner to promote its apparel and its flagship event at Binghamton University. The brand re-engaged me for a second event, the Brooklyn Warehouse Sale in Brooklyn, NY, which made this a repeat partnership across 2 events.</p></section>
+      <section class="story-step"><h4>What I did</h4><p>Designed promotional flyers and produced branded photo content featuring Edikted apparel, executing 7 distinct promotional deliverables across both events. The campaign generated 15,500+ views and reached 3,538 accounts, and the Brooklyn Warehouse Sale content alone drove 4,342 views.</p></section>
       <section class="story-step"><h4>Result</h4><p>Paid brand partnership generating 15,500+ views and reaching 3,538 accounts for Binghamton and Brooklyn events. Led to repeat collaboration achieving 4,342 total views for the Brooklyn Warehouse Sale.</p></section>
     </template>
   </div>
@@ -2011,7 +2013,7 @@
         <h3>Technical Skills</h3>
         <div class="skill-group">
           <h4>Programming &amp; Data</h4>
-          <div class="skill-tags"><span class="skill-tag is-linked" data-projects="prosperity polls" tabindex="0" role="button" aria-label="Python: highlight related projects">Python</span><span class="skill-tag">SQL</span><span class="skill-tag is-linked" data-projects="prosperity polyhedge" tabindex="0" role="button" aria-label="JavaScript: highlight related projects">JavaScript</span><span class="skill-tag">R</span><span class="skill-tag is-linked" data-projects="prosperity polyhedge" tabindex="0" role="button" aria-label="HTML: highlight related projects">HTML</span><span class="skill-tag is-linked" data-projects="prosperity polyhedge" tabindex="0" role="button" aria-label="CSS: highlight related projects">CSS</span></div>
+          <div class="skill-tags"><span class="skill-tag is-linked" data-projects="prosperity" tabindex="0" role="button" aria-label="Python: highlight related projects">Python</span><span class="skill-tag">SQL</span><span class="skill-tag is-linked" data-projects="prosperity polyhedge" tabindex="0" role="button" aria-label="JavaScript: highlight related projects">JavaScript</span><span class="skill-tag">R</span><span class="skill-tag is-linked" data-projects="prosperity polyhedge" tabindex="0" role="button" aria-label="HTML: highlight related projects">HTML</span><span class="skill-tag is-linked" data-projects="prosperity polyhedge" tabindex="0" role="button" aria-label="CSS: highlight related projects">CSS</span></div>
         </div>
         <div class="skill-group">
           <h4>Finance &amp; Modeling</h4>
@@ -2078,7 +2080,7 @@
         <button type="button" class="conf-img-wrap" aria-label="View larger: Photo from HackMIT"><img src="Assets/img/hackmit-photo-800.jpg" srcset="Assets/img/hackmit-photo-800.jpg 800w, Assets/img/hackmit-photo-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="449" loading="lazy" decoding="async" data-full="Assets/img/hackmit-photo-1600.jpg" alt="Photo from HackMIT" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
         <div class="conf-body">
           <div class="conf-icon-row"><div class="conf-icon"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg></div><div><h3>HackMIT</h3><p class="conf-loc">Boston, Massachusetts</p></div></div>
-          <p>Selected from 5,000+ global applicants for MIT's most selective hackathon (sub-10% acceptance). Attended keynote by Andrew Sutherland, Quizlet founder. Built Prosperity, a full-stack financial literacy platform, in 24 hours.</p>
+          <p>Selected from 5,000+ global applicants for MIT's most selective hackathon (sub-10% acceptance). Attended keynote by Andrew Sutherland, Quizlet founder. Built Prosperity, a full-stack financial literacy platform, in 24 hours. Also built PromptForward, an AI literacy platform.</p>
           <span class="conf-badge">2026 &amp; 2025</span>
         </div>
       </div>
