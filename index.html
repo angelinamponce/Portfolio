@@ -297,11 +297,13 @@
     }
 
     .hero-left {
+      --hero-pad-x: clamp(40px, 5vw, 80px);
+      --hero-wedge: 56px;   /* average width of the cream diagonal that overlaps this column's right edge */
       background: var(--forest);
       min-height: 100vh;
       display: flex; flex-direction: column;
-      justify-content: center;
-      padding: calc(var(--nav-h) + 72px) 80px 80px 80px;
+      justify-content: center; align-items: center;
+      padding: calc(var(--nav-h) + 72px) calc(var(--hero-pad-x) + var(--hero-wedge)) 80px var(--hero-pad-x);
       position: relative; overflow: hidden;
     }
 
@@ -343,7 +345,7 @@
       writing-mode: vertical-rl;
     }
 
-    .hero-content { position: relative; z-index: 3; }
+    .hero-content { position: relative; z-index: 3; width: 100%; max-width: 576px; margin-inline: auto; }
 
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 10px;
@@ -1401,10 +1403,6 @@
     @media (max-width: 899px) { :root { --content-scale: 1; } }
 
     /* ─── RESPONSIVE ─── */
-    /* Wide screens: line the hero copy up with the header/content container */
-    @media (min-width: 1025px) {
-      .hero-left { padding-left: max(80px, calc((100vw - 1320px) / 2 + 48px)); }
-    }
     @media (min-width: 1700px) {
       .hero-right { --shot-w: clamp(300px, 24vw, 480px); }
       .hero-desc { font-size: 15.5px; max-width: 520px; }
@@ -1920,9 +1918,9 @@
       <div class="project-card reveal reveal-delay-2" data-cat="finance research" data-id="equity" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
         <h3>Equity Research Analysis</h3>
-        <p class="project-meta">Barclays Equity Research Competition</p>
-        <p>Full equity coverage on CrowdStrike (CRWD) and e.l.f. Beauty (ELF) with DCF models, WACC calculations, and comps. Generated buy recommendation on ELF with $174.05 price target, representing 171% upside from $64.25.</p>
-        <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">Corp Finance</span><span class="tag">Quant Analysis</span></div>
+        <p class="project-meta">Barclays Equity Research Case Competition · Vestal, NY · Jan–Apr 2026</p>
+        <p>Competitor. Spearheaded equity research coverage for Lantheus Holdings (NASDAQ: LNTH) with an evidence-backed BUY recommendation. Built detailed analytical models incorporating WACC calculations (9.8%), revenue projections through 2028, and beta analysis (0.72), resulting in a $130.00 price target, 25.0% upside from $104.00 current trading.</p>
+        <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">WACC</span><span class="tag">Equity Research</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
       <div class="project-card reveal reveal-delay-3" data-cat="research tech" data-id="polyhedge" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
@@ -1973,9 +1971,9 @@
       <section class="story-step"><h4>Result</h4><p>Analyzes 20+ personal finance data points with real-time modeling, personalized insights, and 5+ interactive visualizations including cash flow waterfalls and compound growth charts.</p></section>
     </template>
     <template id="story-equity">
-      <section class="story-step"><h4>Problem</h4><p class="todo">Add: the competition prompt or question you were answering.</p></section>
-      <section class="story-step"><h4>What I did</h4><p>Full equity coverage on CrowdStrike (CRWD) and e.l.f. Beauty (ELF) with DCF models, WACC calculations, and comps.</p></section>
-      <section class="story-step"><h4>Result</h4><p>Generated buy recommendation on ELF with $174.05 price target, representing 171% upside from $64.25.</p></section>
+      <section class="story-step"><h4>Problem</h4><p>Barclays Equity Research Case Competition: produce an evidence-backed investment recommendation on Lantheus Holdings (NASDAQ: LNTH).</p></section>
+      <section class="story-step"><h4>What I did</h4><p>Built detailed analytical models incorporating WACC calculations (9.8%), revenue projections through 2028, and beta analysis (0.72).</p></section>
+      <section class="story-step"><h4>Result</h4><p>BUY recommendation with a $130.00 price target, representing 25.0% upside from the $104.00 current trading price.</p></section>
     </template>
     <template id="story-polyhedge">
       <section class="story-step"><h4>Problem</h4><p class="todo">Add: the problem PolyHedge addresses for prediction-market users.</p></section>
@@ -2047,7 +2045,7 @@
         <div class="value-card">
           <div class="value-icon"><svg class="i" aria-hidden="true"><use href="#i-bar-chart"/></svg></div>
           <strong>Financial Analysis</strong>
-          <p>Built DCF models, WACC calculations, and comp tables for Equity Research on CRWD and ELF. Comfortable translating raw data into investment theses.</p>
+          <p>Built WACC calculations, revenue projections, and beta analysis for Equity Research on LNTH. Comfortable translating raw data into investment theses.</p>
         </div>
         <div class="value-card">
           <div class="value-icon"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></div>
