@@ -363,20 +363,50 @@
     }
 
     .hero-name {
+      --name-ink: #fffdf8;
+      position: relative; isolation: isolate;
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(58px, 6.2vw, 104px);
-      font-weight: 600; line-height: 0.95;
-      color: var(--cream); margin-bottom: 28px;
-      letter-spacing: -1px;
+      font-size: clamp(68px, 7.25vw, 122px);
+      font-weight: 700; line-height: 0.95;
+      color: var(--name-ink); margin-bottom: 28px;
+      letter-spacing: -0.018em;
     }
-    .hero-name em { color: var(--sage-light); font-style: italic; position: relative; display: inline-block; }
+    .hero-name em {
+      --name-ink: #a9d6b9;
+      color: var(--name-ink); font-style: italic; position: relative; display: inline-block;
+      padding-right: 0.12em; margin-right: -0.12em; /* room for the italic overhang inside the sheen's clip */
+    }
+    /* Once the bird has passed, a gold sheen sweeps across the name a single time (left to right). It is sized in em
+       (about three widths of "Angelina") so the band crosses both lines at the same place at the same moment. */
+    .hero-name.is-shining, .hero-name.is-shining em {
+      background: linear-gradient(100deg, var(--name-ink) 0 43%, #dcc08a 47%, #fff4d8 50%, #cdb27e 53%, var(--name-ink) 57% 100%);
+      background-size: 11.7em 100%;
+      background-position: -7.8em 0;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: nameSheen 1.5s ease-in-out forwards;
+    }
+    @keyframes nameSheen { to { background-position: 0 0; } }
+    /* ...then settles into a soft gold/sage glow: a transparent copy of each word carries the shadow, so only opacity animates */
+    .hero-name::before, .hero-name em::before {
+      position: absolute; left: 0; top: 0; z-index: -1;
+      color: transparent; -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(205,178,126,0.26), 0 0 10px rgba(140,189,158,0.14);
+      pointer-events: none; user-select: none;
+      opacity: 0; transition: opacity 1.2s ease;
+    }
+    .hero-name::before { content: 'Angelina'; content: 'Angelina' / ''; }
+    .hero-name em::before { content: 'Ponce'; content: 'Ponce' / ''; }
+    .hero-name.is-settled::before, .hero-name.is-settled em::before { opacity: 1; }
     .name-underline {
-      position: absolute; left: 1px; bottom: -8px; height: 2px; width: 0%;
+      position: absolute; left: 1px; bottom: -8px; height: 2px; width: calc(100% - 0.12em - 2px);
       background: linear-gradient(90deg, var(--gold) 0%, var(--sage) 100%);
-      transition: width 1.1s cubic-bezier(.22,1,.36,1);
-      transition-delay: 0.95s;
+      transform: scaleX(0); transform-origin: left center;
     }
-    body.page-loaded .name-underline { width: calc(100% - 2px); }
+    /* The underline draws in step with the sheen */
+    .hero-name.is-shining .name-underline, .hero-name.is-settled .name-underline {
+      transform: none; transition: transform 1.5s ease-in-out;
+    }
 
     .hero-role-wrap { min-height: 30px; margin-bottom: 36px; }
     .hero-role {
@@ -1485,7 +1515,7 @@
       .logo-name { font-size: 16px; }
       .logo-wrap { gap: 10px; }
       .recruiter-pill::before { display: none; }
-      .hero-name { font-size: 54px; }
+      .hero-name { font-size: 63px; }
       .hero-eyebrow { margin-bottom: 28px; }
       .eyebrow-text { letter-spacing: 2px; }
       .contact-buttons { flex-direction: column; align-items: stretch; }
@@ -2259,9 +2289,24 @@ const introOn = document.documentElement.classList.contains('intro-on');
 const startHero    = () => {
   if (document.body.classList.contains('page-loaded')) return;
   document.body.classList.add('page-loaded');
+  setTimeout(presentName, 900);   // once the name has risen in (and the intro bird has flown off)
   setTimeout(() => document.querySelectorAll('#hero [data-target]').forEach(countUp), 650);
 };
 const unlockScroll = () => { document.documentElement.style.overflow = ''; };
+
+// The name's gold sheen: one sweep (with the underline drawing beneath it), then a soft glow.
+// Reduced motion goes straight to the settled state.
+const heroName = document.querySelector('.hero-name');
+function presentName() {
+  if (!heroName || heroName.classList.contains('is-settled')) return;
+  if (reduceMotion) { heroName.classList.add('is-settled'); return; }
+  heroName.addEventListener('animationend', function done(e) {
+    if (e.target !== heroName) return;
+    heroName.removeEventListener('animationend', done);
+    heroName.classList.replace('is-shining', 'is-settled');
+  });
+  heroName.classList.add('is-shining');
+}
 
 document.documentElement.style.overflow = 'hidden';
 if (!introOn) {
