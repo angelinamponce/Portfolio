@@ -1513,14 +1513,14 @@
       display: block;
       position: fixed; inset: 0; z-index: 9980; /* under the grain layer so texture matches */
       overflow: hidden;
-      /* CSS-only failsafe: if the script never runs, get out of the way after 5s */
-      animation: introFailsafe 0.5s ease 5s forwards;
+      /* CSS-only failsafe: if the script never runs, get out of the way after 6.5s */
+      animation: introFailsafe 0.5s ease 6.5s forwards;
     }
     @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
     .intro-panel {
       position: absolute; inset: 0;
       background: var(--forest);
-      will-change: transform;
+      will-change: opacity;
     }
     .intro-panel::before, .intro-panel::after { content: ''; position: absolute; inset: 0; }
     .intro-panel::before {
@@ -1534,9 +1534,6 @@
         linear-gradient(90deg, rgba(78,128,96,0.07) 1px, transparent 1px);
       background-size: 60px 60px;
     }
-    /* Split follows the hero's dark/cream diagonal (hero-left is 55% wide; its wedge is 80px with a 60% top inset) */
-    .intro-panel-l { clip-path: polygon(0 0, calc(55% - 31px) 0, calc(55% - 79px) 100%, 0 100%); }
-    .intro-panel-r { clip-path: polygon(calc(55% - 33px) 0, 100% 0, 100% 100%, calc(55% - 81px) 100%); }
 
     .intro-stage {
       position: absolute; inset: 0;
@@ -1578,14 +1575,10 @@
       position: absolute; left: 0; top: 0;
       color: #cbe7d3;
       opacity: 0;
-      will-change: transform, opacity;
+      transform-origin: 50% 50%;
+      will-change: transform, opacity, filter;
     }
-    .intro-bird svg { display: block; width: 100%; height: 100%; transform-origin: 55% 45%; }
-    .intro-bird.flying svg { animation: wingFlutter 0.14s ease-in-out infinite alternate; }
-    @keyframes wingFlutter {
-      from { transform: scaleY(1) skewX(0deg); }
-      to   { transform: scaleY(0.88) skewX(-5deg); }
-    }
+    .intro-bird svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .intro-skip-btn {
       position: absolute; right: 24px; bottom: 22px;
       background: none; border: 0; cursor: pointer;
@@ -1645,8 +1638,7 @@
 </svg>
 
 <div id="intro">
-  <div class="intro-panel intro-panel-l"></div>
-  <div class="intro-panel intro-panel-r"></div>
+  <div class="intro-panel"></div>
   <svg class="intro-chart" aria-hidden="true"></svg>
   <div class="intro-stage" aria-hidden="true">
     <div class="intro-copy">
@@ -1654,7 +1646,37 @@
       <p class="intro-tag">Bridging finance and technology</p>
     </div>
   </div>
-  <div class="intro-bird" aria-hidden="true"><svg><use href="#bird"/></svg></div>
+  <!-- Intro-only bird: the shared #bird art drawn three times, back to front: far wing, body, near wing.
+       The near wing is split from the body at the shoulder (960,580) and rotates around it; its clip includes a disc
+       of solid art at the pivot so the joint never opens, and the body's cut leans 3 units into the wing base below
+       the top notch so the pieces overlap instead of leaving a seam. A small static fillet behind the near wing fills
+       the notch that opens at the shoulder on the downstroke; at rest it sits entirely inside solid art. The far wing is
+       the same wing at 85%, in a darker tint, with its shoulder tucked under the neck stroke (985,552) so its cut end
+       stays hidden behind the body. -->
+  <div class="intro-bird" aria-hidden="true">
+    <svg viewBox="296 146 1097 1210">
+      <defs>
+        <clipPath id="introWingClip" clipPathUnits="userSpaceOnUse">
+          <polygon points="296,146 954,146 954,543 939,586 928,610 882,675 820,762 750,850 296,860"/>
+          <circle cx="960" cy="580" r="18"/>
+        </clipPath>
+        <clipPath id="introFarClip" clipPathUnits="userSpaceOnUse">
+          <polygon points="296,146 954,146 954,543 939,586 928,610 882,675 820,762 750,850 296,860"/>
+        </clipPath>
+        <clipPath id="introBodyClip" clipPathUnits="userSpaceOnUse">
+          <polygon points="954,146 1393,146 1393,1356 296,1356 296,860 750,850 820,762 882,675 925,610 936,586 954,543"/>
+        </clipPath>
+      </defs>
+      <g transform="translate(985 552) scale(.85)" style="color:#8ea294"><g class="intro-wing-far"><g transform="translate(-960 -580)" clip-path="url(#introFarClip)">
+        <use href="#bird" x="296" y="146" width="1097" height="1210"/>
+      </g></g></g>
+      <g clip-path="url(#introBodyClip)"><use href="#bird" x="296" y="146" width="1097" height="1210"/></g>
+      <path d="M956,545 Q945,546 936,557 L937,572 L943,579 L953,582 L959,560 Z" fill="currentColor"/>
+      <g transform="translate(960 580)"><g class="intro-wing"><g transform="translate(-960 -580)" clip-path="url(#introWingClip)">
+        <use href="#bird" x="296" y="146" width="1097" height="1210"/>
+      </g></g></g>
+    </svg>
+  </div>
   <button type="button" class="intro-skip-btn" id="introSkip">Skip intro →</button>
 </div>
 
@@ -2264,8 +2286,10 @@ function runIntro() {
   const chars  = [...intro.querySelectorAll('.intro-ch')];
   const line   = intro.querySelector('.intro-line');
   const bird   = intro.querySelector('.intro-bird');
+  const wing   = intro.querySelector('.intro-wing');
+  const farWing = intro.querySelector('.intro-wing-far');
   const skip   = document.getElementById('introSkip');
-  const panels = [intro.querySelector('.intro-panel-l'), intro.querySelector('.intro-panel-r')];
+  const panel  = intro.querySelector('.intro-panel');
   const timers = [];
   const later  = (fn, ms) => timers.push(setTimeout(fn, ms));
   let done = false;
@@ -2275,6 +2299,7 @@ function runIntro() {
     done = true;
     timers.forEach(clearTimeout);
     window.removeEventListener('keydown', onKey);
+    bird.style.willChange = 'auto';
     startHero();
     unlockScroll();
     const remove = () => intro.remove();
@@ -2286,7 +2311,7 @@ function runIntro() {
   const onKey = () => finish(350);
   window.addEventListener('keydown', onKey);
   skip.addEventListener('click', () => finish(350));
-  later(() => finish(500), 5000); // hard cap, whatever happens
+  later(() => finish(500), 6500); // hard cap, whatever happens
 
   // Warm the hero's fonts during the intro; start once the display face is ready (or after 700ms regardless).
   const fontsReady = document.fonts
@@ -2310,8 +2335,7 @@ function runIntro() {
     const vw = window.innerWidth, vh = window.innerHeight;
     const easeOut = 'cubic-bezier(.22,1,.36,1)';
     const SVGNS = 'http://www.w3.org/2000/svg';
-    const NAME_LINE_AT = 900, TAG_AT = 1000, CHART_AT = 1500, CHART_MS = 1400,
-          LIFT_MS = 650, REVEAL_AT = CHART_AT + CHART_MS + 150, REVEAL_MS = 850;
+    const NAME_LINE_AT = 900, TAG_AT = 1000, CHART_AT = 1500, CHART_MS = 1400;
 
     // 1. Name: letters rise in one at a time, the gold rule draws, then the one-liner
     chars.forEach((c, i) => c.animate(
@@ -2381,8 +2405,20 @@ function runIntro() {
     const inOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     place(pose(0));
 
+    // Wing flap: each iteration is one stroke (raised → down), so a full flap is two strokes.
+    // Positive rotation lifts the wing in this art; the far wing trails by 60ms; the body bobs up on the downstroke.
+    const FLAP_MS = 280, FLY_FLAP_MS = 200;
+    let flaps = [];
+    const flap = () => {
+      const o = { duration: FLAP_MS / 2, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' };
+      const stroke = [{ transform: 'rotate(18deg)' }, { transform: 'rotate(-22deg)' }];
+      flaps = [wing.animate(stroke, o),
+               farWing.animate(stroke, { ...o, delay: 60, fill: 'backwards' }),
+               bird.firstElementChild.animate([{ transform: 'translateY(1.25%)' }, { transform: 'translateY(-1.25%)' }], o)];
+    };
+
     later(() => {
-      bird.classList.add('flying');
+      flap();
       bird.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, fill: 'forwards' });
       const t0 = performance.now();
       const tick = now => {
@@ -2393,41 +2429,119 @@ function runIntro() {
         place(q);
         revealRect.setAttribute('width', Math.max(0, q.x + bw / 2 - x0));
         if (p < 1) requestAnimationFrame(tick);
-        else liftOff(q);
+        else finale(q);
       };
       requestAnimationFrame(tick);
     }, CHART_AT);
 
-    // 4. At the peak: a gold ping, and the bird lifts off up and to the right
+    // 4. Finale, one 2s timeline: at the peak the bird lifts off up and to the right (leg 1), wheels around near the
+    //    right edge (turn), then sweeps back across the screen, growing as it passes the viewer (leg 2). Each piece hands
+    //    its speed to the next, so the motion never stops and starts. The overlay is drawn aside in the bird's wake.
+    const LEG1_MS = 700, TURN_MS = 400, LEG2_MS = 900, FIN_MS = LEG1_MS + TURN_MS + LEG2_MS;
     const bez = (a, b, c, e, t) => { const u = 1 - t; return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*e; };
-    function liftOff(q) {
+    const cubic = (x1, y1, x2, y2) => x => {        // CSS cubic-bezier() timing, solved for x by bisection
+      let lo = 0, hi = 1, s = x;
+      for (let i = 0; i < 30; i++) { s = (lo + hi) / 2; if (bez(0, x1, x2, 1, s) < x) lo = s; else hi = s; }
+      return bez(0, y1, y2, 1, s);
+    };
+    const smooth  = t => t * t * (3 - 2 * t);
+    const hermite = (m0, m1) => t => (t*t*t - 2*t*t + t) * m0 + (3*t*t - 2*t*t*t) + (t*t*t - t*t) * m1;  // 0→1, end slopes m0/m1
+    const curve = P => {                             // cubic Bezier, walked by arc length
+      const pt = t => [bez(P[0][0], P[1][0], P[2][0], P[3][0], t), bez(P[0][1], P[1][1], P[2][1], P[3][1], t)];
+      const n = 100, ls = [0];
+      for (let i = 1, a = pt(0); i <= n; i++) { const b = pt(i / n); ls.push(ls[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1])); a = b; }
+      return { len: ls[n], at: f => {
+        const d = f * ls[n]; let i = 1;
+        while (i < n && ls[i] < d) i++;
+        return pt((i - 1 + (d - ls[i - 1]) / ((ls[i] - ls[i - 1]) || 1)) / n);
+      } };
+    };
+    function finale(q) {
       chart.querySelector('.intro-peak').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' });
       chart.querySelector('.intro-peak-ring').animate(
         [{ opacity: 0.9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(5.5)' }], { duration: 700, easing: 'ease-out', fill: 'forwards' });
-      const P = [[q.x, q.y],
-                 [q.x + Math.cos(q.ang) * vw * 0.06, q.y + Math.sin(q.ang) * vw * 0.06],
-                 [q.x + vw * 0.08, q.y - vh * 0.3],
-                 [vw + bw, -bh - 40]];
-      const frames = Array.from({ length: 29 }, (_, i) => {
-        const t = Math.pow(i / 28, 2.2);
-        return { offset: i / 28, transform: `translate(${bez(P[0][0], P[1][0], P[2][0], P[3][0], t).toFixed(1)}px, ${bez(P[0][1], P[1][1], P[2][1], P[3][1], t).toFixed(1)}px) rotate(${(q.rot + (-32 - q.rot) * t).toFixed(2)}deg)` };
-      });
-      bird.animate(frames, { duration: LIFT_MS, fill: 'forwards' });
-    }
+      flaps.forEach(a => a.updatePlaybackRate(FLAP_MS / FLY_FLAP_MS));
 
-    // 5. Reveal: split along the hero's diagonal on desktop, slide up on smaller screens
-    [copy, chart].forEach(el => el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-10px)' }],
-      { duration: 380, delay: REVEAL_AT - 80, easing: 'ease-in', fill: 'forwards' }));
-    skip.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, delay: REVEAL_AT - 100, fill: 'forwards' });
-    const split = { duration: REVEAL_MS, delay: REVEAL_AT, easing: 'cubic-bezier(.76,0,.24,1)', fill: 'forwards' };
-    if (vw > 1024) {
-      panels[0].animate([{ transform: 'none' }, { transform: `translateX(${-Math.ceil(vw * 0.56)}px)` }], split);
-      panels[1].animate([{ transform: 'none' }, { transform: `translateX(${Math.ceil(vw * 0.5 + 90)}px)` }], split);
-    } else {
-      panels.forEach(p => p.animate([{ transform: 'none' }, { transform: 'translateY(-100%)' }], split));
+      // Sizes: about 2.5× by the end of the turn (a little less on phones), about the viewport's height at the exit,
+      // so it reads as the bird passing close rather than filling the screen
+      const s2 = narrow ? 2.1 : 2.5, S = Math.max(s2 * 3, 1.1 * vh / bh);
+      const ext = (s, deg) => { const r = deg * Math.PI / 180;   // half-width of the bird's rotated box at scale s
+        return s * (bw / 2 * Math.abs(Math.cos(r)) + bh / 2 * Math.abs(Math.sin(r))); };
+      // Rotation keys: climbing nose-up, levelling through the turn, then nose slightly down (it faces left by then)
+      const ROT = [[0, q.rot], [LEG1_MS, -14], [LEG1_MS + TURN_MS, -2], [FIN_MS, -5]];
+      const rotAt = t => { let i = 1; while (i < ROT.length - 1 && t > ROT[i][0]) i++;
+        const [ta, ra] = ROT[i - 1], [tb, rb] = ROT[i]; return ra + (rb - ra) * smooth(Math.min(1, (t - ta) / (tb - ta))); };
+
+      // Leg 1 starts along the chart's last slope and ends heading right and a little up. The turn's apex is the
+      // farthest right the bird goes, so it is placed to keep the bird's whole box inside the edge.
+      const C0 = [q.x + bw / 2, q.y + bh / 2];
+      const apexX = Math.min(vw * 0.9, vw - 10 - ext(s2, 14));
+      const room = Math.max(apexX - C0[0], vw * 0.04);
+      const dir1 = [Math.cos(-0.35), Math.sin(-0.35)];
+      const P1 = [C0[0] + room * 0.55, C0[1] - vh * (narrow ? 0.08 : 0.1)];
+      const P2 = [P1[0] - vw * 0.01, P1[1] - vh * 0.07];          // the turn rises 7% of the viewport height
+      const g1 = Math.hypot(P1[0] - C0[0], P1[1] - C0[1]), d = room * 0.45 / 0.75;
+      const leg1 = curve([C0, [C0[0] + Math.cos(q.ang) * g1 * 0.4, C0[1] + Math.sin(q.ang) * g1 * 0.4],
+                          [P1[0] - dir1[0] * g1 * 0.35, P1[1] - dir1[1] * g1 * 0.35], P1]);
+      const turn = curve([P1, [P1[0] + dir1[0] * d, P1[1] + dir1[1] * d], [P2[0] + d, P2[1]], P2]);
+
+      // Speeds (px/ms) at the joins. Leg 1 leaves the line from rest and eases out; the turn hands its speed to leg 2.
+      const v1 = 0.6 * leg1.len / LEG1_MS, v2 = 1.2 * v1;
+      const pos1 = hermite(0, 0.6), posT = hermite(v1 * TURN_MS / turn.len, v2 * TURN_MS / turn.len);
+      // Leg 2 is steered by the bird's trailing (right) edge, which only ever moves left, so the bird can grow
+      // as fast as it likes without swelling back over the page. It finishes just past the left edge.
+      const XR0 = P2[0] + ext(s2, -2), dx = XR0 + 12;
+      const k = Math.min(1, v2 * LEG2_MS / dx);
+      const trail = u => XR0 - dx * (k * u + (1 - k) * u * u * u);
+      const grow = cubic(.5, 0, .8, .35);
+      const drop = vh * 0.12;
+      // Blur peaks at 4px (2px on small screens). It also keeps the browser drawing the bird at its current size each
+      // frame; with no blur at all, Chrome pre-renders the bird at its final huge size and stalls on phones.
+      const blurMax = vw >= 768 ? 4 : 2;
+
+      const N = 240;
+      const frames = Array.from({ length: N + 1 }, (_, i) => {
+        const t = i / N * FIN_MS, rot = rotAt(t);
+        let x, y, s, sx = 1, blur = 0, opacity = 1;
+        if (t <= LEG1_MS + TURN_MS) {
+          s = 1 + (s2 - 1) * smooth(t / (LEG1_MS + TURN_MS));
+          if (t <= LEG1_MS) [x, y] = leg1.at(pos1(t / LEG1_MS));
+          else { const u = (t - LEG1_MS) / TURN_MS; [x, y] = turn.at(posT(u)); sx = 1 - 2 * smooth(u); }
+        } else {
+          const u = (t - LEG1_MS - TURN_MS) / LEG2_MS;
+          sx = -1;
+          s = s2 + (S - s2) * grow(u);
+          x = trail(u) - ext(s, rot);
+          y = P2[1] + drop * u * u;
+          blur = blurMax * u * u;
+          opacity = u <= 0.9 ? 1 : 1 - (u - 0.9) / 0.1;
+        }
+        return {
+          offset: i / N,
+          transform: `translate(${(x - bw / 2).toFixed(1)}px, ${(y - bh / 2).toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${(sx * s).toFixed(4)}, ${s.toFixed(4)})`,
+          filter: `blur(${(blur / s).toFixed(3)}px)`,        // filter runs before the scale, so divide it back out
+          opacity: +opacity.toFixed(3),
+        };
+      });
+      bird.animate(frames, { duration: FIN_MS, fill: 'forwards' });
+
+      // 5. Reveal. The name, one-liner and chart clear as the bird turns. As it sweeps back the hero starts easing in and
+      //    the overlay dissolves into it, finishing before the bird has left.
+      const LEG2_AT = LEG1_MS + TURN_MS;
+      [copy, chart].forEach(el => el.animate([{ opacity: 1 }, { opacity: 0 }],
+        { duration: 350, delay: LEG1_MS, easing: 'ease-in-out', fill: 'forwards' }));
+      panel.animate([{ opacity: 1 }, { opacity: 0 }],
+        { duration: 550, delay: LEG2_AT + LEG2_MS * 0.3, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
+
+      later(() => {                                                // headline, photo and stats ease in under the dissolve
+        startHero();
+        intro.style.pointerEvents = 'none';
+        skip.style.pointerEvents = 'auto';                        // Skip stays clickable until it has faded
+        skip.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' })
+          .finished.then(() => { skip.style.visibility = 'hidden'; }, () => {});
+      }, LEG2_AT + LEG2_MS * 0.25);
+      later(() => finish(0), FIN_MS + 30);
     }
-    later(() => { intro.style.pointerEvents = 'none'; startHero(); }, REVEAL_AT + 200);
-    later(() => finish(0), REVEAL_AT + REVEAL_MS + 50);
   }
 }
 
