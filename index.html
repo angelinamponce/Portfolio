@@ -833,7 +833,7 @@
       position: absolute; top: 0; left: 0; right: 0; height: 1.5px;
       background: linear-gradient(90deg, var(--sage), var(--gold));
       transform: scaleX(0); transform-origin: left; transition: transform 0.45s ease;
-      z-index: 1;
+      z-index: 2; /* stays above the header image */
     }
     .project-card::after {
       content: '';
@@ -875,6 +875,26 @@
     .project-card:hover::after { opacity: 1; }
     .project-card > * { position: relative; z-index: 1; }
     .project-card.hidden { display: none; }
+    /* Header image: the project's screenshot, edge to edge (the card's rounded corners clip it), also used by the modal */
+    .project-shot {
+      /* explicit width (not just negative margins) so Safari sizes the 16:10 box from the full card width */
+      width: calc(100% + 64px); align-self: flex-start;
+      margin: -32px 0 24px -32px; aspect-ratio: 16 / 10;
+      overflow: hidden; background: var(--sage-pale);
+    }
+    .project-shot img {
+      display: block; width: 100%; height: 100%;
+      object-fit: cover; object-position: top;
+      transition: transform 0.6s cubic-bezier(.22,1,.36,1);
+    }
+    .project-shot::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(to top, rgba(14,31,22,0.38) 0%, transparent 42%);
+    }
+    .project-card:hover .project-shot img, .project-card:focus-visible .project-shot img { transform: scale(1.03); }
+    @media (prefers-reduced-motion: reduce) {
+      .project-card:hover .project-shot img, .project-card:focus-visible .project-shot img { transform: none; }
+    }
     .project-icon {
       width: 44px; height: 44px; background: var(--sage-pale);
       border-radius: 9px; display: flex; align-items: center;
@@ -1265,6 +1285,12 @@
     .modal-head .project-icon { margin: 0; flex-shrink: 0; }
     .modal-head h3 { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; color: var(--forest); line-height: 1.1; margin-bottom: 4px; }
     .modal-head .project-meta { margin: 0; }
+    /* Prev/next between projects: the lightbox's arrows (fixed to the screen edges, on the backdrop). They fade in once
+       the modal's opening slide (a transform, which would carry fixed children with it) has finished. */
+    .modal-nav { animation: fadeBackdrop 0.3s ease 0.42s backwards; }
+    .modal-nav[hidden] { display: none; }
+    .modal-count { display: block; margin-top: 8px; color: var(--sage-text); }
+    .modal-inner.swap { animation: photoIn 0.4s cubic-bezier(.22,1,.36,1); }
     .modal-shot {
       border-radius: 12px; overflow: hidden; margin-bottom: 28px;
       background: var(--sage-pale);
@@ -1408,9 +1434,10 @@
     [data-theme="dark"] .side-dot::after { background: var(--d-surface-2); color: var(--cream); border-color: var(--d-line); }
     [data-theme="dark"] .modal { background: var(--d-surface); color: var(--d-text); }
     [data-theme="dark"] .modal-head h3 { color: var(--cream); }
+    [data-theme="dark"] .modal-count { color: rgba(140,189,158,0.7); }
     [data-theme="dark"] .story-step p { color: var(--d-muted); }
     [data-theme="dark"] .modal-close { background: rgba(140,189,158,0.12); color: var(--cream); }
-    [data-theme="dark"] .modal-shot { background: var(--d-surface-2); }
+    [data-theme="dark"] .modal-shot, [data-theme="dark"] .project-shot { background: var(--d-surface-2); }
     [data-theme="dark"] .modal-link { background: var(--sage); }
     [data-theme="dark"] .modal-links { border-top-color: var(--d-line); }
     .theme-anim, .theme-anim *, .theme-anim *::before, .theme-anim *::after {
@@ -1509,6 +1536,8 @@
       .lightbox-prev, .lightbox-next { top: auto; bottom: 24px; transform: none; }
       .lightbox-prev { left: calc(50% - 56px); }
       .lightbox-next { right: calc(50% - 56px); }
+      /* leave room under the project modal for the arrows at the bottom of the screen */
+      .modal { margin: 16px auto 90px; max-height: calc(100vh - 106px); max-height: calc(100dvh - 106px); }
     }
     @media (max-width: 480px) {
       .logo-sub { display: none; }
@@ -1600,7 +1629,9 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       overflow: visible; pointer-events: none;
     }
-    .intro-chart-line { filter: drop-shadow(0 0 6px rgba(205,178,126,0.35)); }
+    .intro-chart-line { filter: drop-shadow(0 0 5px rgba(226,201,146,0.3)); }
+    .intro-breakout { filter: drop-shadow(0 0 6px rgba(239,220,176,0.45)); }
+    .intro-peak { filter: drop-shadow(0 0 4px rgba(239,220,176,0.9)); }
     .intro-bird {
       position: absolute; left: 0; top: 0;
       color: #cbe7d3;
@@ -1629,10 +1660,11 @@
     <path fill="currentColor" fill-rule="evenodd" transform="translate(0 1530) scale(.1 -.1)" d="M3480 13694 c-42 -29 -44 -34 -64 -163 -74 -465 -86 -960 -30 -1301 13 -80 56 -297 65 -325 5 -16 21 -70 35 -120 133 -451 389 -875 748 -1243 535 -548 1198 -925 2301 -1309 81 -29 666 -229 845 -290 55 -18 287 -101 395 -141 163 -60 374 -145 508 -204 76 -33 141 -58 144 -54 4 3 4 7 2 9 -2 1 -31 23 -64 48 -343 262 -766 486 -1672 885 -1060 466 -1480 695 -1913 1041 -592 473 -932 1078 -1049 1868 -6 39 -15 99 -21 135 -5 35 -6 68 -2 72 5 5 58 -51 119 -125 382 -459 763 -769 1358 -1104 97 -54 462 -235 570 -282 55 -24 118 -51 140 -61 22 -10 76 -32 120 -49 44 -17 88 -36 97 -41 10 -6 22 -10 28 -10 6 0 29 -9 53 -19 136 -62 686 -251 1427 -491 539 -174 704 -235 949 -352 322 -152 604 -353 780 -557 50 -57 50 -57 12 -162 -413 -1130 -1079 -2159 -1980 -3059 -364 -364 -535 -511 -1361 -1175 -442 -356 -917 -751 -1080 -900 -25 -23 -101 -93 -170 -156 -316 -289 -728 -727 -934 -994 -264 -342 -469 -649 -653 -980 -108 -194 -106 -189 -84 -209 16 -15 25 -7 133 122 605 719 922 1049 1363 1418 512 429 1059 805 1870 1286 208 123 271 160 890 510 724 411 720 408 915 526 746 450 1177 823 1490 1289 502 749 533 1641 84 2419 -19 34 -6 83 120 414 289 766 614 1124 1166 1285 537 156 1035 20 1517 -414 90 -81 91 -84 40 -120 -160 -110 -396 -406 -515 -646 -103 -205 -207 -511 -255 -745 -2 -14 -14 -70 -25 -125 -18 -85 -45 -249 -93 -545 -83 -524 -119 -711 -179 -945 -225 -870 -658 -1476 -1415 -1982 -594 -396 -1305 -685 -2355 -958 -140 -37 -298 -78 -350 -91 -415 -109 -881 -263 -1310 -431 -538 -211 -1059 -495 -1271 -693 -16 -15 -39 -53 -39 -64 0 -14 25 -3 63 28 304 244 1191 550 2242 771 121 25 326 69 455 96 129 28 303 64 385 80 382 76 584 132 975 272 804 287 1520 696 1915 1092 367 369 638 794 849 1335 47 120 119 331 146 430 5 19 18 67 29 105 17 60 34 136 81 350 11 53 26 135 39 218 6 37 16 95 21 130 6 34 19 135 30 225 77 616 196 989 440 1382 131 210 239 327 422 459 177 128 464 279 716 376 67 26 122 50 122 53 0 3 -34 2 -77 -1 -42 -3 -130 0 -197 8 -289 33 -486 116 -892 377 -115 74 -240 152 -279 174 -498 282 -1118 293 -1645 29 -321 -160 -576 -403 -780 -740 -39 -66 -135 -248 -212 -405 -179 -365 -181 -370 -193 -370 -6 0 -39 26 -75 58 -292 263 -712 501 -1180 669 -52 19 -120 43 -150 54 -30 11 -273 92 -540 181 -520 172 -775 258 -855 287 -27 11 -75 28 -105 39 -224 82 -499 189 -595 232 -22 10 -57 25 -78 34 -231 95 -646 315 -877 464 -684 441 -1103 911 -1462 1640 -55 111 -101 202 -102 202 0 -1 -17 -12 -36 -26z m6184 -4641 c16 -32 66 -180 89 -263 82 -294 88 -636 17 -929 -183 -750 -861 -1429 -1985 -1988 -266 -132 -462 -220 -470 -212 -2 3 87 97 198 210 929 942 1523 1791 1959 2799 65 150 148 360 148 375 0 10 19 35 27 35 1 0 9 -12 17 -27z M11463 10922 c-141 -58 -202 -235 -128 -371 132 -241 495 -148 495 127 0 192 -188 317 -367 244z M3754 10016 c20 -129 120 -355 231 -520 432 -645 1254 -1153 2145 -1324 392 -76 995 -81 1340 -12 25 4 74 14 110 21 61 11 103 29 70 29 -63 0 -674 85 -905 125 -1158 203 -1904 535 -2301 1025 -80 100 -107 140 -100 147 6 6 399 -26 576 -47 41 -5 129 -14 195 -20 66 -6 143 -13 170 -16 84 -9 45 10 -261 132 -159 63 -298 119 -309 124 -11 5 -146 59 -300 120 -154 62 -293 118 -310 125 -55 24 -341 135 -349 135 -5 0 -5 -20 -2 -44z M3870 8701 c0 -108 144 -384 291 -556 571 -672 1552 -1008 2488 -854 203 33 200 37 -44 64 -358 40 -854 133 -1095 207 -474 144 -766 290 -987 493 -79 72 -203 221 -203 243 0 14 45 13 240 -8 47 -5 141 -14 210 -20 69 -7 154 -15 190 -20 36 -4 70 -5 77 -1 10 5 -1138 472 -1159 471 -5 0 -8 -9 -8 -19z"/>
   </symbol>
   <!-- Lucide-style line icons (24×24, stroke-based) -->
-  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></symbol>
   <symbol id="i-trending-up" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></symbol>
   <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
-  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></symbol>
+  <symbol id="i-footprints" viewBox="0 0 24 24"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></symbol>
+  <symbol id="i-book-open" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
   <symbol id="i-vote" viewBox="0 0 24 24"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/></symbol>
   <symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol>
   <symbol id="i-bar-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
@@ -1960,16 +1992,18 @@
       <button type="button" class="filter-note-clear" id="filterNoteClear">Clear <svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <div class="projects-grid">
-      <div class="project-card reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" data-shot="Assets/img/prosperity.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Prosperity: view project details">
-        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-wallet"/></svg></div>
+      <div class="project-card reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" data-github="https://github.com/angelinamponce/Prosperity" data-demo="https://angelinamponce.github.io/Prosperity/" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Prosperity: view project details">
+        <div class="project-shot"><img src="Assets/img/prosperity.jpg" width="1600" height="921" loading="lazy" decoding="async" alt="Screenshot of Prosperity"></div>
+        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-sprout"/></svg></div>
         <h3>Prosperity</h3>
         <p class="project-meta">HackMIT 2025 · Financial Literacy Platform</p>
         <p>Full-stack financial planning platform built in 24 hours at MIT. Analyzes 20+ personal finance data points with real-time modeling, personalized insights, and 5+ interactive visualizations including cash flow waterfalls and compound growth charts.</p>
         <div class="project-tags"><span class="tag">Python</span><span class="tag">JavaScript</span><span class="tag">React</span><span class="tag">Financial APIs</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-shot="Assets/img/promptforward.png" data-github="https://github.com/some-kim/PromptForward" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
-        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></div>
+      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-github="https://github.com/some-kim/PromptForward" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
+        <div class="project-shot"><img src="Assets/img/promptforward.png" width="1314" height="874" loading="lazy" decoding="async" alt="Screenshot of PromptForward"></div>
+        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-book-open"/></svg></div>
         <h3>PromptForward</h3>
         <p class="project-meta">HackMIT 2026 · AI Literacy Platform</p>
         <p>AI literacy platform that teaches prompt engineering through two modes. Training Mode helps professionals and college students build real prompting skill. Game Mode is a 1v1 party game where players race to recreate images with one prompt each. Every prompt is scored on efficiency, rewarding clear prompts with fewer tokens and fewer wasted generations.</p>
@@ -1977,15 +2011,8 @@
         <div class="project-tags"><span class="tag">AI Literacy</span><span class="tag">Prompt Engineering</span><span class="tag">Gamification</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-2" data-cat="finance research" data-id="equity" data-shot="Assets/img/equity-lnth.png" data-shot-alt="Cover slide of the Lantheus (NASDAQ: LNTH) equity research report" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
-        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
-        <h3>Equity Research Analysis</h3>
-        <p class="project-meta">Barclays Equity Research Case Competition · Vestal, NY · Jan–Apr 2026</p>
-        <p>Competitor. Spearheaded equity research coverage for Lantheus Holdings (NASDAQ: LNTH) with an evidence-backed BUY recommendation. Built detailed analytical models incorporating WACC calculations (9.8%), revenue projections through 2028, and beta analysis (0.72), resulting in a $130.00 price target, 25.0% upside from $104.00 current trading.</p>
-        <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">WACC</span><span class="tag">Equity Research</span></div>
-        <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
-      </div>
-      <div class="project-card reveal reveal-delay-3" data-cat="research tech" data-id="polyhedge" data-shot="Assets/img/polyhedge.jpg" data-github="https://github.com/janesanjana4/PolyHedge" data-demo="https://devpost.com/software/polyhedge-alpha-engine-for-prediction-markets" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
+      <div class="project-card reveal reveal-delay-2" data-cat="research tech" data-id="polyhedge" data-github="https://github.com/janesanjana4/PolyHedge" data-demo="https://devpost.com/software/polyhedge-alpha-engine-for-prediction-markets" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
+        <div class="project-shot"><img src="Assets/img/polyhedge.jpg" width="1600" height="1035" loading="lazy" decoding="async" alt="Screenshot of PolyHedge"></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></div>
         <h3>PolyHedge</h3>
         <p class="project-meta">YHack 2026 · Prediction Markets & AI</p>
@@ -1999,15 +2026,26 @@
         </div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" data-shot="Assets/img/nike.jpg" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Nike Digital Transformation: view project details">
-        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-compass"/></svg></div>
+      <div class="project-card reveal reveal-delay-3" data-cat="finance research" data-id="equity" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
+        <div class="project-shot"><img src="Assets/img/equity-lnth.png" width="1600" height="898" loading="lazy" decoding="async" alt="Cover slide of the Lantheus (NASDAQ: LNTH) equity research report"></div>
+        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
+        <h3>Equity Research Analysis</h3>
+        <p class="project-meta">Barclays Equity Research Case Competition · Vestal, NY · Jan–Apr 2026</p>
+        <p>Competitor. Spearheaded equity research coverage for Lantheus Holdings (NASDAQ: LNTH) with an evidence-backed BUY recommendation. Built detailed analytical models incorporating WACC calculations (9.8%), revenue projections through 2028, and beta analysis (0.72), resulting in a $130.00 price target, 25.0% upside from $104.00 current trading.</p>
+        <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">WACC</span><span class="tag">Equity Research</span></div>
+        <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+      </div>
+      <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Nike Digital Transformation: view project details">
+        <div class="project-shot"><img src="Assets/img/nike.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="Screenshot of Nike Digital Transformation"></div>
+        <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-footprints"/></svg></div>
         <h3>Nike Digital Transformation</h3>
         <p class="project-meta">EY TechX Case Competition · Digital Strategy</p>
         <p>Led a three-person team in building a digital transformation strategy for Nike, whose stock fell from ~$170 to ~$90–100 as direct sales declined 14%. Diagnosed a fragmented digital ecosystem, benchmarked Nike against Adidas, Lululemon, and Apple, and proposed an AI-powered 'Nike Hub' with a three-point plan, an 18-month rollout, and a risk and change-management framework.</p>
         <div class="project-tags"><span class="tag">Tech Consulting</span><span class="tag">Digital Strategy</span><span class="tag">Competitive Analysis</span><span class="tag">AI Strategy</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" data-shot="Assets/img/edikted.png" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Brand Partnership Campaign: view project details">
+      <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Brand Partnership Campaign: view project details">
+        <div class="project-shot"><img src="Assets/img/edikted.png" width="773" height="786" loading="lazy" decoding="async" alt="Screenshot of Brand Partnership Campaign"></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-camera"/></svg></div>
         <h3>Brand Partnership Campaign</h3>
         <p class="project-meta">Edikted · Social Media & Design</p>
@@ -2017,9 +2055,9 @@
       </div>
     </div>
 
-    <!-- Project case studies. Links and screenshots: add data-github / data-demo / data-shot (+ optional data-shot-alt) on the
-         matching .project-card (e.g. data-github="https://github.com/…"). Missing links are simply left out; a missing
-         screenshot shows an "add" placeholder. -->
+    <!-- Project case studies. Links: add data-github / data-demo on the matching .project-card
+         (e.g. data-github="https://github.com/…"); missing links are simply left out. Screenshot: the card's .project-shot
+         image (its src and alt) is reused in the modal; a card without one shows an "add" placeholder there. -->
     <template id="story-prosperity">
       <section class="story-step"><h4>Problem</h4><p>Financial instability affects people across all demographics, and many people struggle with money management without realizing their spending patterns. Quality financial education is often accessible only to those who can afford expensive professional services. We believed financial literacy shouldn't be a privilege but a right, and wanted to break down those barriers for communities that have been historically underserved.</p></section>
       <section class="story-step"><h4>What I did</h4><p>Full-stack financial planning platform built in 24 hours at MIT.</p></section>
@@ -2253,6 +2291,7 @@
       <div>
         <h3 id="modalTitle"></h3>
         <p class="project-meta" id="modalMeta"></p>
+        <span class="lightbox-count modal-count" id="modalCount"></span>
       </div>
     </div>
     <div class="modal-shot" id="modalShot"></div>
@@ -2263,6 +2302,8 @@
     </div>
     <div class="modal-links" id="modalLinks"></div>
   </div>
+  <button type="button" class="lightbox-btn lightbox-prev modal-nav" id="modalPrev" aria-label="Previous project"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+  <button type="button" class="lightbox-btn lightbox-next modal-nav" id="modalNext" aria-label="Next project"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
 </dialog>
 
 <dialog class="lightbox" id="lightbox" aria-label="Conference photo">
@@ -2368,12 +2409,83 @@ function runIntro() {
     try { reduceMotion ? playReduced() : playFull(); } catch (e) { finish(300); }
   });
 
+  // Chart: an intraday-style price line below the copy. It trends up with small irregular peaks and dips, consolidates,
+  // then breaks out: the last ~20% climbs steeply to a clear new high, traced by a brighter, thicker stroke. Vertices
+  // sit on the background grid's half-steps and the range spans whole grid rows, so the grid reads as the chart's
+  // gridlines. A fixed seed draws the same line on every visit.
+  function buildChart(vw, vh) {
+    const narrow = vw < 640, portrait = vh > vw;
+    const GRID = 60, STEP = narrow ? 15 : 30;
+    const copyRect = copy.getBoundingClientRect();
+    const top = Math.ceil((copyRect.bottom + Math.max(36, vh * (portrait ? 0.12 : 0.07))) / GRID) * GRID;
+    const bottom = Math.max(top + 2 * GRID, Math.round(vh * (portrait ? 0.8 : 0.9) / GRID) * GRID);
+    const x0 = -STEP, x1 = Math.round(vw * (narrow ? 0.8 : 0.84) / STEP) * STEP;
+    const n = (x1 - x0) / STEP, nb = Math.round(n * 0.8), trendTo = Math.round(nb * 0.72);
+    let seed = 20261010;
+    const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+    const amp = narrow ? 0.2 : 0.17;
+    const raw = [0];
+    for (let i = 1; i <= nb; i++)                 // moderate climb, then sideways consolidation into the breakout
+      raw.push(raw[i - 1] + (i <= trendTo ? 0.55 / trendTo + (rnd() - 0.46) * amp : (rnd() - 0.5) * amp * 0.8));
+    const steps = Array.from({ length: n - nb }, () => 0.7 + 0.6 * rnd());
+    const climb = Math.max(...raw) + 0.8 - raw[nb], total = steps.reduce((a, b) => a + b);
+    steps.forEach(st => raw.push(raw[raw.length - 1] + climb * st / total));
+    const lo = Math.min(...raw), hi = raw[n];
+    const pts = raw.map((v, i) => [x0 + i * STEP, bottom - (bottom - top) * (v - lo) / (hi - lo)]);
+    // A few faint data points on the clearest peaks before the breakout
+    const marks = (narrow ? [[0.3, 0.5], [0.52, 0.74]] : [[0.2, 0.38], [0.4, 0.58], [0.58, 0.74]]).map(([a, b]) => {
+      let best = -1;
+      for (let i = Math.ceil(n * a); i <= Math.floor(n * b); i++)
+        if (raw[i] > raw[i - 1] && raw[i] > raw[i + 1] && (best < 0 || raw[i] > raw[best])) best = i;
+      return best;
+    }).filter(i => i > 0).map(i => pts[i]);
+    // Sharp-ish corners: Catmull-Rom with a very short handle takes only the edge off each vertex
+    const k = 0.06, f = p => p.map(c => c.toFixed(1)).join(',');
+    const segs = pts.slice(0, -1).map((p1, i) => {
+      const p0 = pts[i - 1] || p1, p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      return ` C${f([p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k])} ${f([p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k])} ${f(p2)}`;
+    });
+    const d = `M${f(pts[0])}${segs.join('')}`, dBreak = `M${f(pts[nb])}${segs.slice(nb).join('')}`;
+    const peak = pts[n];
+    chart.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
+    chart.innerHTML = `
+      <defs>
+        <linearGradient id="introStroke" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${x1}" y2="0">
+          <stop offset="0" stop-color="#8f6e40" stop-opacity="0.75"/><stop offset="0.6" stop-color="#c4a46a" stop-opacity="0.9"/>
+          <stop offset="1" stop-color="#efdcb0"/>
+        </linearGradient>
+        <linearGradient id="introBreak" gradientUnits="userSpaceOnUse" x1="${pts[nb][0]}" y1="0" x2="${peak[0]}" y2="0">
+          <stop offset="0" stop-color="#efdcb0" stop-opacity="0"/><stop offset="0.35" stop-color="#efdcb0" stop-opacity="0.85"/>
+          <stop offset="1" stop-color="#fbf0d6"/>
+        </linearGradient>
+        <linearGradient id="introArea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d9bf8a" stop-opacity="0.12"/><stop offset="1" stop-color="#d9bf8a" stop-opacity="0"/>
+        </linearGradient>
+        <clipPath id="introReveal"><rect x="${x0}" y="0" width="0" height="${vh}"/></clipPath>
+      </defs>
+      <path d="${d} L${peak[0].toFixed(1)},${vh} L${x0},${vh} Z" fill="url(#introArea)" clip-path="url(#introReveal)"/>
+      <path class="intro-chart-line" d="${d}" fill="none" stroke="url(#introStroke)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="intro-breakout" d="${dBreak}" fill="none" stroke="url(#introBreak)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${marks.map(m => `<circle class="intro-mark" cx="${m[0]}" cy="${m[1].toFixed(1)}" r="2" fill="#e6cf9c" opacity="0"/>`).join('')}
+      <circle class="intro-peak-ring" cx="${peak[0]}" cy="${peak[1]}" r="4" fill="none" stroke="#efdcb0" vector-effect="non-scaling-stroke" opacity="0" style="transform-box: fill-box; transform-origin: center"/>
+      <circle class="intro-peak" cx="${peak[0]}" cy="${peak[1]}" r="3.5" fill="#efdcb0" opacity="0"/>`;
+    const path = chart.querySelector('.intro-chart-line'), brk = chart.querySelector('.intro-breakout');
+    const len = path.getTotalLength(), brkLen = brk.getTotalLength();
+    return { narrow, path, len, lenA: len - brkLen, brk, brkLen, x0,
+      revealRect: chart.querySelector('#introReveal rect'), markDots: [...chart.querySelectorAll('.intro-mark')] };
+  }
+
   function playReduced() {
     chars.forEach(c => { c.style.opacity = 1; });
     line.style.transform = 'none';
     tag.style.opacity = 1;
-    copy.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, easing: 'ease-out', fill: 'backwards' });
-    later(() => finish(400), 1100);
+    // The finished chart, breakout included: no drawing, no bird, no flight
+    const { revealRect, markDots } = buildChart(window.innerWidth, window.innerHeight);
+    revealRect.setAttribute('width', window.innerWidth + 60);
+    markDots.forEach(m => m.setAttribute('opacity', 0.55));
+    chart.querySelector('.intro-peak').setAttribute('opacity', 1);
+    [copy, chart].forEach(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, easing: 'ease-out', fill: 'backwards' }));
+    later(() => finish(400), 1800);
   }
 
   function playFull() {
@@ -2391,47 +2503,12 @@ function runIntro() {
     tag.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
       { duration: 600, delay: TAG_AT, easing: easeOut, fill: 'both' });
 
-    // 2. Chart: a rising line with small dips, laid out in the space below the copy.
-    //    Values are hand-tuned (0 = start, 1 = peak) so it reads like a real growth chart.
-    const narrow = vw < 640, portrait = vh > vw;
-    const values = narrow
-      ? [0, 0.1, 0.07, 0.27, 0.23, 0.46, 0.42, 0.68, 0.64, 1]
-      : [0, 0.09, 0.04, 0.17, 0.13, 0.28, 0.36, 0.3, 0.45, 0.56, 0.5, 0.69, 0.78, 0.72, 0.88, 1];
-    const copyRect = copy.getBoundingClientRect();
-    const top = copyRect.bottom + Math.max(36, vh * (portrait ? 0.12 : 0.07));
-    const bottom = vh * (portrait ? 0.8 : 0.9);
-    const x0 = -12, x1 = vw * (narrow ? 0.8 : 0.84);
-    const pts = values.map((v, i) => [x0 + (x1 - x0) * i / (values.length - 1), bottom - (bottom - top) * v]);
-    // Lightly rounded corners (Catmull-Rom with a short handle) so the bird's ride stays smooth
-    const k = 0.14;
-    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
-      const c1 = [p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k];
-      const c2 = [p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k];
-      d += ` C${c1.map(n => n.toFixed(1))} ${c2.map(n => n.toFixed(1))} ${p2.map(n => n.toFixed(1))}`;
-    }
-    const peak = pts[pts.length - 1];
-    chart.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
-    chart.innerHTML = `
-      <defs>
-        <linearGradient id="introStroke" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${vw}" y2="0">
-          <stop offset="0" stop-color="#b49660" stop-opacity="0.7"/><stop offset="1" stop-color="#cdb27e"/>
-        </linearGradient>
-        <linearGradient id="introArea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#cdb27e" stop-opacity="0.09"/><stop offset="1" stop-color="#cdb27e" stop-opacity="0"/>
-        </linearGradient>
-        <clipPath id="introReveal"><rect x="${x0}" y="0" width="0" height="${vh}"/></clipPath>
-      </defs>
-      <path d="${d} L${peak[0].toFixed(1)},${vh} L${x0},${vh} Z" fill="url(#introArea)" clip-path="url(#introReveal)"/>
-      <path class="intro-chart-line" d="${d}" fill="none" stroke="url(#introStroke)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle class="intro-peak-ring" cx="${peak[0]}" cy="${peak[1]}" r="4" fill="none" stroke="#cdb27e" vector-effect="non-scaling-stroke" opacity="0" style="transform-box: fill-box; transform-origin: center"/>
-      <circle class="intro-peak" cx="${peak[0]}" cy="${peak[1]}" r="3.5" fill="#cdb27e" opacity="0"/>`;
-    const path = chart.querySelector('.intro-chart-line');
-    const revealRect = chart.querySelector('#introReveal rect');
-    const len = path.getTotalLength();
+    // 2. Chart (see buildChart), drawn by the bird's ride below
+    const { narrow, path, len, lenA, brk, brkLen, revealRect, markDots, x0 } = buildChart(vw, vh);
     path.style.strokeDasharray = len;
     path.style.strokeDashoffset = len;
+    brk.style.strokeDasharray = brkLen;
+    brk.style.strokeDashoffset = brkLen;
 
     // 3. Bird rides the tip of the line as it draws, tilting with the slope
     const bw = Math.round(Math.min(96, Math.max(38, vw * (narrow ? 0.11 : 0.05))));
@@ -2440,15 +2517,25 @@ function runIntro() {
     bird.style.height = bh + 'px';
     const pointAt = l => path.getPointAtLength(Math.max(0, Math.min(len, l)));
     const pose = l => {
-      const p = pointAt(l), a = pointAt(l - 18), b = pointAt(l + 18);
+      const p = pointAt(l), a = pointAt(l - 30), b = pointAt(l + 30);   // a wide window keeps the tilt calm over small dips
       const ang = Math.atan2(b.y - a.y, b.x - a.x);               // slope of the line here
       const lift = bh * 0.34;                                       // sit just above the line
       const cx = p.x + Math.sin(ang) * lift, cy = p.y - Math.cos(ang) * lift;
       return { x: cx - bw / 2, y: cy - bh / 2, rot: ang * 180 / Math.PI * 0.7 + 10, ang };
     };
     const place = q => { bird.style.transform = `translate(${q.x.toFixed(1)}px, ${q.y.toFixed(1)}px) rotate(${q.rot.toFixed(2)}deg)`; };
-    const inOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     place(pose(0));
+    // Pace along the line: easing in at the start, steady through the early line, ~1.8× quicker through the breakout
+    // for momentum, then settling onto the peak. Speed is set by position, and the whole ride is scaled to CHART_MS.
+    const pace = (() => {
+      const ramp = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+      const ss = [0]; let s = 0, t = 0;
+      while (s < len) {
+        const v = Math.min(1, 0.12 + t / 220) * (1 + 0.8 * ramp((s - lenA + 30) / 120)) * Math.max(0.1, Math.min(1, (len - s) / 90));
+        s = Math.min(len, s + v * 4); t += 4; ss.push(s);
+      }
+      return u => { const f = u * (ss.length - 1), i = Math.floor(f); return i >= ss.length - 1 ? len : ss[i] + (ss[i + 1] - ss[i]) * (f - i); };
+    })();
 
     // Wing flap: each iteration is one stroke (raised → down), so a full flap is two strokes.
     // Positive rotation lifts the wing in this art; the far wing trails by 60ms; the body bobs up on the downstroke.
@@ -2468,12 +2555,16 @@ function runIntro() {
       const t0 = performance.now();
       const tick = now => {
         if (done) return;
-        const p = inOut(Math.min(1, (now - t0) / CHART_MS));
-        path.style.strokeDashoffset = len * (1 - p);
-        const q = pose(len * p);
+        const u = Math.min(1, (now - t0) / CHART_MS), s = pace(u);
+        path.style.strokeDashoffset = len - s;
+        brk.style.strokeDashoffset = brkLen - Math.max(0, Math.min(brkLen, s - lenA));
+        const q = pose(s);
         place(q);
-        revealRect.setAttribute('width', Math.max(0, q.x + bw / 2 - x0));
-        if (p < 1) requestAnimationFrame(tick);
+        const tipX = pointAt(s).x;
+        revealRect.setAttribute('width', Math.max(0, tipX - 2 - x0));   // the area fill follows just behind the tip
+        while (markDots.length && +markDots[0].getAttribute('cx') <= tipX)
+          markDots.shift().animate([{ opacity: 0 }, { opacity: 0.55 }], { duration: 350, fill: 'forwards' });
+        if (u < 1) requestAnimationFrame(tick);
         else finale(q);
       };
       requestAnimationFrame(tick);
@@ -2812,7 +2903,8 @@ document.querySelectorAll('dialog').forEach(d => {
 
 // ── Project modal
 const modal = document.getElementById('projectModal');
-function openProject(card) {
+// Fills the modal with a card's project; used both to open it and to step between projects while it is open
+function renderProject(card) {
   const id = card.dataset.id;
   document.getElementById('modalTitle').textContent = card.querySelector('h3').textContent;
   document.getElementById('modalMeta').textContent = card.querySelector('.project-meta').textContent;
@@ -2821,24 +2913,49 @@ function openProject(card) {
   const story = document.getElementById('story-' + id);
   document.getElementById('modalStory').replaceChildren(story ? story.content.cloneNode(true) : '');
   const shot = document.getElementById('modalShot');
-  if (card.dataset.shot) {
+  const cardShot = card.querySelector('.project-shot img');   // the card's header image doubles as the modal screenshot
+  if (cardShot) {
     shot.className = 'modal-shot';
-    shot.innerHTML = `<img src="${card.dataset.shot}" alt="${card.dataset.shotAlt || 'Screenshot of ' + card.querySelector('h3').textContent}">`;
+    shot.innerHTML = `<img src="${cardShot.getAttribute('src')}" alt="${cardShot.alt}">`;
   } else {
     shot.className = 'modal-shot is-empty';
-    shot.innerHTML = '<svg class="i" aria-hidden="true"><use href="#i-image"/></svg><span>Add a screenshot (data-shot)</span>';
+    shot.innerHTML = '<svg class="i" aria-hidden="true"><use href="#i-image"/></svg><span>Add a screenshot (.project-shot)</span>';
   }
   // Only links that exist are shown; with none, the row is empty and hidden by .modal-links:empty
   const link = (href, icon, label) => href
     ? `<a class="modal-link" href="${href}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-${icon}"/></svg>${label}</a>`
     : '';
   const { github, demo } = card.dataset;
-  const demoLabel = /devpost\.com/i.test(demo || '') ? 'Devpost' : 'Live demo';
+  const demoLabel = /devpost\.com/i.test(demo || '') ? 'Devpost' : 'Live site';
   document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel);
+  // Position among the cards the current filter shows; with only one, there is nothing to step to
+  const shown = visibleProjects();
+  document.getElementById('modalCount').textContent = `${shown.indexOf(card) + 1} / ${shown.length}`;
+  modalPrev.hidden = modalNext.hidden = shown.length < 2;
   modal.lastCard = card;
+}
+function openProject(card) {
+  renderProject(card);
   openDialog(modal);
   modal.scrollTop = 0;
 }
+const visibleProjects = () => projectCards.filter(c => !c.classList.contains('hidden'));
+const modalPrev = document.getElementById('modalPrev'), modalNext = document.getElementById('modalNext');
+const modalInner = modal.querySelector('.modal-inner');
+// Prev/next follow the grid's order, skip cards the filter hides, and wrap around at both ends (like the lightbox)
+function stepProject(dir) {
+  const shown = visibleProjects();
+  if (shown.length < 2) return;
+  renderProject(shown[(shown.indexOf(modal.lastCard) + dir + shown.length) % shown.length]);
+  modal.scrollTop = 0;
+  modalInner.classList.remove('swap'); void modalInner.offsetWidth; modalInner.classList.add('swap');
+}
+modalPrev.addEventListener('click', () => stepProject(-1));
+modalNext.addEventListener('click', () => stepProject(1));
+modal.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') stepProject(-1);
+  if (e.key === 'ArrowRight') stepProject(1);
+});
 modal.addEventListener('close', () => { if (modal.lastCard) modal.lastCard.focus({ preventScroll: true }); });
 projectCards.forEach(card => {
   card.addEventListener('click', () => openProject(card));
