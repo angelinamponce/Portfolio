@@ -81,7 +81,7 @@
     :focus-visible { outline: 2px solid var(--sage); outline-offset: 3px; }
     .hero-left :focus-visible, .exp-section :focus-visible, .edu-section :focus-visible,
     header:not(.scrolled) :focus-visible, #quick-view :focus-visible, footer :focus-visible,
-    .lightbox :focus-visible, #intro :focus-visible, [data-theme="dark"] :focus-visible { outline-color: var(--sage-light); }
+    .lightbox :focus-visible, #intro :focus-visible, #intro-bird-layer :focus-visible, [data-theme="dark"] :focus-visible { outline-color: var(--sage-light); }
     main:focus, section:focus { outline: none; }
     .sr-only {
       position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -1572,14 +1572,28 @@
       display: block;
       position: fixed; inset: 0; z-index: 9980; /* under the grain layer so texture matches */
       overflow: hidden;
-      /* CSS-only failsafe: if the script never runs, get out of the way after 6.5s */
-      animation: introFailsafe 0.5s ease 6.5s forwards;
+      /* CSS-only failsafe: if the script never runs, get out of the way after 8s */
+      animation: introFailsafe 0.5s ease 8s forwards;
     }
     @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+    /* The bird (and the Skip button) fly on their own layer above the page, so the bird can land after the overlay
+       has gone. Same failsafe as #intro, so it can never get stuck on screen. */
+    #intro-bird-layer { display: none; }
+    .intro-on #intro-bird-layer {
+      display: block;
+      position: fixed; inset: 0; z-index: 9995;
+      pointer-events: none; overflow: hidden;
+      animation: introFailsafe 0.5s ease 8s forwards;
+    }
+    .intro-bird-anchor { position: absolute; left: 0; top: 0; }
+    /* take-off sparkles (added and removed by the script) */
+    .intro-spark { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; will-change: transform, opacity; }
+    /* Two copies of the dark panel, one per side of the hero's diagonal; their masks (set by the script) feather the
+       seam so no hard line shows when they part */
     .intro-panel {
       position: absolute; inset: 0;
       background: var(--forest);
-      will-change: opacity;
+      will-change: transform, opacity;
     }
     .intro-panel::before, .intro-panel::after { content: ''; position: absolute; inset: 0; }
     .intro-panel::before {
@@ -1641,7 +1655,7 @@
     }
     .intro-bird svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .intro-skip-btn {
-      position: absolute; right: 24px; bottom: 22px;
+      position: absolute; right: 24px; bottom: 22px; pointer-events: auto;
       background: none; border: 0; cursor: pointer;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
@@ -1650,7 +1664,12 @@
       transition: color 0.2s ease;
     }
     .intro-skip-btn:hover { color: var(--cream); }
-    @media (max-width: 768px) { .intro-skip-btn { right: 16px; bottom: 16px; } }
+    /* once the overlay has gone, Skip sits on the page itself: give it a small dark pill so it reads on any background */
+    .intro-skip-btn.on-page { background: rgba(14,31,22,0.6); color: var(--cream); border-radius: 100px; padding: 8px 14px; }
+    @media (max-width: 768px) {
+      .intro-skip-btn { right: 16px; bottom: 16px; }
+      .intro-skip-btn.on-page { right: 62px; } /* clear of the scroll-to-top button */
+    }
   </style>
 </head>
 <body>
@@ -1701,6 +1720,7 @@
 
 <div id="intro">
   <div class="intro-panel"></div>
+  <div class="intro-panel"></div>
   <svg class="intro-chart" aria-hidden="true"></svg>
   <div class="intro-stage" aria-hidden="true">
     <div class="intro-copy">
@@ -1708,6 +1728,9 @@
       <p class="intro-tag">Bridging finance and technology</p>
     </div>
   </div>
+</div>
+
+<div id="intro-bird-layer">
   <!-- Intro-only bird: the shared #bird art drawn three times, back to front: far wing, body, near wing.
        The near wing is split from the body at the shoulder (960,580) and rotates around it; its clip includes a disc
        of solid art at the pivot so the joint never opens, and the body's cut leans 3 units into the wing base below
@@ -1715,7 +1738,7 @@
        the notch that opens at the shoulder on the downstroke; at rest it sits entirely inside solid art. The far wing is
        the same wing at 85%, in a darker tint, with its shoulder tucked under the neck stroke (985,552) so its cut end
        stays hidden behind the body. -->
-  <div class="intro-bird" aria-hidden="true">
+  <div class="intro-bird-anchor"><div class="intro-bird" aria-hidden="true">
     <svg viewBox="296 146 1097 1210">
       <defs>
         <clipPath id="introWingClip" clipPathUnits="userSpaceOnUse">
@@ -1732,13 +1755,15 @@
       <g transform="translate(985 552) scale(.85)" style="color:#8ea294"><g class="intro-wing-far"><g transform="translate(-960 -580)" clip-path="url(#introFarClip)">
         <use href="#bird" x="296" y="146" width="1097" height="1210"/>
       </g></g></g>
-      <g clip-path="url(#introBodyClip)"><use href="#bird" x="296" y="146" width="1097" height="1210"/></g>
+      <!-- The body is the #bird outline written out in this viewBox's units (no transform), so the perch's head tilt can
+           morph it: the head lifts on a smooth falloff around the neck, keeping one continuous outline with no seam -->
+      <g clip-path="url(#introBodyClip)"><path class="intro-body" fill="currentColor" fill-rule="evenodd" d="M348.0 160.6C343.8 163.5 343.6 164.0 341.6 176.9C334.2 223.4 333.0 272.9 338.6 307.0C339.9 315.0 344.2 336.7 345.1 339.5C345.6 341.1 347.2 346.5 348.6 351.5C361.9 396.6 387.5 439.0 423.4 475.8C476.9 530.6 543.2 568.3 653.5 606.7C661.6 609.6 720.1 629.6 738.0 635.7C743.5 637.5 766.7 645.8 777.5 649.8C793.8 655.8 814.9 664.3 828.3 670.2C835.9 673.5 842.4 676.0 842.7 675.6C843.1 675.3 843.1 674.9 842.9 674.7C842.7 674.6 839.8 672.4 836.5 669.9C802.2 643.7 759.9 621.3 669.3 581.4C563.3 534.8 521.3 511.9 478.0 477.3C418.8 430.0 384.8 369.5 373.1 290.5C372.5 286.6 371.6 280.6 371.0 277.0C370.5 273.5 370.4 270.2 370.8 269.8C371.3 269.3 376.6 274.9 382.7 282.3C420.9 328.2 459.0 359.2 518.5 392.7C528.2 398.1 564.7 416.2 575.5 420.9C581.0 423.3 587.3 426.0 589.5 427.0C591.7 428.0 597.1 430.2 601.5 431.9C605.9 433.6 610.3 435.5 611.2 436.0C612.2 436.6 613.4 437.0 614.0 437.0C614.6 437.0 616.9 437.9 619.3 438.9C632.9 445.1 687.9 464.0 762.0 488.0C815.9 505.4 832.4 511.5 856.9 523.2C889.1 538.4 917.3 558.5 934.9 578.9C939.9 584.6 939.9 584.6 936.1 595.1C894.8 708.1 828.2 811.0 738.1 901.0C701.7 937.4 684.6 952.1 602.0 1018.5C557.8 1054.1 510.3 1093.6 494.0 1108.5C491.5 1110.8 483.9 1117.8 477.0 1124.1C445.4 1153.0 404.2 1196.8 383.6 1223.5C357.2 1257.7 336.7 1288.4 318.3 1321.5C307.5 1340.9 307.7 1340.4 309.9 1342.4C311.5 1343.9 312.4 1343.1 323.2 1330.2C383.7 1258.3 415.4 1225.3 459.5 1188.4C510.7 1145.5 565.4 1107.9 646.5 1059.8C667.3 1047.5 673.6 1043.8 735.5 1008.8C807.9 967.7 807.5 968.0 827.0 956.2C901.6 911.2 944.7 873.9 976.0 827.3C1026.2 752.4 1029.3 663.2 984.4 585.4C982.5 582.0 983.8 577.1 996.4 544.0C1025.3 467.4 1057.8 431.6 1113.0 415.5C1166.7 399.9 1216.5 413.5 1264.7 456.9C1273.7 465.0 1273.8 465.3 1268.7 468.9C1252.7 479.9 1229.1 509.5 1217.2 533.5C1206.9 554.0 1196.5 584.6 1191.7 608.0C1191.5 609.4 1190.3 615.0 1189.2 620.5C1187.4 629.0 1184.7 645.4 1179.9 675.0C1171.6 727.4 1168.0 746.1 1162.0 769.5C1139.5 856.5 1096.2 917.1 1020.5 967.7C961.1 1007.3 890.0 1036.2 785.0 1063.5C771.0 1067.2 755.2 1071.3 750.0 1072.6C708.5 1083.5 661.9 1098.9 619.0 1115.7C565.2 1136.8 513.1 1165.2 491.9 1185.0C490.3 1186.5 488.0 1190.3 488.0 1191.4C488.0 1192.8 490.5 1191.7 494.3 1188.6C524.7 1164.2 613.4 1133.6 718.5 1111.5C730.6 1109.0 751.1 1104.6 764.0 1101.9C776.9 1099.1 794.3 1095.5 802.5 1093.9C840.7 1086.3 860.9 1080.7 900.0 1066.7C980.4 1038.0 1052.0 997.1 1091.5 957.5C1128.2 920.6 1155.3 878.1 1176.4 824.0C1181.1 812.0 1188.3 790.9 1191.0 781.0C1191.5 779.1 1192.8 774.3 1193.9 770.5C1195.6 764.5 1197.3 756.9 1202.0 735.5C1203.1 730.2 1204.6 722.0 1205.9 713.7C1206.5 710.0 1207.5 704.2 1208.0 700.7C1208.6 697.3 1209.9 687.2 1211.0 678.2C1218.7 616.6 1230.6 579.3 1255.0 540.0C1268.1 519.0 1278.9 507.3 1297.2 494.1C1314.9 481.3 1343.6 466.2 1368.8 456.5C1375.5 453.9 1381.0 451.5 1381.0 451.2C1381.0 450.9 1377.6 451.0 1373.3 451.3C1369.1 451.6 1360.3 451.3 1353.6 450.5C1324.7 447.2 1305.0 438.9 1264.4 412.8C1252.9 405.4 1240.4 397.6 1236.5 395.4C1186.7 367.2 1124.7 366.1 1072.0 392.5C1039.9 408.5 1014.4 432.8 994.0 466.5C990.1 473.1 980.5 491.3 972.8 507.0C954.9 543.5 954.7 544.0 953.5 544.0C952.9 544.0 949.6 541.4 946.0 538.2C916.8 511.9 874.8 488.1 828.0 471.3C822.8 469.4 816.0 467.0 813.0 465.9C810.0 464.8 785.7 456.7 759.0 447.8C707.0 430.6 681.5 422.0 673.5 419.1C670.8 418.0 666.0 416.3 663.0 415.2C640.6 407.0 613.1 396.3 603.5 392.0C601.3 391.0 597.8 389.5 595.7 388.6C572.6 379.1 531.1 357.1 508.0 342.2C439.6 298.1 397.7 251.1 361.8 178.2C356.3 167.1 351.7 158.0 351.6 158.0C351.6 158.1 349.9 159.2 348.0 160.6ZM966.4 624.7C968.0 627.9 973.0 642.7 975.3 651.0C983.5 680.4 984.1 714.6 977.0 743.9C958.7 818.9 890.9 886.8 778.5 942.7C751.9 955.9 732.3 964.7 731.5 963.9C731.3 963.6 740.2 954.2 751.3 942.9C844.2 848.7 903.6 763.8 947.2 663.0C953.7 648.0 962.0 627.0 962.0 625.5C962.0 624.5 963.9 622.0 964.7 622.0C964.8 622.0 965.6 623.2 966.4 624.7ZM1146.3 437.8C1132.2 443.6 1126.1 461.3 1133.5 474.9C1146.7 499.0 1183.0 489.7 1183.0 462.2C1183.0 443.0 1164.2 430.5 1146.3 437.8ZM375.4 528.4C377.4 541.3 387.4 563.9 398.5 580.4C441.7 644.9 523.9 695.7 613.0 712.8C652.2 720.4 712.5 720.9 747.0 714.0C749.5 713.6 754.4 712.6 758.0 711.9C764.1 710.8 768.3 709.0 765.0 709.0C758.7 709.0 697.6 700.5 674.5 696.5C558.7 676.2 484.1 643.0 444.4 594.0C436.4 584.0 433.7 580.0 434.4 579.3C435.0 578.7 474.3 581.9 492.0 584.0C496.1 584.5 504.9 585.4 511.5 586.0C518.1 586.6 525.8 587.3 528.5 587.6C536.9 588.5 533.0 586.6 502.4 574.4C486.5 568.1 472.6 562.5 471.5 562.0C470.4 561.5 456.9 556.1 441.5 550.0C426.1 543.8 412.2 538.2 410.5 537.5C405.0 535.1 376.4 524.0 375.6 524.0C375.1 524.0 375.1 526.0 375.4 528.4ZM387.0 659.9C387.0 670.7 401.4 698.3 416.1 715.5C473.2 782.7 571.3 816.3 664.9 800.9C685.2 797.6 684.9 797.2 660.5 794.5C624.7 790.5 575.1 781.2 551.0 773.8C503.6 759.4 474.4 744.8 452.3 724.5C444.4 717.3 432.0 702.4 432.0 700.2C432.0 698.8 436.5 698.9 456.0 701.0C460.7 701.5 470.1 702.4 477.0 703.0C483.9 703.7 492.4 704.5 496.0 705.0C499.6 705.4 503.0 705.5 503.7 705.1C504.7 704.6 389.9 657.9 387.8 658.0C387.3 658.0 387.0 658.9 387.0 659.9Z"/></g>
       <path d="M956,545 Q945,546 936,557 L937,572 L943,579 L953,582 L959,560 Z" fill="currentColor"/>
       <g transform="translate(960 580)"><g class="intro-wing"><g transform="translate(-960 -580)" clip-path="url(#introWingClip)">
         <use href="#bird" x="296" y="146" width="1097" height="1210"/>
       </g></g></g>
     </svg>
-  </div>
+  </div></div>
   <button type="button" class="intro-skip-btn" id="introSkip">Skip intro →</button>
 </div>
 
@@ -2326,6 +2351,21 @@
 </footer>
 
 <script>
+// ── Intro settings: the bird's size, perch, head turn, take-off direction and sparkles
+const INTRO = {
+  birdScale: 1.5,                    // ride size relative to the original bird (min 57px, max 144px, 16.5vw on phones)
+  perchWidthPct: 0.15,               // perched width as a share of the headshot's (min 64px, max 40% of the screen)
+  exitDirection: 'left',             // 'left' | 'right'
+  landFacing: 'left',                // which way the bird faces on the perch: 'left' | 'right'
+  perchAnchor: 'top-right',          // where on the headshot frame (or the phone fallback) it lands: 'top-right' | 'top-left' | 'top-center'
+  headTiltDeg: 8,                    // the perch's curious look: the beak lifts this much (chin up), then levels
+  headTiltInMs: 500, headTiltHoldMs: 500, headTiltOutMs: 400,
+  wingShakeMs: 300,
+  exitScale: 9,                      // the left exit grows to about this many times the perch size (capped near 75% of the screen height)
+  particleCount: 14,                 // most sparkles alive at once
+  particleIntervalMs: 70,
+  sparkleColors: ['#cdb27e', '#8cbd9e'],
+};
 const introOn = document.documentElement.classList.contains('intro-on');
 const startHero    = () => {
   if (document.body.classList.contains('page-loaded')) return;
@@ -2364,40 +2404,53 @@ if (introOn) runIntro();
 function runIntro() {
   const intro = document.getElementById('intro');
   try { sessionStorage.setItem('apIntroSeen', '1'); } catch (e) {}
-  if (!intro || !intro.animate) { if (intro) intro.remove(); startHero(); unlockScroll(); return; }
+  const birdLayer = document.getElementById('intro-bird-layer');
+  if (!intro || !intro.animate) { if (intro) intro.remove(); if (birdLayer) birdLayer.remove(); startHero(); unlockScroll(); return; }
 
   const copy   = intro.querySelector('.intro-copy');
   const tag    = intro.querySelector('.intro-tag');
   const chart  = intro.querySelector('.intro-chart');
   const chars  = [...intro.querySelectorAll('.intro-ch')];
   const line   = intro.querySelector('.intro-line');
-  const bird   = intro.querySelector('.intro-bird');
-  const wing   = intro.querySelector('.intro-wing');
-  const farWing = intro.querySelector('.intro-wing-far');
+  const anchor = birdLayer.querySelector('.intro-bird-anchor');
+  const bird   = birdLayer.querySelector('.intro-bird');
+  const wing   = birdLayer.querySelector('.intro-wing');
+  const farWing = birdLayer.querySelector('.intro-wing-far');
   const skip   = document.getElementById('introSkip');
-  const panel  = intro.querySelector('.intro-panel');
+  const panels = [...intro.querySelectorAll('.intro-panel')];
   const timers = [];
   const later  = (fn, ms) => timers.push(setTimeout(fn, ms));
-  let done = false;
+  let done = false, overlayGone = false, reperch = null;
 
+  // The overlay leaves first (the bird is still flying); Skip then sits on the page until the bird has gone
+  function removeOverlay() {
+    if (overlayGone) return;
+    overlayGone = true;
+    intro.remove();
+    skip.classList.add('on-page');
+  }
+  // End of the sequence, Skip, a keypress or the hard cap: the bird layer goes at once, the overlay fades if still up
   function finish(fadeMs) {
     if (done) return;
     done = true;
     timers.forEach(clearTimeout);
     window.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', onResize);
     bird.style.willChange = 'auto';
+    birdLayer.remove();
     startHero();
     unlockScroll();
-    const remove = () => intro.remove();
-    if (!fadeMs) return remove();
+    if (overlayGone || !fadeMs) return removeOverlay();
     intro.style.pointerEvents = 'none';
     intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: fadeMs, easing: 'ease', fill: 'forwards' })
-      .finished.then(remove, remove);
+      .finished.then(removeOverlay, removeOverlay);
   }
   const onKey = () => finish(350);
+  const onResize = () => { if (reperch) reperch(); };
   window.addEventListener('keydown', onKey);
+  window.addEventListener('resize', onResize);
   skip.addEventListener('click', () => finish(350));
-  later(() => finish(500), 6500); // hard cap, whatever happens
+  later(() => finish(500), 8000); // hard cap, whatever happens
 
   // Warm the hero's fonts during the intro; start once the display face is ready (or after 700ms regardless).
   const fontsReady = document.fonts
@@ -2503,6 +2556,18 @@ function runIntro() {
     tag.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
       { duration: 600, delay: TAG_AT, easing: easeOut, fill: 'both' });
 
+    // The two panels part along the hero's diagonal on wide screens (it runs 48px from top to bottom, like
+    // .hero-left::after). Each one's mask fades out across a 90px band on the far side of the seam, under the other
+    // panel, so together they still cover everything until they move.
+    const split = vw > 1024;
+    if (split) {
+      const a = Math.atan(48 / vh), deg = (90 + a * 180 / Math.PI).toFixed(3), L = vw * Math.cos(a) + vh * Math.sin(a);
+      const seam = (vw * 0.55 - 55 - vw / 2) * Math.cos(a) + L / 2, F = 90;
+      const masks = [`linear-gradient(${deg}deg, #000 ${seam.toFixed(1)}px, transparent ${(seam + F).toFixed(1)}px)`,
+                     `linear-gradient(${deg}deg, transparent ${(seam - F).toFixed(1)}px, #000 ${seam.toFixed(1)}px)`];
+      panels.forEach((p, i) => { p.style.webkitMaskImage = masks[i]; p.style.maskImage = masks[i]; });
+    }
+
     // 2. Chart (see buildChart), drawn by the bird's ride below
     const { narrow, path, len, lenA, brk, brkLen, revealRect, markDots, x0 } = buildChart(vw, vh);
     path.style.strokeDasharray = len;
@@ -2511,7 +2576,7 @@ function runIntro() {
     brk.style.strokeDashoffset = brkLen;
 
     // 3. Bird rides the tip of the line as it draws, tilting with the slope
-    const bw = Math.round(Math.min(96, Math.max(38, vw * (narrow ? 0.11 : 0.05))));
+    const bw = Math.round(narrow ? vw * 0.11 * INTRO.birdScale : Math.min(96 * INTRO.birdScale, Math.max(38 * INTRO.birdScale, vw * 0.05 * INTRO.birdScale)));
     const bh = Math.round(bw * 1210 / 1097);
     bird.style.width  = bw + 'px';
     bird.style.height = bh + 'px';
@@ -2539,14 +2604,13 @@ function runIntro() {
 
     // Wing flap: each iteration is one stroke (raised → down), so a full flap is two strokes.
     // Positive rotation lifts the wing in this art; the far wing trails by 60ms; the body bobs up on the downstroke.
-    const FLAP_MS = 280, FLY_FLAP_MS = 200;
+    const FLAP_MS = 280, FAST_FLAP_MS = 180;
     let flaps = [];
-    const flap = () => {
-      const o = { duration: FLAP_MS / 2, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' };
+    const flap = (cycle = FLAP_MS, { wings = true, bob = true } = {}) => {
+      const o = { duration: cycle / 2, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' };
       const stroke = [{ transform: 'rotate(18deg)' }, { transform: 'rotate(-22deg)' }];
-      flaps = [wing.animate(stroke, o),
-               farWing.animate(stroke, { ...o, delay: 60, fill: 'backwards' }),
-               bird.firstElementChild.animate([{ transform: 'translateY(1.25%)' }, { transform: 'translateY(-1.25%)' }], o)];
+      if (wings) flaps = [wing.animate(stroke, o), farWing.animate(stroke, { ...o, delay: 60, fill: 'backwards' })];
+      if (bob) flaps.push(bird.firstElementChild.animate([{ transform: 'translateY(1.25%)' }, { transform: 'translateY(-1.25%)' }], o));
     };
 
     later(() => {
@@ -2570,18 +2634,26 @@ function runIntro() {
       requestAnimationFrame(tick);
     }, CHART_AT);
 
-    // 4. Finale, one 2s timeline: at the peak the bird lifts off up and to the right (leg 1), wheels around near the
-    //    right edge (turn), then sweeps back across the screen, growing as it passes the viewer (leg 2). Each piece hands
-    //    its speed to the next, so the motion never stops and starts. The overlay is drawn aside in the bird's wake.
-    const LEG1_MS = 700, TURN_MS = 400, LEG2_MS = 900, FIN_MS = LEG1_MS + TURN_MS + LEG2_MS;
+    // 4. Finale. At the peak the overlay dissolves into the hero while the bird flies to a perch on the headshot's frame
+    //    (side-by-side hero only), lands, looks around, shakes its wings, then takes off. By default it wheels around to
+    //    face left and sweeps out over the top of the hero trailing sparkles (INTRO.exitDirection). The bird lives in its
+    //    own fixed layer, so it keeps flying after the overlay has gone.
+    const APP_MS = 1000, CROUCH_MS = 110, TURN_MS = 350, SWEEP_MS = 800, AWAY_MS = 730;
+    const exitLeft = INTRO.exitDirection !== 'right';
+    const landSx = INTRO.landFacing === 'right' ? 1 : -1;   // the outer wrapper's scaleX on the perch (the art faces right)
+    // Perch schedule, from touchdown: settle → still → head tilt → wing shake → take-off
+    const TILT_AT = 650;                                // settle (~0.3s), then a still moment
+    const TILT_MS = INTRO.headTiltInMs + INTRO.headTiltHoldMs + INTRO.headTiltOutMs;
+    const SHAKE_AT = TILT_AT + TILT_MS, PERCH_MS = SHAKE_AT + INTRO.wingShakeMs + 50;
     const bez = (a, b, c, e, t) => { const u = 1 - t; return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*e; };
+    const smooth  = t => t * t * (3 - 2 * t);
+    const clamp01 = t => Math.max(0, Math.min(1, t));
+    const hermite = (m0, m1) => t => (t*t*t - 2*t*t + t) * m0 + (3*t*t - 2*t*t*t) + (t*t*t - t*t) * m1;  // 0→1, end slopes m0/m1
     const cubic = (x1, y1, x2, y2) => x => {        // CSS cubic-bezier() timing, solved for x by bisection
       let lo = 0, hi = 1, s = x;
       for (let i = 0; i < 30; i++) { s = (lo + hi) / 2; if (bez(0, x1, x2, 1, s) < x) lo = s; else hi = s; }
       return bez(0, y1, y2, 1, s);
     };
-    const smooth  = t => t * t * (3 - 2 * t);
-    const hermite = (m0, m1) => t => (t*t*t - 2*t*t + t) * m0 + (3*t*t - 2*t*t*t) + (t*t*t - t*t) * m1;  // 0→1, end slopes m0/m1
     const curve = P => {                             // cubic Bezier, walked by arc length
       const pt = t => [bez(P[0][0], P[1][0], P[2][0], P[3][0], t), bez(P[0][1], P[1][1], P[2][1], P[3][1], t)];
       const n = 100, ls = [0];
@@ -2592,91 +2664,359 @@ function runIntro() {
         return pt((i - 1 + (d - ls[i - 1]) / ((ls[i] - ls[i - 1]) || 1)) / n);
       } };
     };
+    // Points on the bird, from its centre (art units → px): the feet (just under the breast, art 985,1030) trace the
+    // paths, so they land exactly on the line; sparkles come off the tail tip (art 330,1330).
+    const artPt = (x, y) => [bw * (x - 844.5) / 1097, bh * (y - 751) / 1210];
+    const FOOT = artPt(985, 1030), TAIL = artPt(330, 1330);
+    const FOOT_PCT = `${((985 - 296) / 1097 * 100).toFixed(1)}% ${((1030 - 146) / 1210 * 100).toFixed(1)}%`;
+    const place2 = (centre, off, rot, s, sx) => { const r = rot * Math.PI / 180, x = off[0] * sx * s, y = off[1] * s;
+      return [centre[0] + x * Math.cos(r) - y * Math.sin(r), centre[1] + x * Math.sin(r) + y * Math.cos(r)]; };
+    const centreFor = (feet, rot, s, sx) => { const f = place2([0, 0], FOOT, rot, s, sx); return [feet[0] - f[0], feet[1] - f[1]]; };
+    // A box's resting position: its on-screen box minus any translate the hero entrance is still applying above it
+    const layoutRect = el => {
+      const r = el.getBoundingClientRect(); let dx = 0, dy = 0;
+      for (let a = el; a && a !== document.body; a = a.parentElement) {
+        const t = getComputedStyle(a).transform;
+        if (t && t !== 'none') { const m = new DOMMatrix(t); dx += m.e; dy += m.f; }
+      }
+      return { x: r.left - dx, y: r.top - dy, w: r.width, h: r.height };
+    };
+    const overlaps = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+    // The perched bird's box (feet at x,y; width w): 63% of it lies behind the feet (the tail side), 37% ahead of them,
+    // and 73% of its height above them. Facing left, the tail side is on the right.
+    const perchBox = (x, y, w) => landSx > 0
+      ? { l: x - w * 0.63, r: x + w * 0.37, t: y - w * 1.103 * 0.75, b: y + w * 1.103 * 0.28 }
+      : { l: x - w * 0.37, r: x + w * 0.63, t: y - w * 1.103 * 0.75, b: y + w * 1.103 * 0.28 };
+    const lightPage = document.documentElement.getAttribute('data-theme') !== 'dark';
+    // Feet position along a line [l, r] for INTRO.perchAnchor, keeping the whole bird inside the line and the screen
+    const anchorX = (line, w, W) => {
+      const f = { 'top-left': 0.15, 'top-center': 0.5 }[INTRO.perchAnchor] ?? 0.85;
+      const b = perchBox(0, 0, w), lo = Math.max(line[0], 4) - b.l, hi = Math.min(line[1], W - 4) - b.r;
+      return Math.max(lo, Math.min(hi, line[0] + (line[1] - line[0]) * f));
+    };
+    function perchSpot() {
+      const W = window.innerWidth, H = window.innerHeight;
+      const shot = document.querySelector('.headshot-wrap');
+      const minW = 64, wFor = shotW => Math.min(Math.max(minW, shotW * INTRO.perchWidthPct), W * 0.4);
+      if (W > 1024 && shot) {                            // side-by-side hero: the outer frame line, 12px above the photo
+        // The frame line runs from 12px left of the photo to 12px short of its right edge; the bird lands at the
+        // INTRO.perchAnchor spot along it, kept inside its ends and on screen
+        const r = layoutRect(shot), y = r.y - 12, line = [r.x - 12, r.x + r.w - 12];
+        const face = { l: r.x + r.w * 0.3, r: r.x + r.w * 0.7, t: r.y + r.h * 0.08, b: r.y + r.h * 0.5 };
+        let w = wFor(r.w), x = anchorX(line, w, W);
+        // keep clear of the face (roughly the middle 40% of the photo, 8-50% down): shrink the bird if it isn't
+        while (w > 40 && overlaps(perchBox(x, y, w), face)) { w *= 0.95; x = anchorX(line, w, W); }
+        const box = perchBox(x, y, w);
+        if (box.t > 80 && box.r < W - 4 && r.y + r.h * 0.3 < H) return { x, y, s: w / bw, w, onLight: lightPage, face };
+      }
+      // Stacked hero: the "Open to Opportunities" pill, or the top of the name's last letter, if the bird fits cleanly
+      // there (fully on screen, not over the rest of the headline)
+      const w = wFor(shot ? layoutRect(shot).w : 0), cands = [];
+      const pill = document.querySelector('.recruiter-pill');
+      if (pill) { const r = layoutRect(pill); if (r.w) cands.push({ x: anchorX([r.x, r.x + r.w], w, W), y: r.y }); }
+      const em = document.querySelector('.hero-name em'), first = document.querySelector('.hero-name').firstChild;
+      if (em && first) {
+        const t = [...em.childNodes].find(n => n.nodeType === 3), rg = document.createRange();
+        if (t && t.length) {
+          const shift = (r => { const b = em.getBoundingClientRect(); return [b.left - r.x, b.top - r.y]; })(layoutRect(em));
+          rg.setStart(t, t.length - 1); rg.setEnd(t, t.length);
+          const g = rg.getBoundingClientRect();
+          rg.selectNodeContents(first); const line = rg.getBoundingClientRect();
+          cands.push({ x: g.left - shift[0] + g.width * 0.5, y: g.top - shift[1] + g.height * 0.43,     // the letter's x-height
+            avoid: { l: line.left - shift[0], r: line.right - shift[0], t: line.top - shift[1], b: line.bottom - shift[1] } });
+        }
+      }
+      for (const c of cands) {
+        const b = perchBox(c.x, c.y, w);
+        if (b.t >= 2 && b.l >= 2 && b.r <= W - 2 && !(c.avoid && overlaps(b, c.avoid))) return { x: c.x, y: c.y, s: w / bw, w, onLight: false };
+      }
+      return null;                                       // nowhere clean to land: just fly off
+    }
+
+    // Sparkles off the tail during take-off: 4-point stars and a few leaves in gold and mint, drifting behind the bird
+    // and a little down, spinning, shrinking and fading out. At most INTRO.particleCount alive; each removes itself.
+    let sparksAlive = 0;
+    const SPARK = 'M0-10C1.2-2 2-1.2 10 0 2 1.2 1.2 2 0 10-1.2 2-2 1.2-10 0-2-1.2-1.2-2 0-10Z', LEAF = 'M0-10C6-5 6 5 0 10-6 5-6-5 0-10Z';
+    function sparkle(x, y, dirX, k = 1) {
+      if (sparksAlive >= INTRO.particleCount || done) return;
+      const leaf = Math.random() < 0.25, size = (leaf ? 12 + Math.random() * 6 : 9 + Math.random() * 6) * k;
+      const el = document.createElementNS(SVGNS, 'svg');
+      el.setAttribute('viewBox', '-10 -10 20 20');
+      el.setAttribute('class', 'intro-spark');
+      el.style.width = el.style.height = size.toFixed(1) + 'px';
+      el.innerHTML = `<path d="${leaf ? LEAF : SPARK}" fill="${INTRO.sparkleColors[Math.random() < 0.6 ? 0 : 1]}"/>`;
+      birdLayer.appendChild(el);
+      sparksAlive++;
+      const base = `translate(${(x - size / 2).toFixed(1)}px, ${(y - size / 2).toFixed(1)}px)`;
+      const dx = -dirX * (10 + Math.random() * 20), dy = 10 + Math.random() * 20, spin = (20 + Math.random() * 70) * (Math.random() < 0.5 ? -1 : 1);
+      el.animate([{ transform: `${base} rotate(0deg) scale(1)`, opacity: 0.9 },
+                  { transform: `${base} translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${spin.toFixed(0)}deg) scale(0.4)`, opacity: 0 }],
+        { duration: 700, easing: 'cubic-bezier(.2,.6,.35,1)', fill: 'forwards' })
+        .finished.then(() => { el.remove(); sparksAlive--; }, () => {});
+    }
+
     function finale(q) {
       chart.querySelector('.intro-peak').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' });
       chart.querySelector('.intro-peak-ring').animate(
         [{ opacity: 0.9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(5.5)' }], { duration: 700, easing: 'ease-out', fill: 'forwards' });
-      flaps.forEach(a => a.updatePlaybackRate(FLAP_MS / FLY_FLAP_MS));
 
-      // Sizes: about 2.5× by the end of the turn (a little less on phones), about the viewport's height at the exit,
-      // so it reads as the bird passing close rather than filling the screen
-      const s2 = narrow ? 2.1 : 2.5, S = Math.max(s2 * 3, 1.1 * vh / bh);
-      const ext = (s, deg) => { const r = deg * Math.PI / 180;   // half-width of the bird's rotated box at scale s
-        return s * (bw / 2 * Math.abs(Math.cos(r)) + bh / 2 * Math.abs(Math.sin(r))); };
-      // Rotation keys: climbing nose-up, levelling through the turn, then nose slightly down (it faces left by then)
-      const ROT = [[0, q.rot], [LEG1_MS, -14], [LEG1_MS + TURN_MS, -2], [FIN_MS, -5]];
-      const rotAt = t => { let i = 1; while (i < ROT.length - 1 && t > ROT[i][0]) i++;
-        const [ta, ra] = ROT[i - 1], [tb, rb] = ROT[i]; return ra + (rb - ra) * smooth(Math.min(1, (t - ta) / (tb - ta))); };
+      // 5. Reveal: the copy and chart fade, the dark panels part along the hero's diagonal (their seams are feathered) and
+      //    fade out, and the hero eases in underneath while the bird is still flying.
+      startHero();
+      [copy, chart].forEach(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-in-out', fill: 'forwards' }));
+      const part = { duration: 900, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' };
+      if (split) {
+        panels[0].animate([{ transform: 'none', opacity: 1 }, { opacity: 0.85, offset: 0.4 }, { transform: `translateX(${-Math.ceil(vw * 0.6)}px)`, opacity: 0 }], part);
+        panels[1].animate([{ transform: 'none', opacity: 1 }, { opacity: 0.85, offset: 0.4 }, { transform: `translateX(${Math.ceil(vw * 0.5 + 90)}px)`, opacity: 0 }], part);
+      } else {
+        panels.forEach(p => p.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-32px)', opacity: 0 }], part));
+      }
+      later(removeOverlay, 1100);
 
-      // Leg 1 starts along the chart's last slope and ends heading right and a little up. The turn's apex is the
-      // farthest right the bird goes, so it is placed to keep the bird's whole box inside the edge.
-      const C0 = [q.x + bw / 2, q.y + bh / 2];
-      const apexX = Math.min(vw * 0.9, vw - 10 - ext(s2, 14));
-      const room = Math.max(apexX - C0[0], vw * 0.04);
-      const dir1 = [Math.cos(-0.35), Math.sin(-0.35)];
-      const P1 = [C0[0] + room * 0.55, C0[1] - vh * (narrow ? 0.08 : 0.1)];
-      const P2 = [P1[0] - vw * 0.01, P1[1] - vh * 0.07];          // the turn rises 7% of the viewport height
-      const g1 = Math.hypot(P1[0] - C0[0], P1[1] - C0[1]), d = room * 0.45 / 0.75;
-      const leg1 = curve([C0, [C0[0] + Math.cos(q.ang) * g1 * 0.4, C0[1] + Math.sin(q.ang) * g1 * 0.4],
-                          [P1[0] - dir1[0] * g1 * 0.35, P1[1] - dir1[1] * g1 * 0.35], P1]);
-      const turn = curve([P1, [P1[0] + dir1[0] * d, P1[1] + dir1[1] * d], [P2[0] + d, P2[1]], P2]);
+      const T = perchSpot();
+      const feet0 = place2([q.x + bw / 2, q.y + bh / 2], FOOT, q.rot, 1, 1);
+      // Everything is placed relative to the perch through the anchor, so a resize only has to move the anchor
+      const home = T ? [T.x, T.y] : [0, 0];
+      let shift = [0, 0];
+      anchor.style.transform = `translate(${home[0]}px, ${home[1]}px)`;
+      const sP = T ? T.s : 1, perch = T ? [T.x, T.y] : feet0;
+      const dark = (k, blur = 0, s = 1) => (T && T.onLight && k > 0 ? `brightness(${(1 - 0.58 * k).toFixed(3)}) saturate(${(1 + 0.5 * k).toFixed(3)})` : 'brightness(1) saturate(1)')
+        + ` blur(${(blur / s).toFixed(3)}px)`;          // blur is in screen px; the filter runs before the scale, so divide it out
+      const splitX = vw * 0.55 - 55;                    // where the dark half of the hero ends on wide screens
 
-      // Speeds (px/ms) at the joins. Leg 1 leaves the line from rest and eases out; the turn hands its speed to leg 2.
-      const v1 = 0.6 * leg1.len / LEG1_MS, v2 = 1.2 * v1;
-      const pos1 = hermite(0, 0.6), posT = hermite(v1 * TURN_MS / turn.len, v2 * TURN_MS / turn.len);
-      // Leg 2 is steered by the bird's trailing (right) edge, which only ever moves left, so the bird can grow
-      // as fast as it likes without swelling back over the page. It finishes just past the left edge.
-      const XR0 = P2[0] + ext(s2, -2), dx = XR0 + 12;
-      const k = Math.min(1, v2 * LEG2_MS / dx);
-      const trail = u => XR0 - dx * (k * u + (1 - k) * u * u * u);
-      const grow = cubic(.5, 0, .8, .35);
-      const drop = vh * 0.12;
-      // Blur peaks at 4px (2px on small screens). It also keeps the browser drawing the bird at its current size each
-      // frame; with no blur at all, Chrome pre-renders the bird at its final huge size and stalls on phones.
-      const blurMax = vw >= 768 ? 4 : 2;
-
-      const N = 240;
-      const frames = Array.from({ length: N + 1 }, (_, i) => {
-        const t = i / N * FIN_MS, rot = rotAt(t);
-        let x, y, s, sx = 1, blur = 0, opacity = 1;
-        if (t <= LEG1_MS + TURN_MS) {
-          s = 1 + (s2 - 1) * smooth(t / (LEG1_MS + TURN_MS));
-          if (t <= LEG1_MS) [x, y] = leg1.at(pos1(t / LEG1_MS));
-          else { const u = (t - LEG1_MS) / TURN_MS; [x, y] = turn.at(posT(u)); sx = 1 - 2 * smooth(u); }
+      // ── Timeline pieces: each gives the feet position, rotation, scale, facing (sx), darkening (k) and opacity.
+      //    Rotations are written for a right-facing bird and multiplied by the facing, so "nose up" stays nose up
+      //    whichever way the bird points.
+      const segs = [];
+      const flipAt = (u, a, b) => smooth(clamp01((u - a) / (b - a)));   // 0 → 1 across [a, b]
+      if (T) {
+        const dist = Math.hypot(perch[0] - feet0[0], perch[1] - feet0[1]), wMid = bw * (1 + sP) / 2;
+        let approach, flip0 = 1, flip1 = 1;
+        if (landSx < 0) {
+          // Facing left: it climbs up and to the right of the face, wheels around (0.35s, starting just after the peak,
+          // finished about halfway), and comes down onto the perch from the upper right, below the header
+          const header = document.querySelector('header'), navB = header ? (h => h.y + h.h)(layoutRect(header)) : 0;
+          const apex = [Math.min(Math.max(perch[0] + vw * 0.06, T.face.r + wMid * 0.63 + 10), window.innerWidth - wMid * 0.63 - 8),
+                        Math.max(perch[1] - 70, navB + wMid * 1.103 * 0.75 + 6)];
+          approach = curve([feet0, [apex[0], feet0[1] - (feet0[1] - apex[1]) * 0.85], apex, perch]);
+          flip0 = 0.12; flip1 = 0.12 + 350 / APP_MS;
         } else {
-          const u = (t - LEG1_MS - TURN_MS) / LEG2_MS;
-          sx = -1;
-          s = s2 + (S - s2) * grow(u);
-          x = trail(u) - ext(s, rot);
-          y = P2[1] + drop * u * u;
-          blur = blurMax * u * u;
-          opacity = u <= 0.9 ? 1 : 1 - (u - 0.9) / 0.1;
+          // Facing right: rising into the perch from just below, the climb running right of the face
+          const sideX = Math.max(perch[0], T.face.r + wMid * 0.63 + 8);
+          approach = curve([feet0, [Math.max(feet0[0] + Math.cos(q.ang) * dist * 0.35, sideX), feet0[1] + Math.sin(q.ang) * dist * 0.35],
+                            [sideX, perch[1] + dist * 0.35], perch]);
         }
-        return {
-          offset: i / N,
-          transform: `translate(${(x - bw / 2).toFixed(1)}px, ${(y - bh / 2).toFixed(1)}px) rotate(${rot.toFixed(2)}deg) scale(${(sx * s).toFixed(4)}, ${s.toFixed(4)})`,
-          filter: `blur(${(blur / s).toFixed(3)}px)`,        // filter runs before the scale, so divide it back out
-          opacity: +opacity.toFixed(3),
-        };
+        const appPos = hermite(0.5, 0);                  // leaves at an easy pace, brakes to a stop on the perch
+        segs.push({ ms: APP_MS, n: 80, at: u => {
+          const f = landSx < 0 ? flipAt(u, flip0, flip1) : 0, sx = 1 - 2 * f;
+          const base = u < 0.75 ? q.rot + (-16 - q.rot) * smooth(u / 0.75) : -16 + 12 * smooth((u - 0.75) / 0.25);   // flare nose-up, then level
+          return { feet: approach.at(appPos(u)), s: 1 + (sP - 1) * smooth(u), sx, rot: base * sx - 10 * Math.sin(Math.PI * f),
+            k: smooth(clamp01((u - 0.25) / 0.5)), o: 1 };
+        } });
+        segs.push({ ms: PERCH_MS + CROUCH_MS, n: 1, at: () => ({ feet: perch, s: sP, sx: landSx, rot: -4 * landSx, k: 1, o: 1 }) });
+      }
+      const start = T ? perch : feet0, k0 = T ? 1 : 0;
+      const sx0 = T ? landSx : 1, exitSx = exitLeft ? -1 : 1;
+      const rot0 = T ? -4 * landSx : q.rot;
+      const turnNeeded = sx0 !== exitSx;                 // wheel around at take-off only if it faces away from the exit
+      const rise = vh * 0.05;
+      if (exitLeft) {
+        // Sweep up and left above the hero copy, accelerating, growing 25% and leaving off the left edge. If the bird
+        // faces right, it first wheels around (outer wrapper scaleX 1 → -1, edge-on mid-turn) while springing up a few %
+        // of the viewport, and the turn hands its speed and heading to the sweep.
+        // The headline's text (not its full-width box) and the header, at their resting positions
+        const h1 = document.querySelector('.hero-name'), rg = document.createRange();
+        rg.selectNodeContents(h1);
+        const nb = rg.getBoundingClientRect(), hb = h1.getBoundingClientRect(), hr = layoutRect(h1);
+        const name = { x: nb.left - (hb.left - hr.x), y: nb.top - (hb.top - hr.y), r: nb.right - (hb.left - hr.x) };
+        const header = document.querySelector('header'), navB = header ? (r => r.y + r.h)(layoutRect(header)) : 0;
+        // The route runs in the gap between the header and the headline, in the top 35% of the screen. Along it the bird
+        // swells (ease-in) to INTRO.exitScale × its perch size, capped near 75% of the screen height, as if passing close
+        // to the viewer; near the edge the big bird spills past that band, which is fine. It ends fully off the left.
+        const grow = Math.max(1, Math.min(INTRO.exitScale, vh * 0.75 / (bh * sP)));
+        const hEnd = bh * sP * Math.min(grow, 1.25);    // the bird's height early on, while it still has to fit the gap
+        const band = Math.max(navB + 6 + 0.75 * hEnd, Math.min(vh * 0.12, name.y - 0.3 * hEnd - 8, vh * 0.35 - 0.3 * hEnd));
+        const clearX = name.r + bw * sP * 0.37 + 10;   // the bird's leading edge stays right of the headline until it is above it
+        const out = [-bw * sP * grow * 0.85 - 30, band]; // the trailing (tail) side clears the left edge too, even banked
+        const swell = cubic(.45, .05, .8, .35), blurMax = vw >= 768 ? 4 : 0;
+        const lift = turnNeeded ? rise : 0;              // with no turn, the sweep itself springs up from the perch
+        let tEnd, sweep, dir;
+        if (start[1] - 0.28 * hEnd > name.y - 10) {
+          // Starting below the top of the headline (stacked hero): climb straight up clear of the name, then curve left
+          // above it. Two joined curves, both heading straight up where they meet.
+          tEnd = [Math.max(start[0], clearX), start[1] - lift];
+          const top = [tEnd[0], Math.min(tEnd[1] - 10, band + Math.min(30, (tEnd[1] - band) * 0.5))];
+          const climb = curve([tEnd, [tEnd[0], tEnd[1] - (tEnd[1] - top[1]) * 0.35], [top[0], top[1] + (tEnd[1] - top[1]) * 0.35], top]);
+          const over = curve([top, [top[0], band - 12], [top[0] * 0.3, band], out]);
+          sweep = { len: climb.len + over.len, at: f => { const d = f * (climb.len + over.len);
+            return d <= climb.len ? climb.at(d / climb.len) : over.at((d - climb.len) / over.len); } };
+          dir = [0, -1];
+        } else {
+          tEnd = turnNeeded ? [start[0] - vw * 0.015, start[1] - rise] : start;
+          const s1 = [Math.max(tEnd[0] - vw * 0.06, clearX), Math.min(tEnd[1] - (turnNeeded ? 10 : rise), band + (tEnd[1] - band) * 0.35)];
+          sweep = curve([tEnd, s1, [Math.min(tEnd[0], clearX) * 0.35, band], out]);
+          dir = (d => d.map(c => c / Math.hypot(...d)))([s1[0] - tEnd[0], s1[1] - tEnd[1]]);
+        }
+        let sweepPos = hermite(0, 2.2);                  // from rest after the crouch's spring
+        if (turnNeeded) {
+          // The turn ends heading the way the sweep starts, so the hand-over has no kink
+          const turn = curve([start, [start[0], start[1] - rise * 0.6], [tEnd[0] - dir[0] * rise * 0.5, tEnd[1] - dir[1] * rise * 0.5], tEnd]);
+          const vJoin = 0.9 * turn.len / TURN_MS;        // px/ms where the turn hands over to the sweep
+          const turnPos = hermite(1.2, 0.9);
+          sweepPos = hermite(Math.min(1.2, vJoin * SWEEP_MS / sweep.len), 2.2);
+          segs.push({ ms: TURN_MS, n: 44, at: u => ({ feet: turn.at(turnPos(u)), s: sP, sx: 1 - 2 * smooth(u),
+            rot: rot0 + (4 - rot0) * smooth(u) - 12 * Math.sin(Math.PI * u), k: k0, o: 1 }) });
+        }
+        const r0 = turnNeeded ? 4 : rot0;
+        segs.push({ ms: SWEEP_MS, n: 72, at: u => { const f = sweep.at(sweepPos(u)), g = swell(u);
+          return { feet: f, s: sP * (1 + (grow - 1) * g), sx: -1, rot: r0 + (14 - r0) * smooth(u), blur: blurMax * g,
+            k: k0 * smooth(clamp01((f[0] - splitX) / 160)), o: u <= 0.91 ? 1 : 1 - (u - 0.91) / 0.09 }; } });
+      } else {
+        // Right-hand exit: if the bird faces left, it first wheels around (scaleX -1 → 1) while springing up; then a
+        // rising curve that accelerates out past the top-right corner
+        let from = start, r1 = rot0;
+        if (turnNeeded) {
+          const tEnd = [start[0] + vw * 0.015, start[1] - rise];
+          const turn = curve([start, [start[0], start[1] - rise * 0.6], [tEnd[0] - 12, tEnd[1] + 6], tEnd]);
+          const turnPos = hermite(1.2, 0.9);
+          segs.push({ ms: TURN_MS, n: 44, at: u => ({ feet: turn.at(turnPos(u)), s: sP, sx: -1 + 2 * smooth(u),
+            rot: rot0 + (-4 - rot0) * smooth(u) + 12 * Math.sin(Math.PI * u), k: k0, o: 1 }) });
+          from = tEnd; r1 = -4;
+        }
+        const exit = [window.innerWidth + 70, -90];
+        const away = curve([from, [from[0] + 12, from[1] - 70],
+                            [from[0] + (exit[0] - from[0]) * 0.55, from[1] + (exit[1] - from[1]) * 0.75], exit]);
+        const awayPos = hermite(turnNeeded ? 0.6 : 0, 2.4);
+        segs.push({ ms: T ? AWAY_MS : 1100, n: 60, at: u => ({ feet: away.at(awayPos(u)), s: sP * (1 + 0.25 * u), sx: 1,
+          rot: r1 + (-22 - r1) * smooth(u), k: k0, o: u <= 0.8 ? 1 : 1 - (u - 0.8) / 0.2 }) });
+      }
+      const total = segs.reduce((a, g) => a + g.ms, 0);
+      const TAKEOFF_AT = T ? APP_MS + PERCH_MS : 0;     // the crouch starts here; the flight follows it
+      const stateAt = t => { let t0 = 0;
+        for (const g of segs) { if (t <= t0 + g.ms) return g.at(clamp01((t - t0) / g.ms)); t0 += g.ms; }
+        return segs[segs.length - 1].at(1); };
+      const frames = [];
+      let t0 = 0;
+      segs.forEach(g => {
+        for (let i = 0; i <= g.n; i++) {
+          const u = i / g.n, f = g.at(u), c = centreFor(f.feet, f.rot, f.s, f.sx);
+          frames.push({ offset: Math.min(1, (t0 + u * g.ms) / total),
+            transform: `translate(${(c[0] - home[0] - bw / 2).toFixed(1)}px, ${(c[1] - home[1] - bh / 2).toFixed(1)}px) rotate(${f.rot.toFixed(2)}deg) scale(${(f.sx * f.s).toFixed(4)}, ${f.s.toFixed(4)})`,
+            filter: dark(f.k, f.blur || 0, f.s), opacity: +f.o.toFixed(3) });
+        }
+        t0 += g.ms;
       });
-      bird.animate(frames, { duration: FIN_MS, fill: 'forwards' });
+      bird.style.transform = 'none';
+      const flight = bird.animate(frames, { duration: total, fill: 'forwards' });
+      reperch = () => {                                  // keep the landing spot right if the window changes size
+        const n = perchSpot();
+        if (T && n) { shift = [n.x - home[0], n.y - home[1]]; anchor.style.transform = `translate(${n.x}px, ${n.y}px)`; }
+      };
 
-      // 5. Reveal. The name, one-liner and chart clear as the bird turns. As it sweeps back the hero starts easing in and
-      //    the overlay dissolves into it, finishing before the bird has left.
-      const LEG2_AT = LEG1_MS + TURN_MS;
-      [copy, chart].forEach(el => el.animate([{ opacity: 1 }, { opacity: 0 }],
-        { duration: 350, delay: LEG1_MS, easing: 'ease-in-out', fill: 'forwards' }));
-      panel.animate([{ opacity: 1 }, { opacity: 0 }],
-        { duration: 550, delay: LEG2_AT + LEG2_MS * 0.3, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' });
+      const body = bird.firstElementChild, outline = bird.querySelector('.intro-body');
+      body.style.transformOrigin = FOOT_PCT;            // the landing bounce and take-off crouch pivot on the feet
+      const angleOf = el => { const t = getComputedStyle(el).transform; if (!t || t === 'none') return 0; const m = new DOMMatrix(t); return Math.atan2(m.b, m.a) * 180 / Math.PI; };
+      const perchTimers = [];
+      const perchLater = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); perchTimers.push(id); };
+      let tookOff = false;
+      // The head tilt: the outline's head turns about the neck by INTRO.headTiltDeg (beak up), with the same smooth falloff
+      // used to make the poses, so every frame of the morph is one seamless outline. Inside the flipped wrapper the beak
+      // still lifts. Eased in, held, eased back; no overshoot.
+      const tilted = (() => {
+        // Weight: 1 within 100 units of the line from the back of the head to the beak (art 1120,480 → 1360,450), easing
+        // to 0 by 175, which is before the shoulder, so the wings and the body below the throat never move
+        const A = [1120, 480], V = [240, -30], P = [1080, 600], ang = -INTRO.headTiltDeg * Math.PI / 180;
+        const restD = outline.getAttribute('d');
+        return restD.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, xs, ys) => {
+          const x = +xs, y = +ys, k = clamp01(((x - A[0]) * V[0] + (y - A[1]) * V[1]) / (V[0] * V[0] + V[1] * V[1]));
+          const w = 1 - smooth(clamp01((Math.hypot(x - A[0] - k * V[0], y - A[1] - k * V[1]) - 100) / 75));
+          const a = ang * w, dx = x - P[0], dy = y - P[1];
+          return `${(P[0] + dx * Math.cos(a) - dy * Math.sin(a)).toFixed(1)} ${(P[1] + dx * Math.sin(a) + dy * Math.cos(a)).toFixed(1)}`;
+        });
+      })();
+      function headTilt() {
+        const restD = outline.getAttribute('d'), a = document.createElementNS(SVGNS, 'animate');
+        const i = INTRO.headTiltInMs / TILT_MS, h = (INTRO.headTiltInMs + INTRO.headTiltHoldMs) / TILT_MS;
+        a.setAttribute('attributeName', 'd');
+        a.setAttribute('values', `${restD};${tilted};${tilted};${restD}`);
+        a.setAttribute('keyTimes', `0;${i.toFixed(4)};${h.toFixed(4)};1`);
+        a.setAttribute('calcMode', 'spline');
+        a.setAttribute('keySplines', '0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1');
+        a.setAttribute('dur', `${TILT_MS}ms`);
+        a.setAttribute('begin', 'indefinite');
+        a.setAttribute('fill', 'remove');
+        outline.appendChild(a);
+        a.beginElement();
+      }
 
-      later(() => {                                                // headline, photo and stats ease in under the dissolve
-        startHero();
-        intro.style.pointerEvents = 'none';
-        skip.style.pointerEvents = 'auto';                        // Skip stays clickable until it has faded
-        skip.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' })
-          .finished.then(() => { skip.style.visibility = 'hidden'; }, () => {});
-      }, LEG2_AT + LEG2_MS * 0.25);
-      later(() => finish(0), FIN_MS + 30);
+      // Take-off (from a timer, or at once if the visitor scrolls mid-perch): scrolling unlocks, the wings snap open,
+      // a quick crouch leaning toward the turn, then a spring up into the flight, flapping fast, trailing sparkles
+      function takeOff() {
+        if (tookOff || done) return;
+        tookOff = true;
+        perchTimers.forEach(clearTimeout);
+        ['wheel', 'touchmove', 'scroll'].forEach(e => window.removeEventListener(e, takeOff));
+        unlockScroll();
+        if (flight.currentTime < TAKEOFF_AT) flight.currentTime = TAKEOFF_AT;
+        outline.querySelectorAll('animate').forEach(a => a.remove());   // a tilt in progress snaps back to level
+        [wing, farWing].forEach(w => { const from = angleOf(w); w.getAnimations().forEach(a => a.cancel());
+          w.animate([{ transform: `rotate(${from.toFixed(1)}deg)` }, { transform: 'rotate(18deg)' }], { duration: 90, easing: 'ease-out', fill: 'forwards' }); });
+        body.getAnimations().forEach(a => a.cancel());
+        // lean 2.5° toward the exit side on screen; rotations inside the flipped wrapper mirror, so multiply by the facing
+        const lean = (exitLeft ? -2.5 : 0) * (T ? landSx : 1), crouch = T ? CROUCH_MS : 0;
+        if (T) {
+          body.animate([{ transform: 'none' }, { transform: `rotate(${lean}deg) scaleY(0.97)` }], { duration: CROUCH_MS, easing: 'ease-in', fill: 'forwards' });
+          later(() => {
+            body.getAnimations().forEach(a => a.cancel());
+            body.animate([{ transform: `rotate(${lean}deg) scaleY(0.97)` }, { transform: 'translateY(-3%)', offset: 0.6 }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
+            [wing, farWing].forEach(w => w.getAnimations().forEach(a => a.cancel()));
+            flap(FAST_FLAP_MS, { bob: false });
+            later(() => flap(FAST_FLAP_MS, { wings: false }), 160);
+          }, CROUCH_MS);
+        } else {
+          flaps.forEach(a => a.updatePlaybackRate(FLAP_MS / FAST_FLAP_MS));   // never landed: just beat faster
+        }
+        // Sparkles every ~70ms for ~0.9s of the flight, none in its last 0.2s. They come off the tail, measured from the
+        // feet; as the bird swells, that offset and the sparkles grow with it, but only up to 1.5x.
+        const s0 = T ? sP : 1;
+        for (let i = 0; i * INTRO.particleIntervalMs < 900; i++) {
+          later(() => {
+            const t = flight.currentTime;
+            if (total - t < 200) return;
+            const st = stateAt(t), k = Math.min(1.5, st.s / s0);
+            const tail = place2(st.feet, [TAIL[0] - FOOT[0], TAIL[1] - FOOT[1]], st.rot, s0 * k, st.sx);
+            sparkle(tail[0] + shift[0], tail[1] + shift[1], st.sx < 0 ? -1 : 1, k);
+          }, crouch + 60 + i * INTRO.particleIntervalMs);
+        }
+        later(() => finish(0), total - flight.currentTime + 30);
+      }
+
+      if (!T) { takeOff(); return; }
+
+      // Landing: a few quick, wide beats while braking, then the wings fold down against the body, flapping stops,
+      // and a small settle bounce
+      later(() => {
+        flaps.slice(0, 2).forEach(a => { a.effect.setKeyframes([{ transform: 'rotate(22deg)' }, { transform: 'rotate(-24deg)' }]); a.updatePlaybackRate(1.9); });
+      }, APP_MS - 300);
+      later(() => {
+        [wing, farWing].forEach(w => { const from = angleOf(w);
+          w.getAnimations().forEach(a => a.cancel());
+          w.animate([{ transform: `rotate(${from.toFixed(1)}deg)` }, { transform: 'rotate(-22deg)' }], { duration: 160, easing: 'ease-out', fill: 'forwards' }); });
+        flaps.forEach(a => a.cancel());
+        body.animate([{ transform: 'none' }, { transform: 'translateY(2%)', offset: 0.4 }, { transform: 'none' }], { duration: 280, easing: 'ease-out' });
+        // Scrolling, a wheel or a touch while perched sends it on its way
+        ['wheel', 'touchmove', 'scroll'].forEach(e => window.addEventListener(e, takeOff, { passive: true }));
+      }, APP_MS);
+      // Perched: settle, a still moment, the head tilt (the body stays still), then the wing shake, then take-off
+      perchLater(headTilt, APP_MS + TILT_AT);
+      // Wing shake: the near wing flicks up and back twice from its folded angle; the far wing follows 40ms later
+      perchLater(() => {
+        const shake = [{ transform: 'rotate(-22deg)' }, { transform: 'rotate(-10deg)' }, { transform: 'rotate(-22deg)' },
+                       { transform: 'rotate(-10deg)' }, { transform: 'rotate(-22deg)' }];
+        wing.animate(shake, { duration: INTRO.wingShakeMs, easing: 'ease-in-out', fill: 'forwards' });
+        farWing.animate(shake, { duration: INTRO.wingShakeMs, delay: 40, easing: 'ease-in-out', fill: 'forwards' });
+      }, APP_MS + SHAKE_AT);
+      perchLater(takeOff, TAKEOFF_AT);
     }
   }
 }

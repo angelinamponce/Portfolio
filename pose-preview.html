@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Bird pose preview</title>
+<!-- Unlinked page: compares the intro's head tilt (Assets/bird-head-tilt.svg) and rest pose with the original logo (Assets/bird.svg) -->
+<style>
+  :root { --forest: #0e1f16; --mint: #cbe7d3; --cream: #faf7f0; --ink: #1b2a21; }
+  body { margin: 0; padding: 32px 16px; font: 14px/1.5 'Outfit', system-ui, sans-serif; background: var(--cream); color: var(--ink); }
+  h1 { font: 600 28px/1.2 'Cormorant Garamond', Georgia, serif; margin: 0 0 6px; }
+  p { margin: 0 0 24px; color: #5a6b60; }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; max-width: 980px; }
+  figure { margin: 0; text-align: center; }
+  .tile { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; }
+  .tile img { width: 64%; height: auto; }
+  .dark .tile { background: var(--forest); }
+  .light .tile { background: #fff; border: 1px solid rgba(14,31,22,0.1); }
+  .dark .tile img { filter: brightness(0) invert(91%) sepia(8%) saturate(420%) hue-rotate(80deg); } /* ≈ #cbe7d3 */
+  .light .tile img { filter: brightness(0) invert(36%) sepia(14%) saturate(520%) hue-rotate(90deg); }
+  figcaption { margin-top: 8px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #5a6b60; }
+  section + section { margin-top: 32px; }
+</style>
+</head>
+<body>
+  <h1>Bird pose preview</h1>
+  <p>The perch's head tilt (beak lifted 8°, the default headTiltDeg) next to the rest pose and the original logo, on the intro's dark green and on the light page.</p>
+  <section class="row dark">
+    <figure><div class="tile"><img src="Assets/bird.svg" alt="Original logo"></div><figcaption>Original logo</figcaption></figure>
+    <figure><div class="tile"><img src="Assets/bird-rest.svg" alt="Rest pose"></div><figcaption>bird-rest</figcaption></figure>
+    <figure><div class="tile"><img src="Assets/bird-head-tilt.svg" alt="Head tilted up"></div><figcaption>bird-head-tilt</figcaption></figure>
+  </section>
+  <section class="row light">
+    <figure><div class="tile"><img src="Assets/bird.svg" alt="Original logo"></div><figcaption>Original logo</figcaption></figure>
+    <figure><div class="tile"><img src="Assets/bird-rest.svg" alt="Rest pose"></div><figcaption>bird-rest</figcaption></figure>
+    <figure><div class="tile"><img src="Assets/bird-head-tilt.svg" alt="Head tilted up"></div><figcaption>bird-head-tilt</figcaption></figure>
+  </section>
+</body>
+</html>
