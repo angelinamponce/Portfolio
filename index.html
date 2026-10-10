@@ -4,38 +4,39 @@
   <meta charset="utf-8">
   <title>Angelina Ponce | Finance & Technology</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Economics student at Binghamton University specializing in private equity, data analytics, and financial modeling.">
+  <meta name="description" content="Binghamton University economics student bridging finance and technology, focused on asset &amp; wealth management and AI.">
   <link rel="canonical" href="https://angelinaponce.com/">
   <meta name="theme-color" content="#0e1f16">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://angelinaponce.com/">
   <meta property="og:site_name" content="Angelina Ponce">
   <meta property="og:title" content="Angelina Ponce | Finance &amp; Technology">
-  <meta property="og:description" content="Economics student at Binghamton University specializing in private equity, data analytics, and financial modeling.">
+  <meta property="og:description" content="Binghamton University economics student bridging finance and technology, focused on asset &amp; wealth management and AI.">
   <meta property="og:image" content="https://angelinaponce.com/Assets/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Angelina Ponce, Finance &amp; Technology">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Angelina Ponce | Finance &amp; Technology">
-  <meta name="twitter:description" content="Economics student at Binghamton University specializing in private equity, data analytics, and financial modeling.">
+  <meta name="twitter:description" content="Binghamton University economics student bridging finance and technology, focused on asset &amp; wealth management and AI.">
   <meta name="twitter:image" content="https://angelinaponce.com/Assets/og-image.jpg">
   <link rel="icon" type="image/svg+xml" href="Assets/favicon.svg">
   <link rel="icon" type="image/png" href="Assets/abuelitapajarito.png">
   <link rel="apple-touch-icon" href="Assets/abuelitapajarito.png">
   <link rel="preload" as="image" href="Headshot.jpg">
   <script>
-    /* Decide before first paint whether the intro plays (once per tab session). */
+    /* Decide before first paint whether the intro plays: after it plays it stores an expiry (INTRO.introReplayDays
+       later) in localStorage, and it is skipped until then. Blocked storage just means it plays. */
     (function () {
       var root = document.documentElement, seen = false;
-      try { seen = sessionStorage.getItem('apIntroSeen') === '1'; } catch (e) {}
+      try { seen = Date.now() < Number(localStorage.getItem('apIntroUntil') || 0); } catch (e) {}
       root.classList.add(seen ? 'intro-skip' : 'intro-on', 'js');
       try { if (localStorage.getItem('apTheme') === 'dark') root.setAttribute('data-theme', 'dark'); } catch (e) {}
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -711,6 +712,13 @@
     .fact-card strong { display: block; font-size: 12.5px; color: var(--forest); font-weight: 600; margin-bottom: 2px; letter-spacing: 0.2px; }
     .fact-card span { font-size: 12px; color: var(--gray-500); }
     .about-text p { font-size: 15px; line-height: 2.05; color: var(--gray-700); margin-bottom: 20px; font-weight: 300; }
+    /* Optional pieces driven by SITE (top of the script): they stay hidden until their data is filled in */
+    .fact-card[hidden], .c-btn[hidden] { display: none; }
+    .testimonials { display: grid; gap: 16px; max-width: 760px; margin: 0 auto; }
+    .testimonials .highlight-box { margin: 0; }
+    .testimonials blockquote { margin: 0; }
+    .testimonials figcaption { margin-top: 10px; font: 600 11px 'Outfit', sans-serif; font-style: normal; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sage-text); }
+    [data-theme="dark"] .testimonials figcaption { color: var(--sage-light); }
     .highlight-box {
       background: linear-gradient(135deg, var(--sage-pale) 0%, var(--gold-pale) 100%);
       border-left: 2px solid var(--sage);
@@ -1655,19 +1663,20 @@
     }
     .intro-bird svg { display: block; width: 100%; height: 100%; overflow: visible; }
     .intro-skip-btn {
-      position: absolute; right: 24px; bottom: 22px; pointer-events: auto;
+      position: absolute; right: 16px; bottom: 12px; pointer-events: auto;
+      display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; /* comfortable tap target */
       background: none; border: 0; cursor: pointer;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
-      color: rgba(232,240,235,0.62);
-      padding: 8px 4px;
+      font-size: 11.5px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(232,240,235,0.86); /* about 11:1 on the dark panel */
+      padding: 12px 14px;
       transition: color 0.2s ease;
     }
     .intro-skip-btn:hover { color: var(--cream); }
     /* once the overlay has gone, Skip sits on the page itself: give it a small dark pill so it reads on any background */
     .intro-skip-btn.on-page { background: rgba(14,31,22,0.6); color: var(--cream); border-radius: 100px; padding: 8px 14px; }
     @media (max-width: 768px) {
-      .intro-skip-btn { right: 16px; bottom: 16px; }
+      .intro-skip-btn { right: 8px; bottom: 8px; }
       .intro-skip-btn.on-page { right: 62px; } /* clear of the scroll-to-top button */
     }
   </style>
@@ -1915,7 +1924,8 @@
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-graduation-cap"/></svg></span><div><strong>Binghamton University</strong><span>BA Economics · Data Analytics and Computer Science Minors</span></div></div>
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div><strong>Based in</strong><span>New York, NY</span></div></div>
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-briefcase"/></svg></span><div><strong>Focus</strong><span>Product Management · Asset &amp; Wealth Management · AI &amp; Startups</span></div></div>
-        <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-activity"/></svg></span><div><strong>Currently</strong><span>Leading StackHacks · Barclays Equity Research Competition 2026</span></div></div>
+        <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-activity"/></svg></span><div><strong>Currently</strong><span>Leading StackHacks · Seeking full-time roles in asset &amp; wealth management and AI</span></div></div>
+        <div class="fact-card" id="exploringRow" hidden><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></span><div><strong>Currently exploring</strong><span></span></div></div>
       </div>
       <div class="about-text reveal reveal-delay-2">
         <p>I'm a senior at Binghamton University pursuing Economics with minors in Data Analytics and Computer Science, a combination that lets me move fluidly between the trading floor and the terminal. My perspective sits at the rare intersection of financial analysis and technical execution.</p>
@@ -2080,7 +2090,7 @@
       </div>
     </div>
 
-    <!-- Project case studies. Links: add data-github / data-demo on the matching .project-card
+    <!-- Project case studies. Links: add data-github / data-demo / data-report on the matching .project-card
          (e.g. data-github="https://github.com/…"); missing links are simply left out. Screenshot: the card's .project-shot
          image (its src and alt) is reused in the modal; a card without one shows an "add" placeholder there. -->
     <template id="story-prosperity">
@@ -2209,7 +2219,7 @@
         </div>
       </div>
       <div class="conf-card reveal reveal-delay-3">
-        <button type="button" class="conf-img-wrap" aria-label="View larger: Photo from the ALPFA Convention"><img src="alpfa-photo.jpeg" width="800" height="450" loading="lazy" decoding="async" alt="Photo from the ALPFA Convention" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
+        <button type="button" class="conf-img-wrap" aria-label="View larger: Photo from the ALPFA Convention"><img src="Assets/img/alpfa-photo-800.jpg" srcset="Assets/img/alpfa-photo-800.jpg 800w, Assets/img/alpfa-photo-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="691" loading="lazy" decoding="async" data-full="Assets/img/alpfa-photo-1600.jpg" alt="Photo from the ALPFA Convention" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
         <div class="conf-body">
           <div class="conf-icon-row"><div class="conf-icon"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></div><div><h3>ALPFA Convention</h3><p class="conf-loc">Charlotte, North Carolina</p></div></div>
           <p>Attended the Association of Latino Professionals for America's national convention as a member, connecting with professionals across finance, technology, and business, and engaging in career development programming and networking with peers and industry leaders nationwide.</p>
@@ -2297,6 +2307,7 @@
         <a href="mailto:angelinaponce163@gmail.com" class="c-btn btn-email"><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg> Email Me</a>
         <a href="https://www.linkedin.com/in/angelina-ponce" target="_blank" rel="noopener" class="c-btn btn-li"><svg class="i" aria-hidden="true"><use href="#i-linkedin"/></svg> LinkedIn</a>
         <a href="Angelina%20Ponce%20Resume.pdf" target="_blank" rel="noopener" class="c-btn btn-resume">↓ View Resume</a>
+        <a target="_blank" rel="noopener" class="c-btn btn-resume" id="bookCall" hidden><svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg> Book a call</a>
       </div>
       <button type="button" class="copy-email" id="copyEmail" data-email="angelinaponce163@gmail.com">
         <svg class="i" aria-hidden="true"><use href="#i-copy"/></svg><span>angelinaponce163@gmail.com</span><span class="copy-email-hint">Copy</span>
@@ -2351,8 +2362,16 @@
 </footer>
 
 <script>
+// ── Site settings. Each optional piece stays hidden until its value is filled in.
+const SITE = {
+  testimonials: [],                  // { name: '', role: '', quote: '' } entries; shown as "What others say" after About
+  currentlyExploring: '',            // one line, shown as a "Currently exploring" row in About
+  bookingUrl: '',                    // e.g. a scheduling link; adds a "Book a call" button to Contact
+  analyticsDomain: '',               // e.g. 'angelinaponce.com'; loads Plausible (no cookies) when set
+};
 // ── Intro settings: the bird's size, perch, head turn, take-off direction and sparkles
 const INTRO = {
+  introReplayDays: 7,                // after the intro plays, skip it for this many days (per browser)
   birdScale: 1.5,                    // ride size relative to the original bird (min 57px, max 144px, 16.5vw on phones)
   perchWidthPct: 0.15,               // perched width as a share of the headshot's (min 64px, max 40% of the screen)
   exitDirection: 'left',             // 'left' | 'right'
@@ -2377,6 +2396,33 @@ const INTRO = {
   sparkleColors: ['#cdb27e', '#8cbd9e'],
 };
 const introOn = document.documentElement.classList.contains('intro-on');
+
+// ── Optional pieces from SITE (text goes in as text, never as HTML)
+(function siteExtras() {
+  if (SITE.testimonials.length) {
+    const about = document.getElementById('about'), sec = document.createElement('section');
+    sec.className = 'section'; sec.id = 'testimonials';
+    sec.innerHTML = '<div class="container"><div class="reveal"><div class="section-label">Testimonials</div><h2 class="section-title">What others say</h2></div><div class="testimonials"></div></div>';
+    const list = sec.querySelector('.testimonials');
+    SITE.testimonials.forEach(({ name, role, quote }) => {
+      if (!quote) return;
+      const fig = document.createElement('figure'), q = document.createElement('blockquote'), cap = document.createElement('figcaption');
+      fig.className = 'highlight-box reveal'; q.textContent = `"${quote}"`;
+      cap.textContent = [name, role].filter(Boolean).join(' · ');
+      fig.append(q, cap); list.appendChild(fig);
+    });
+    if (list.children.length && about) about.after(sec);
+  }
+  const ex = document.getElementById('exploringRow');
+  if (ex && SITE.currentlyExploring) { ex.querySelector(':scope > div > span').textContent = SITE.currentlyExploring; ex.hidden = false; }
+  const book = document.getElementById('bookCall');
+  if (book && SITE.bookingUrl) { book.href = SITE.bookingUrl; book.hidden = false; }
+  if (SITE.analyticsDomain) {
+    const sc = document.createElement('script');
+    sc.defer = true; sc.dataset.domain = SITE.analyticsDomain; sc.src = 'https://plausible.io/js/script.js';
+    document.head.appendChild(sc);
+  }
+})();
 const startHero    = () => {
   if (document.body.classList.contains('page-loaded')) return;
   document.body.classList.add('page-loaded');
@@ -2413,7 +2459,7 @@ if (introOn) runIntro();
 
 function runIntro() {
   const intro = document.getElementById('intro');
-  try { sessionStorage.setItem('apIntroSeen', '1'); } catch (e) {}
+  try { localStorage.setItem('apIntroUntil', String(Date.now() + INTRO.introReplayDays * 864e5)); } catch (e) {}
   const birdLayer = document.getElementById('intro-bird-layer');
   if (!intro || !intro.animate) { if (intro) intro.remove(); if (birdLayer) birdLayer.remove(); startHero(); unlockScroll(); return; }
 
@@ -2555,7 +2601,9 @@ function runIntro() {
     const vw = window.innerWidth, vh = window.innerHeight;
     const easeOut = 'cubic-bezier(.22,1,.36,1)';
     const SVGNS = 'http://www.w3.org/2000/svg';
-    const NAME_LINE_AT = 900, TAG_AT = 1000, CHART_AT = 1500, CHART_MS = 1400;
+    // Phones get a shorter intro: the chart starts sooner and runs quicker, and the bird never perches (see perchSpot)
+    const short = vw < 768;
+    const NAME_LINE_AT = 900, TAG_AT = 1000, CHART_AT = short ? 1100 : 1500, CHART_MS = short ? 1100 : 1400;
 
     // 1. Name: letters rise in one at a time, the gold rule draws, then the one-liner
     chars.forEach((c, i) => c.animate(
@@ -2730,6 +2778,7 @@ function runIntro() {
     };
     function perchSpot() {
       const W = window.innerWidth, H = window.innerHeight;
+      if (W < 768) return null;                          // phones: no perch, straight into the exit
       const shot = document.querySelector('.headshot-wrap');
       const minW = 64, wFor = shotW => Math.min(Math.max(minW, shotW * INTRO.perchWidthPct), W * 0.4);
       if (W > 1024 && shot) {                            // side-by-side hero: the outer frame line, 12px above the photo
@@ -3303,9 +3352,9 @@ function renderProject(card) {
   const link = (href, icon, label) => href
     ? `<a class="modal-link" href="${href}" target="_blank" rel="noopener"><svg class="i" aria-hidden="true"><use href="#i-${icon}"/></svg>${label}</a>`
     : '';
-  const { github, demo } = card.dataset;
+  const { github, demo, report } = card.dataset;
   const demoLabel = /devpost\.com/i.test(demo || '') ? 'Devpost' : 'Live site';
-  document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel);
+  document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel) + link(report, 'external-link', 'Report');
   // Position among the cards the current filter shows; with only one, there is nothing to step to
   const shown = visibleProjects();
   document.getElementById('modalCount').textContent = `${shown.indexOf(card) + 1} / ${shown.length}`;
