@@ -1572,8 +1572,8 @@
       display: block;
       position: fixed; inset: 0; z-index: 9980; /* under the grain layer so texture matches */
       overflow: hidden;
-      /* CSS-only failsafe: if the script never runs, get out of the way after 8s */
-      animation: introFailsafe 0.5s ease 8s forwards;
+      /* CSS-only failsafe: if the script never runs, get out of the way after 11s */
+      animation: introFailsafe 0.5s ease 11s forwards;
     }
     @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
     /* The bird (and the Skip button) fly on their own layer above the page, so the bird can land after the overlay
@@ -1583,7 +1583,7 @@
       display: block;
       position: fixed; inset: 0; z-index: 9995;
       pointer-events: none; overflow: hidden;
-      animation: introFailsafe 0.5s ease 8s forwards;
+      animation: introFailsafe 0.5s ease 11s forwards;
     }
     .intro-bird-anchor { position: absolute; left: 0; top: 0; }
     /* take-off sparkles (added and removed by the script) */
@@ -2358,10 +2358,20 @@ const INTRO = {
   exitDirection: 'left',             // 'left' | 'right'
   landFacing: 'left',                // which way the bird faces on the perch: 'left' | 'right'
   perchAnchor: 'top-right',          // where on the headshot frame (or the phone fallback) it lands: 'top-right' | 'top-left' | 'top-center'
-  headTiltDeg: 8,                    // the perch's curious look: the beak lifts this much (chin up), then levels
-  headTiltInMs: 500, headTiltHoldMs: 500, headTiltOutMs: 400,
+  // Looking around on the perch, in order. Each step turns only the head, never down: 'tilt' (beak lifts, toward the
+  // viewer), 'look' (head turns along its gaze, beak slightly lifted), 'lookUp' (beak lifts higher), 'glance' (two quick
+  // small turns, gapMs apart). Angles vary by about ±1° each visit; phones (under 768px) play the first three steps.
+  lookSequence: [
+    { type: 'tilt',   deg: 8,  inMs: 500, holdMs: 320, outMs: 400 },
+    { type: 'look',   deg: 12, inMs: 500, holdMs: 360, outMs: 450 },
+    { type: 'lookUp', deg: 14, inMs: 500, holdMs: 320, outMs: 400 },
+    { type: 'glance', deg: 5,  inMs: 125, holdMs: 0,   outMs: 125, gapMs: 100 },
+  ],
+  lookPauseMs: [200, 280],           // level pauses between steps (random in this range), with a tiny drift
+  perchHoldMs: 4500,                 // touchdown to take-off (2.8s max on phones); the whole perch scales with it
   wingShakeMs: 300,
-  exitScale: 9,                      // the left exit grows to about this many times the perch size (capped near 75% of the screen height)
+  exitScale: 12,                     // the left exit swells to this many times the perch size, flying toward the viewer
+  exitY: 0.5,                        // where it leaves the left edge, as a fraction of the screen height
   particleCount: 14,                 // most sparkles alive at once
   particleIntervalMs: 70,
   sparkleColors: ['#cdb27e', '#8cbd9e'],
@@ -2450,7 +2460,7 @@ function runIntro() {
   window.addEventListener('keydown', onKey);
   window.addEventListener('resize', onResize);
   skip.addEventListener('click', () => finish(350));
-  later(() => finish(500), 8000); // hard cap, whatever happens
+  later(() => finish(500), 11000); // hard cap, whatever happens
 
   // Warm the hero's fonts during the intro; start once the display face is ready (or after 700ms regardless).
   const fontsReady = document.fonts
@@ -2641,10 +2651,34 @@ function runIntro() {
     const APP_MS = 1000, CROUCH_MS = 110, TURN_MS = 350, SWEEP_MS = 800, AWAY_MS = 730;
     const exitLeft = INTRO.exitDirection !== 'right';
     const landSx = INTRO.landFacing === 'right' ? 1 : -1;   // the outer wrapper's scaleX on the perch (the art faces right)
-    // Perch schedule, from touchdown: settle → still → head tilt → wing shake → take-off
-    const TILT_AT = 650;                                // settle (~0.3s), then a still moment
-    const TILT_MS = INTRO.headTiltInMs + INTRO.headTiltHoldMs + INTRO.headTiltOutMs;
-    const SHAKE_AT = TILT_AT + TILT_MS, PERCH_MS = SHAKE_AT + INTRO.wingShakeMs + 50;
+    // Perch schedule, from touchdown: settle (0.3s) → still (0.4s) → look around (INTRO.lookSequence, with level pauses)
+    // → wing shake → still (0.25s) → take-off. Everything but the settle bounce and the shake itself scales with the
+    // perch length (INTRO.perchHoldMs, designed at 4.5s): the stills, and the look-around, which plays at whatever pace
+    // fills the time left (about 60% of its listed timings at 4.5s).
+    const PERCH_MS = vw < 768 ? Math.min(2800, INTRO.perchHoldMs) : INTRO.perchHoldMs, perchK = PERCH_MS / 4500;
+    const LOOK_AT = 300 + 400 * perchK, SHAKE_AT = PERCH_MS - INTRO.wingShakeMs - 250 * perchK;
+    const lookPlan = (() => {
+      const steps = vw < 768 ? INTRO.lookSequence.slice(0, 3) : INTRO.lookSequence, plan = [];
+      const [p0, p1] = INTRO.lookPauseMs;
+      let t = 0;
+      steps.forEach((st, i) => {
+        const deg = Math.max(1, st.deg + (Math.random() - 0.5) * 2.4);
+        if (st.type === 'glance') {
+          plan.push({ at: t, type: 'look', deg, inMs: st.inMs, holdMs: st.holdMs, outMs: st.outMs });
+          t += st.inMs + st.holdMs + st.outMs + (st.gapMs ?? 100);
+          plan.push({ at: t, type: 'look', deg: deg * 0.9, inMs: st.inMs, holdMs: st.holdMs, outMs: st.outMs });
+          t += st.inMs + st.holdMs + st.outMs;
+        } else {
+          plan.push({ at: t, type: st.type, deg, inMs: st.inMs, holdMs: st.holdMs, outMs: st.outMs });
+          t += st.inMs + st.holdMs + st.outMs;
+        }
+        const pause = p0 + Math.random() * (p1 - p0);    // level, with a tiny (<1°) drift
+        plan.push({ at: t, type: 'tilt', deg: 0.6, inMs: pause / 2, holdMs: 0, outMs: pause / 2 });
+        t += pause;
+      });
+      const k = (SHAKE_AT - LOOK_AT) / t;                 // stretch or squeeze the whole plan to fill its time
+      return { k, steps: plan.map(x => ({ ...x, at: LOOK_AT + x.at * k, inMs: x.inMs * k, holdMs: x.holdMs * k, outMs: x.outMs * k })) };
+    })();
     const bez = (a, b, c, e, t) => { const u = 1 - t; return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*e; };
     const smooth  = t => t * t * (3 - 2 * t);
     const clamp01 = t => Math.max(0, Math.min(1, t));
@@ -2780,7 +2814,8 @@ function runIntro() {
       let shift = [0, 0];
       anchor.style.transform = `translate(${home[0]}px, ${home[1]}px)`;
       const sP = T ? T.s : 1, perch = T ? [T.x, T.y] : feet0;
-      const dark = (k, blur = 0, s = 1) => (T && T.onLight && k > 0 ? `brightness(${(1 - 0.58 * k).toFixed(3)}) saturate(${(1 + 0.5 * k).toFixed(3)})` : 'brightness(1) saturate(1)')
+      const dark = (k, blur = 0, s = 1, lift = 0) =>     // darkening on the cream page, the exit's brightening, and blur
+        `brightness(${((T && T.onLight && k > 0 ? 1 - 0.58 * k : 1) * (1 + 0.15 * lift)).toFixed(3)}) saturate(${(T && T.onLight && k > 0 ? 1 + 0.5 * k : 1).toFixed(3)})`
         + ` blur(${(blur / s).toFixed(3)}px)`;          // blur is in screen px; the filter runs before the scale, so divide it out
       const splitX = vw * 0.55 - 55;                    // where the dark half of the hero ends on wide screens
 
@@ -2821,56 +2856,47 @@ function runIntro() {
       const turnNeeded = sx0 !== exitSx;                 // wheel around at take-off only if it faces away from the exit
       const rise = vh * 0.05;
       if (exitLeft) {
-        // Sweep up and left above the hero copy, accelerating, growing 25% and leaving off the left edge. If the bird
-        // faces right, it first wheels around (outer wrapper scaleX 1 → -1, edge-on mid-turn) while springing up a few %
-        // of the viewport, and the turn hands its speed and heading to the sweep.
-        // The headline's text (not its full-width box) and the header, at their resting positions
-        const h1 = document.querySelector('.hero-name'), rg = document.createRange();
-        rg.selectNodeContents(h1);
-        const nb = rg.getBoundingClientRect(), hb = h1.getBoundingClientRect(), hr = layoutRect(h1);
-        const name = { x: nb.left - (hb.left - hr.x), y: nb.top - (hb.top - hr.y), r: nb.right - (hb.left - hr.x) };
-        const header = document.querySelector('header'), navB = header ? (r => r.y + r.h)(layoutRect(header)) : 0;
-        // The route runs in the gap between the header and the headline, in the top 35% of the screen. Along it the bird
-        // swells (ease-in) to INTRO.exitScale × its perch size, capped near 75% of the screen height, as if passing close
-        // to the viewer; near the edge the big bird spills past that band, which is fine. It ends fully off the left.
-        const grow = Math.max(1, Math.min(INTRO.exitScale, vh * 0.75 / (bh * sP)));
-        const hEnd = bh * sP * Math.min(grow, 1.25);    // the bird's height early on, while it still has to fit the gap
-        const band = Math.max(navB + 6 + 0.75 * hEnd, Math.min(vh * 0.12, name.y - 0.3 * hEnd - 8, vh * 0.35 - 0.3 * hEnd));
-        const clearX = name.r + bw * sP * 0.37 + 10;   // the bird's leading edge stays right of the headline until it is above it
-        const out = [-bw * sP * grow * 0.85 - 30, band]; // the trailing (tail) side clears the left edge too, even banked
-        const swell = cubic(.45, .05, .8, .35), blurMax = vw >= 768 ? 4 : 0;
-        const lift = turnNeeded ? rise : 0;              // with no turn, the sweep itself springs up from the perch
-        let tEnd, sweep, dir;
-        if (start[1] - 0.28 * hEnd > name.y - 10) {
-          // Starting below the top of the headline (stacked hero): climb straight up clear of the name, then curve left
-          // above it. Two joined curves, both heading straight up where they meet.
-          tEnd = [Math.max(start[0], clearX), start[1] - lift];
-          const top = [tEnd[0], Math.min(tEnd[1] - 10, band + Math.min(30, (tEnd[1] - band) * 0.5))];
-          const climb = curve([tEnd, [tEnd[0], tEnd[1] - (tEnd[1] - top[1]) * 0.35], [top[0], top[1] + (tEnd[1] - top[1]) * 0.35], top]);
-          const over = curve([top, [top[0], band - 12], [top[0] * 0.3, band], out]);
-          sweep = { len: climb.len + over.len, at: f => { const d = f * (climb.len + over.len);
-            return d <= climb.len ? climb.at(d / climb.len) : over.at((d - climb.len) / over.len); } };
-          dir = [0, -1];
-        } else {
-          tEnd = turnNeeded ? [start[0] - vw * 0.015, start[1] - rise] : start;
-          const s1 = [Math.max(tEnd[0] - vw * 0.06, clearX), Math.min(tEnd[1] - (turnNeeded ? 10 : rise), band + (tEnd[1] - band) * 0.35)];
-          sweep = curve([tEnd, s1, [Math.min(tEnd[0], clearX) * 0.35, band], out]);
-          dir = (d => d.map(c => c / Math.hypot(...d)))([s1[0] - tEnd[0], s1[1] - tEnd[1]]);
-        }
-        let sweepPos = hermite(0, 2.2);                  // from rest after the crouch's spring
+        // Fly off from the middle of the left side, toward the viewer: a short lift (4% of the screen) off the perch,
+        // then a smooth curve over the gap between the hero copy and the photo that settles at INTRO.exitY of the screen
+        // height on the left edge. Along it the bird swells to INTRO.exitScale × its perch size on a strong ease-in, as
+        // if closing on the screen, with a roll, a nose-up-then-level angle, a speed blur (desktop) and a slight
+        // brightening; it fades only over the last 8% and ends fully off the left edge. The path is traced by the
+        // bird's centre, so as it grows huge it drifts down to the viewer's eye line. If the bird faces right, it first
+        // wheels around (outer wrapper scaleX 1 → -1, edge-on mid-turn) and hands its speed to the sweep.
+        const grow = Math.max(1, INTRO.exitScale), wEnd = bw * sP * grow;
+        const copyEl = document.querySelector('.hero-content'), shotEl = document.querySelector('.headshot-wrap');
+        const copyR = copyEl ? (r => r.x + r.w)(layoutRect(copyEl)) : vw * 0.45, shotL = shotEl ? layoutRect(shotEl).x : vw * 0.6;
+        const gapX = split && shotL > copyR ? (copyR + shotL) / 2 : vw * 0.5;
+        const exitC = [-wEnd * 0.62 - 30, vh * INTRO.exitY];   // centre: the whole (banked) bird is past the left edge
+        const swell = cubic(.6, .04, .98, .34), blurMax = vw >= 768 ? 6 : 0;
+        let c0 = centreFor(start, rot0, sP, sx0), r0 = rot0, sweepPos = hermite(0, 2.2), joinV = 0;
+        const p1 = c => [c[0] - vw * 0.03, c[1] - (turnNeeded ? 0 : vh * 0.04)];
         if (turnNeeded) {
-          // The turn ends heading the way the sweep starts, so the hand-over has no kink
-          const turn = curve([start, [start[0], start[1] - rise * 0.6], [tEnd[0] - dir[0] * rise * 0.5, tEnd[1] - dir[1] * rise * 0.5], tEnd]);
-          const vJoin = 0.9 * turn.len / TURN_MS;        // px/ms where the turn hands over to the sweep
-          const turnPos = hermite(1.2, 0.9);
-          sweepPos = hermite(Math.min(1.2, vJoin * SWEEP_MS / sweep.len), 2.2);
+          // Wheel around while springing up 4% of the screen; the turn ends heading the way the sweep starts
+          const tEnd = [start[0] - vw * 0.015, start[1] - vh * 0.04];
+          const cEnd = centreFor(tEnd, 4, sP, -1), q1 = p1(cEnd);
+          const dir = (d => d.map(c => c / Math.hypot(...d)))([q1[0] - cEnd[0], q1[1] - cEnd[1]]);
+          const turn = curve([start, [start[0], start[1] - vh * 0.024], [tEnd[0] - dir[0] * vh * 0.02, tEnd[1] - dir[1] * vh * 0.02], tEnd]);
+          const turnPos = hermite(1.2, 0.9), vJoin = 0.9 * turn.len / TURN_MS;
           segs.push({ ms: TURN_MS, n: 44, at: u => ({ feet: turn.at(turnPos(u)), s: sP, sx: 1 - 2 * smooth(u),
             rot: rot0 + (4 - rot0) * smooth(u) - 12 * Math.sin(Math.PI * u), k: k0, o: 1 }) });
+          c0 = cEnd; r0 = 4; joinV = vJoin;
         }
-        const r0 = turnNeeded ? 4 : rot0;
-        segs.push({ ms: SWEEP_MS, n: 72, at: u => { const f = sweep.at(sweepPos(u)), g = swell(u);
-          return { feet: f, s: sP * (1 + (grow - 1) * g), sx: -1, rot: r0 + (14 - r0) * smooth(u), blur: blurMax * g,
-            k: k0 * smooth(clamp01((f[0] - splitX) / 160)), o: u <= 0.91 ? 1 : 1 - (u - 0.91) / 0.09 }; } });
+        // Stay at perch height across the photo (the bird is still small), and only start down toward the middle of the
+        // left side once past the photo's left edge, over the gap before the hero copy
+        const header = document.querySelector('header'), navB = header ? (r => r.y + r.h)(layoutRect(header)) : 0;
+        // high enough that the tail clears the top of the photo, low enough that the wings clear the header
+        const hi = Math.min(p1(c0)[1], Math.max(navB + bh * sP * 0.6 + 4, (shotEl ? layoutRect(shotEl).y : vh) - bh * sP * 0.75)), acrossX = split ? Math.min(shotL - 10, c0[0] - vw * 0.1) : c0[0] - vw * 0.1;
+        const sweep = curve([c0, [acrossX, hi], [Math.min(gapX, acrossX) - (acrossX - gapX > 0 ? 0 : vw * 0.05), hi + (exitC[1] - hi) * 0.15], exitC]);
+        if (turnNeeded) sweepPos = hermite(Math.min(1.2, joinV * SWEEP_MS / sweep.len), 2.2);
+        segs.push({ ms: SWEEP_MS, n: 80, at: u => {
+          const c = sweep.at(sweepPos(u)), g = swell(u), sc = sP * (1 + (grow - 1) * g);
+          // a little nose-up off the perch (more would swing the tail down over the photo), levelling out, plus a gentle
+          // roll that builds once it is past the photo
+          const rot = r0 + (3 - r0) * smooth(clamp01(u / 0.3)) - 3 * smooth(clamp01((u - 0.3) / 0.7)) + 10 * Math.sin(Math.PI * clamp01((u - 0.3) / 0.7));
+          return { feet: place2(c, FOOT, rot, sc, -1), s: sc, sx: -1, rot, blur: blurMax * g, lift: g,
+            k: k0 * smooth(clamp01((c[0] - splitX) / 160)), o: u <= 0.92 ? 1 : 1 - (u - 0.92) / 0.08 };
+        } });
       } else {
         // Right-hand exit: if the bird faces left, it first wheels around (scaleX -1 → 1) while springing up; then a
         // rising curve that accelerates out past the top-right corner
@@ -2902,7 +2928,7 @@ function runIntro() {
           const u = i / g.n, f = g.at(u), c = centreFor(f.feet, f.rot, f.s, f.sx);
           frames.push({ offset: Math.min(1, (t0 + u * g.ms) / total),
             transform: `translate(${(c[0] - home[0] - bw / 2).toFixed(1)}px, ${(c[1] - home[1] - bh / 2).toFixed(1)}px) rotate(${f.rot.toFixed(2)}deg) scale(${(f.sx * f.s).toFixed(4)}, ${f.s.toFixed(4)})`,
-            filter: dark(f.k, f.blur || 0, f.s), opacity: +f.o.toFixed(3) });
+            filter: dark(f.k, f.blur || 0, f.s, f.lift || 0), opacity: +f.o.toFixed(3) });
         }
         t0 += g.ms;
       });
@@ -2919,30 +2945,40 @@ function runIntro() {
       const perchTimers = [];
       const perchLater = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); perchTimers.push(id); };
       let tookOff = false;
-      // The head tilt: the outline's head turns about the neck by INTRO.headTiltDeg (beak up), with the same smooth falloff
-      // used to make the poses, so every frame of the morph is one seamless outline. Inside the flipped wrapper the beak
-      // still lifts. Eased in, held, eased back; no overshoot.
-      const tilted = (() => {
-        // Weight: 1 within 100 units of the line from the back of the head to the beak (art 1120,480 → 1360,450), easing
-        // to 0 by 175, which is before the shoulder, so the wings and the body below the throat never move
-        const A = [1120, 480], V = [240, -30], P = [1080, 600], ang = -INTRO.headTiltDeg * Math.PI / 180;
-        const restD = outline.getAttribute('d');
-        return restD.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, xs, ys) => {
-          const x = +xs, y = +ys, k = clamp01(((x - A[0]) * V[0] + (y - A[1]) * V[1]) / (V[0] * V[0] + V[1] * V[1]));
+      // Looking around: each step morphs the outline into a head pose and back. The head and beak turn about the neck
+      // on a smooth falloff (weight 1 within 100 units of the line from the back of the head to the beak, art
+      // 1120,480 → 1360,450, easing to 0 by 175, before the shoulder), so every frame is one seamless outline and the
+      // wings and body never move. Every pose lifts the beak; none dips it. Inside the flipped wrapper the turns mirror.
+      const restD = outline.getAttribute('d'), poseCache = {};
+      const NUM2 = /(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g;
+      const poseD = (type, deg) => {
+        const key = type + deg.toFixed(1);
+        if (poseCache[key]) return poseCache[key];
+        const A = [1120, 480], V = [240, -30], P = [1080, 600], Hc = [1150, 470];
+        // 'look' / glance: the head foreshortens as it turns along its gaze, beak lifted a little; 'tilt': a slight
+        // turn toward the viewer with the beak up; 'lookUp': the beak lifts
+        const squeeze = type === 'look' ? deg / 45 : type === 'tilt' ? deg / 90 : 0;
+        const lift = (type === 'look' ? deg * 0.3 : deg) * Math.PI / 180;
+        return (poseCache[key] = restD.replace(NUM2, (m, xs, ys) => {
+          let x = +xs, y = +ys;
+          const k = clamp01(((x - A[0]) * V[0] + (y - A[1]) * V[1]) / (V[0] * V[0] + V[1] * V[1]));
           const w = 1 - smooth(clamp01((Math.hypot(x - A[0] - k * V[0], y - A[1] - k * V[1]) - 100) / 75));
-          const a = ang * w, dx = x - P[0], dy = y - P[1];
-          return `${(P[0] + dx * Math.cos(a) - dy * Math.sin(a)).toFixed(1)} ${(P[1] + dx * Math.sin(a) + dy * Math.cos(a)).toFixed(1)}`;
-        });
-      })();
-      function headTilt() {
-        const restD = outline.getAttribute('d'), a = document.createElementNS(SVGNS, 'animate');
-        const i = INTRO.headTiltInMs / TILT_MS, h = (INTRO.headTiltInMs + INTRO.headTiltHoldMs) / TILT_MS;
+          if (!w) return m;
+          x = Hc[0] + (x - Hc[0]) * (1 - w * squeeze);
+          const r = -lift * w, dx = x - P[0], dy = y - P[1];
+          return `${(P[0] + dx * Math.cos(r) - dy * Math.sin(r)).toFixed(1)} ${(P[1] + dx * Math.sin(r) + dy * Math.cos(r)).toFixed(1)}`;
+        }));
+      };
+      // One step: ease into the pose, hold, ease back to level (no overshoot). SMIL, so the path data animates everywhere.
+      function headStep({ type, deg, inMs, holdMs, outMs }) {
+        outline.querySelectorAll('animate').forEach(x => x.remove());
+        const dur = inMs + holdMs + outMs, pose = poseD(type, deg), a = document.createElementNS(SVGNS, 'animate');
         a.setAttribute('attributeName', 'd');
-        a.setAttribute('values', `${restD};${tilted};${tilted};${restD}`);
-        a.setAttribute('keyTimes', `0;${i.toFixed(4)};${h.toFixed(4)};1`);
+        a.setAttribute('values', `${restD};${pose};${pose};${restD}`);
+        a.setAttribute('keyTimes', `0;${(inMs / dur).toFixed(4)};${((inMs + holdMs) / dur).toFixed(4)};1`);
         a.setAttribute('calcMode', 'spline');
         a.setAttribute('keySplines', '0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1');
-        a.setAttribute('dur', `${TILT_MS}ms`);
+        a.setAttribute('dur', `${dur.toFixed(0)}ms`);
         a.setAttribute('begin', 'indefinite');
         a.setAttribute('fill', 'remove');
         outline.appendChild(a);
@@ -2976,14 +3012,16 @@ function runIntro() {
         } else {
           flaps.forEach(a => a.updatePlaybackRate(FLAP_MS / FAST_FLAP_MS));   // never landed: just beat faster
         }
+        // the beat quickens to ~0.14s as it closes on the viewer
+        if (exitLeft) later(() => flaps.forEach(a => a.updatePlaybackRate(a.playbackRate * FAST_FLAP_MS / 140)), crouch + 400);
         // Sparkles every ~70ms for ~0.9s of the flight, none in its last 0.2s. They come off the tail, measured from the
-        // feet; as the bird swells, that offset and the sparkles grow with it, but only up to 1.5x.
+        // feet; as the bird swells, that offset and the sparkles grow with it, but only up to 1.8x.
         const s0 = T ? sP : 1;
         for (let i = 0; i * INTRO.particleIntervalMs < 900; i++) {
           later(() => {
             const t = flight.currentTime;
             if (total - t < 200) return;
-            const st = stateAt(t), k = Math.min(1.5, st.s / s0);
+            const st = stateAt(t), k = Math.min(1.8, st.s / s0);
             const tail = place2(st.feet, [TAIL[0] - FOOT[0], TAIL[1] - FOOT[1]], st.rot, s0 * k, st.sx);
             sparkle(tail[0] + shift[0], tail[1] + shift[1], st.sx < 0 ? -1 : 1, k);
           }, crouch + 60 + i * INTRO.particleIntervalMs);
@@ -3007,8 +3045,8 @@ function runIntro() {
         // Scrolling, a wheel or a touch while perched sends it on its way
         ['wheel', 'touchmove', 'scroll'].forEach(e => window.addEventListener(e, takeOff, { passive: true }));
       }, APP_MS);
-      // Perched: settle, a still moment, the head tilt (the body stays still), then the wing shake, then take-off
-      perchLater(headTilt, APP_MS + TILT_AT);
+      // Perched: settle, a still moment, the look-around plan (the body stays still), then the wing shake, then take-off
+      lookPlan.steps.forEach(st => perchLater(() => headStep(st), APP_MS + st.at));
       // Wing shake: the near wing flicks up and back twice from its folded angle; the far wing follows 40ms later
       perchLater(() => {
         const shake = [{ transform: 'rotate(-22deg)' }, { transform: 'rotate(-10deg)' }, { transform: 'rotate(-22deg)' },
