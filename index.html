@@ -25,12 +25,26 @@
   <link rel="apple-touch-icon" href="Assets/abuelitapajarito.png">
   <link rel="preload" as="image" href="Headshot.jpg">
   <script>
-    /* Decide before first paint whether the intro plays: after it plays it stores an expiry (INTRO.introReplayDays
-       later) in localStorage, and it is skipped until then. Blocked storage just means it plays. */
+    /* Intro replay settings. They live here (INTRO points to them) because the choice has to be made before first paint.
+       introMode: 'always' plays on every load | 'once-per-session' skips it for the rest of the tab's session |
+       'days' skips it for introReplayDays after it plays (per browser). Blocked storage just means it plays. */
+    var INTRO_REPLAY = { introMode: 'always', introReplayDays: 7 };
     (function () {
-      var root = document.documentElement, seen = false;
-      try { seen = Date.now() < Number(localStorage.getItem('apIntroUntil') || 0); } catch (e) {}
+      var root = document.documentElement, seen = false, mode = INTRO_REPLAY.introMode;
+      try {
+        if (mode === 'once-per-session') seen = sessionStorage.getItem('apIntroSeen') === '1';
+        else if (mode === 'days') seen = Date.now() < Number(localStorage.getItem('apIntroUntil') || 0);
+      } catch (e) {}
       root.classList.add(seen ? 'intro-skip' : 'intro-on', 'js');
+      if (!seen) {
+        // The intro starts at the top of the page: no restored scroll on refresh, and a deep link (/#contact) is held
+        // back so the browser doesn't jump there under the overlay; runIntro scrolls to it once the intro ends.
+        try { history.scrollRestoration = 'manual'; } catch (e) {}
+        if (location.hash.length > 1) {
+          INTRO_REPLAY.pendingHash = location.hash;
+          try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { INTRO_REPLAY.pendingHash = ''; }
+        }
+      }
       try { if (localStorage.getItem('apTheme') === 'dark') root.setAttribute('data-theme', 'dark'); } catch (e) {}
     })();
   </script>
@@ -1594,6 +1608,7 @@
       animation: introFailsafe 0.5s ease 11s forwards;
     }
     .intro-bird-anchor { position: absolute; left: 0; top: 0; }
+    .intro-bird3d { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     /* take-off sparkles (added and removed by the script) */
     .intro-spark { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; will-change: transform, opacity; }
     /* Two copies of the dark panel, one per side of the hero's diagonal; their masks (set by the script) feather the
@@ -2371,7 +2386,8 @@ const SITE = {
 };
 // ── Intro settings: the bird's size, perch, head turn, take-off direction and sparkles
 const INTRO = {
-  introReplayDays: 7,                // after the intro plays, skip it for this many days (per browser)
+  introMode: INTRO_REPLAY.introMode,             // 'always' | 'once-per-session' | 'days': set in INTRO_REPLAY in <head>
+  introReplayDays: INTRO_REPLAY.introReplayDays, // for 'days' mode: also set in INTRO_REPLAY in <head>
   birdScale: 1.5,                    // ride size relative to the original bird (min 57px, max 144px, 16.5vw on phones)
   perchWidthPct: 0.15,               // perched width as a share of the headshot's (min 64px, max 40% of the screen)
   exitDirection: 'left',             // 'left' | 'right'
@@ -2454,14 +2470,30 @@ if (!introOn) {
 
 const finePointer  = window.matchMedia('(pointer: fine)').matches;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Intro bird dev aids (see loadBird3D)
+const BIRD_DEBUG = new URLSearchParams(location.search).get('birdDebug') === '1';
+const BIRD_DEV = BIRD_DEBUG || ['localhost', '127.0.0.1', ''].includes(location.hostname);
 
 if (introOn) runIntro();
 
 function runIntro() {
   const intro = document.getElementById('intro');
-  try { localStorage.setItem('apIntroUntil', String(Date.now() + INTRO.introReplayDays * 864e5)); } catch (e) {}
+  try {
+    if (INTRO.introMode === 'once-per-session') sessionStorage.setItem('apIntroSeen', '1');
+    else if (INTRO.introMode === 'days') localStorage.setItem('apIntroUntil', String(Date.now() + INTRO.introReplayDays * 864e5));
+  } catch (e) {}
   const birdLayer = document.getElementById('intro-bird-layer');
-  if (!intro || !intro.animate) { if (intro) intro.remove(); if (birdLayer) birdLayer.remove(); startHero(); unlockScroll(); return; }
+  // A deep link held back in <head>: put the hash back and scroll to its section once the intro is out of the way
+  function landOnHash() {
+    const hash = INTRO_REPLAY.pendingHash;
+    if (!hash) return;
+    INTRO_REPLAY.pendingHash = '';
+    try { history.replaceState(history.state, '', hash); } catch (e) {}
+    let t = null;
+    try { t = document.querySelector(hash); } catch (e) {}
+    if (t) requestAnimationFrame(() => scrollToSection(t));
+  }
+  if (!intro || !intro.animate) { if (intro) intro.remove(); if (birdLayer) birdLayer.remove(); startHero(); unlockScroll(); landOnHash(); return; }
 
   const copy   = intro.querySelector('.intro-copy');
   const tag    = intro.querySelector('.intro-tag');
@@ -2477,6 +2509,18 @@ function runIntro() {
   const timers = [];
   const later  = (fn, ms) => timers.push(setTimeout(fn, ms));
   let done = false, overlayGone = false, reperch = null;
+  // The 3D bird (Assets/intro-bird3d.js) loads during the intro's first second; phones, reduced motion, no WebGL or a load over
+  // 2.5s keep the flat bird
+  let three3D = null;
+  try { if (!reduceMotion && window.innerWidth >= 768) (three3D = loadBird3D(2500)).catch(() => {}); } catch (e) { three3D = null; }
+  let b3 = null;
+  const parity = { n: 0, pos: 0, scale: 0 };   // dev check: largest dove vs flat-bird gap over the run (see playFull)
+  const disposeBird3D = () => {
+    if (!b3) return;
+    if (BIRD_DEV && parity.n) console.info(`[intro bird] parity over ${parity.n} frames: max position ${parity.pos.toFixed(2)}px, max scale ${(parity.scale * 100).toFixed(2)}%`
+      + (parity.pos < 2 && parity.scale < 0.01 ? '' : ' (over the 2px / 1% limit)'));
+    b3.dispose(); b3 = null;
+  };
 
   // The overlay leaves first (the bird is still flying); Skip then sits on the page until the bird has gone
   function removeOverlay() {
@@ -2493,20 +2537,24 @@ function runIntro() {
     window.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);
     bird.style.willChange = 'auto';
+    disposeBird3D();
     birdLayer.remove();
     startHero();
     unlockScroll();
+    landOnHash();
     if (overlayGone || !fadeMs) return removeOverlay();
     intro.style.pointerEvents = 'none';
     intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: fadeMs, easing: 'ease', fill: 'forwards' })
       .finished.then(removeOverlay, removeOverlay);
   }
   const onKey = () => finish(350);
-  const onResize = () => { if (reperch) reperch(); };
+  const onResize = () => { if (reperch) reperch(); if (b3) b3.resize(); };
   window.addEventListener('keydown', onKey);
   window.addEventListener('resize', onResize);
   skip.addEventListener('click', () => finish(350));
   later(() => finish(500), 11000); // hard cap, whatever happens
+  // Back/forward from the browser's page cache: never resume or replay the intro, just clear it away
+  window.addEventListener('pageshow', e => { if (e.persisted) finish(0); });
 
   // Warm the hero's fonts during the intro; start once the display face is ready (or after 700ms regardless).
   const fontsReady = document.fonts
@@ -2663,8 +2711,9 @@ function runIntro() {
     // Wing flap: each iteration is one stroke (raised → down), so a full flap is two strokes.
     // Positive rotation lifts the wing in this art; the far wing trails by 60ms; the body bobs up on the downstroke.
     const FLAP_MS = 280, FAST_FLAP_MS = 180;
-    let flaps = [];
+    let flaps = [], flapNow = [FLAP_MS, 1, true];
     const flap = (cycle = FLAP_MS, { wings = true, bob = true } = {}) => {
+      if (wings) { flapNow = [cycle, 1]; if (b3) b3.flap(cycle, 1, true); }
       const o = { duration: cycle / 2, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' };
       const stroke = [{ transform: 'rotate(18deg)' }, { transform: 'rotate(-22deg)' }];
       if (wings) flaps = [wing.animate(stroke, o), farWing.animate(stroke, { ...o, delay: 60, fill: 'backwards' })];
@@ -2677,7 +2726,8 @@ function runIntro() {
       const t0 = performance.now();
       const tick = now => {
         if (done) return;
-        const u = Math.min(1, (now - t0) / CHART_MS), s = pace(u);
+        // the first frame's timestamp can be a little before t0; a negative u sent pace() off the line (NaN)
+        const u = Math.max(0, Math.min(1, (now - t0) / CHART_MS)), s = pace(u);
         path.style.strokeDashoffset = len - s;
         brk.style.strokeDashoffset = brkLen - Math.max(0, Math.min(brkLen, s - lenA));
         const q = pose(s);
@@ -2754,6 +2804,44 @@ function runIntro() {
     const place2 = (centre, off, rot, s, sx) => { const r = rot * Math.PI / 180, x = off[0] * sx * s, y = off[1] * s;
       return [centre[0] + x * Math.cos(r) - y * Math.sin(r), centre[1] + x * Math.sin(r) + y * Math.cos(r)]; };
     const centreFor = (feet, rot, s, sx) => { const f = place2([0, 0], FOOT, rot, s, sx); return [feet[0] - f[0], feet[1] - f[1]]; };
+    // Once three.js is in, the dove takes over from the flat bird, which keeps flying exactly as before, only hidden: its
+    // drawing goes to opacity 0 (the wrapper's own opacity is part of the timeline, and is read). Each frame the dove copies
+    // the wrapper's transform (feet, angle, scale, facing), the body's (bob, settle, crouch), and the wrapper's opacity,
+    // filter and will-change; nothing is recomputed. Any error hands back to the flat bird.
+    if (three3D) three3D.then(mod => {
+      if (done) return;
+      b3 = mod.createIntroBird(birdLayer, bw * 0.9);
+      b3.flap(...flapNow);
+      const svg = bird.firstElementChild, U = Math.min(bw / 1097, bh / 1210);   // flat-bird px per art unit
+      svg.style.transition = 'opacity 0.15s';
+      svg.style.opacity = BIRD_DEBUG ? '0.5' : '0';
+      if (BIRD_DEBUG) bird.style.color = '#ff2d95';   // ?birdDebug=1: the flat bird, tinted, over the dove
+      const matrixOf = t => t === 'none' ? new DOMMatrix() : new DOMMatrix(t);
+      const drive = now => {
+        if (done || !b3) return;
+        try {
+          const cs = getComputedStyle(bird), r = bird.getBoundingClientRect(), m = matrixOf(cs.transform);
+          const s = Math.hypot(m.c, m.d) || 1, rot = Math.atan2(-m.c, m.d) * 180 / Math.PI, sx = (m.a * m.d - m.b * m.c) / (s * s);
+          const feet = place2([r.left + r.width / 2, r.top + r.height / 2], FOOT, rot, s, sx);
+          // the body's transform about its transform-origin, rewritten about the feet
+          const bs = getComputedStyle(svg), b = matrixOf(bs.transform), o = bs.transformOrigin.split(' ').map(parseFloat);
+          const fx = bw / 2 + FOOT[0] - o[0], fy = bh / 2 + FOOT[1] - o[1];
+          const body = { a: b.a, b: b.b, c: b.c, d: b.d, e: b.a * fx + b.c * fy + b.e - fx, f: b.b * fx + b.d * fy + b.f - fy };
+          // the flat filter's blur is written before the wrapper's scale (see dark()); the canvas isn't scaled, so scale it here
+          const filter = cs.filter.replace(/blur\(([\d.]+)px\)/, (x, v) => `blur(${(v * s).toFixed(3)}px)`);
+          b3.frame({ feet, rot, s, sx, body, opacity: cs.opacity, filter, willChange: cs.willChange }, now);
+          if (BIRD_DEV && +cs.opacity > 0) {
+            // the flat bird's own feet and vertical scale on screen (from the browser) against where the camera put the dove
+            const ctm = svg.getScreenCTM(), f2 = new DOMPoint(985, 1030).matrixTransform(ctm), d = b3.measure();
+            parity.pos = Math.max(parity.pos, Math.hypot(d.feet[0] - f2.x, d.feet[1] - f2.y));
+            parity.scale = Math.max(parity.scale, Math.abs(d.scale / (Math.hypot(ctm.c, ctm.d) / U) - 1));
+            parity.n++;
+          }
+          requestAnimationFrame(drive);
+        } catch (e) { disposeBird3D(); svg.style.opacity = ''; bird.style.color = ''; }
+      };
+      requestAnimationFrame(drive);
+    }).catch(() => {});
     // A box's resting position: its on-screen box minus any translate the hero entrance is still applying above it
     const layoutRect = el => {
       const r = el.getBoundingClientRect(); let dx = 0, dy = 0;
@@ -3020,6 +3108,7 @@ function runIntro() {
       };
       // One step: ease into the pose, hold, ease back to level (no overshoot). SMIL, so the path data animates everywhere.
       function headStep({ type, deg, inMs, holdMs, outMs }) {
+        if (b3) b3.look({ type, deg, inMs, holdMs, outMs });
         outline.querySelectorAll('animate').forEach(x => x.remove());
         const dur = inMs + holdMs + outMs, pose = poseD(type, deg), a = document.createElementNS(SVGNS, 'animate');
         a.setAttribute('attributeName', 'd');
@@ -3049,6 +3138,7 @@ function runIntro() {
         body.getAnimations().forEach(a => a.cancel());
         // lean 2.5° toward the exit side on screen; rotations inside the flipped wrapper mirror, so multiply by the facing
         const lean = (exitLeft ? -2.5 : 0) * (T ? landSx : 1), crouch = T ? CROUCH_MS : 0;
+        if (b3) b3.takeOff();
         if (T) {
           body.animate([{ transform: 'none' }, { transform: `rotate(${lean}deg) scaleY(0.97)` }], { duration: CROUCH_MS, easing: 'ease-in', fill: 'forwards' });
           later(() => {
@@ -3060,9 +3150,10 @@ function runIntro() {
           }, CROUCH_MS);
         } else {
           flaps.forEach(a => a.updatePlaybackRate(FLAP_MS / FAST_FLAP_MS));   // never landed: just beat faster
+          if (b3) b3.flap(FAST_FLAP_MS);
         }
         // the beat quickens to ~0.14s as it closes on the viewer
-        if (exitLeft) later(() => flaps.forEach(a => a.updatePlaybackRate(a.playbackRate * FAST_FLAP_MS / 140)), crouch + 400);
+        if (exitLeft) later(() => { flaps.forEach(a => a.updatePlaybackRate(a.playbackRate * FAST_FLAP_MS / 140)); if (b3) b3.flap(140); }, crouch + 400);
         // Sparkles every ~70ms for ~0.9s of the flight, none in its last 0.2s. They come off the tail, measured from the
         // feet; as the bird swells, that offset and the sparkles grow with it, but only up to 1.8x.
         const s0 = T ? sP : 1;
@@ -3084,12 +3175,14 @@ function runIntro() {
       // and a small settle bounce
       later(() => {
         flaps.slice(0, 2).forEach(a => { a.effect.setKeyframes([{ transform: 'rotate(22deg)' }, { transform: 'rotate(-24deg)' }]); a.updatePlaybackRate(1.9); });
+        if (b3) b3.flap(FLAP_MS / 1.9, 1.15);
       }, APP_MS - 300);
       later(() => {
         [wing, farWing].forEach(w => { const from = angleOf(w);
           w.getAnimations().forEach(a => a.cancel());
           w.animate([{ transform: `rotate(${from.toFixed(1)}deg)` }, { transform: 'rotate(-22deg)' }], { duration: 160, easing: 'ease-out', fill: 'forwards' }); });
         flaps.forEach(a => a.cancel());
+        if (b3) b3.fold(160);
         body.animate([{ transform: 'none' }, { transform: 'translateY(2%)', offset: 0.4 }, { transform: 'none' }], { duration: 280, easing: 'ease-out' });
         // Scrolling, a wheel or a touch while perched sends it on its way
         ['wheel', 'touchmove', 'scroll'].forEach(e => window.addEventListener(e, takeOff, { passive: true }));
@@ -3102,10 +3195,27 @@ function runIntro() {
                        { transform: 'rotate(-10deg)' }, { transform: 'rotate(-22deg)' }];
         wing.animate(shake, { duration: INTRO.wingShakeMs, easing: 'ease-in-out', fill: 'forwards' });
         farWing.animate(shake, { duration: INTRO.wingShakeMs, delay: 40, easing: 'ease-in-out', fill: 'forwards' });
+        if (b3) b3.shake(INTRO.wingShakeMs);
       }, APP_MS + SHAKE_AT);
       perchLater(takeOff, TAKEOFF_AT);
     }
   }
+}
+
+// ── 3D intro bird (Assets/intro-bird3d.js, with a trimmed, self-hosted three.js in Assets/vendor). The flat SVG bird
+//    still flies the whole sequence, hidden; each frame the dove copies its transforms, opacity and filter (see playFull),
+//    and the flat bird's cues (flap, fold, head steps, shake, take-off) drive its wings and head.
+//    ?birdDebug=1 shows the flat bird, tinted, over the dove; on localhost (or with that flag) the console reports how
+//    far apart they got over the run (BIRD_DEBUG, BIRD_DEV above runIntro).
+function loadBird3D(timeoutMs) {
+  try {                                              // WebGL at all? (a throwaway context, released at once)
+    const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl');
+    if (!gl) return Promise.reject(new Error('no WebGL'));
+    const lose = gl.getExtension('WEBGL_lose_context');
+    if (lose) lose.loseContext();
+  } catch (e) { return Promise.reject(e); }
+  return Promise.race([import('./Assets/intro-bird3d.js'),
+    new Promise((_, no) => setTimeout(() => no(new Error('the 3D bird took too long')), timeoutMs))]);
 }
 
 const progressBar = document.getElementById('progress-bar');
