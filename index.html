@@ -555,23 +555,30 @@
     }
     body.page-loaded .hero-right-enter { opacity: 1; transform: none; }
 
-    /* Portrait block: the brass frame (with the photo inside it) and the stat cards share one wrapper and one width,
-       so they line up at every breakpoint. The photo is centred with equal side padding and stands on the frame's
-       bottom edge; the frame's own canvas background keeps the hero motif from ever showing behind it. */
+    /* Portrait block: the brass frame and the stat cards share one wrapper and one width, so they line up at every
+       breakpoint. Inside the frame, the photo sits on its own layer that is clipped only at the frame's left, right and
+       bottom inner edges: the photo is wider than the frame and anchored to its bottom centre, so the blazer and arm run
+       out past both sides, and the layer reaches 30% above the frame so the head can rise over the top border (the
+       border belongs to the frame, so the photo layer is painted over it). The frame's canvas background keeps the
+       hero motif from showing behind her. */
     .portrait { width: var(--shot-w); }
     .headshot-wrap {
-      position: relative; margin-bottom: 20px; overflow: hidden;
-      padding: clamp(16px, 1.6vw, 24px) clamp(16px, 1.6vw, 24px) 0;
+      --shot-scale: 1.36;   /* photo width ÷ frame width; the photo's edges fall outside the frame */
+      position: relative; margin: 8% 0 20px; aspect-ratio: 4 / 5;
       border: 1px solid rgba(184,150,92,0.55);
-      background: radial-gradient(circle at 50% 42%, rgba(212,181,125,0.14) 0%, transparent 62%), var(--hero-bg);
+      background: radial-gradient(circle at 50% 38%, rgba(212,181,125,0.14) 0%, transparent 62%), var(--hero-bg);
       transition: border-color 0.4s ease;
     }
     .headshot-wrap:hover { border-color: rgba(184,150,92,0.85); }
-
+    .headshot-clip {
+      position: absolute; left: 0; right: 0; bottom: 0; top: -30%; z-index: 1;
+      clip-path: inset(0);   /* left, right and bottom are the frame's inner edges; the top is 30% above the frame */
+      pointer-events: none;
+    }
     .headshot {
-      width: 100%; height: auto; aspect-ratio: 4 / 5;
-      object-fit: cover; object-position: 46% 30%;   /* her face sits a little left of the photo's centre */
-      position: relative; z-index: 1;
+      position: absolute; bottom: -1%; left: 50%;
+      width: calc(var(--shot-scale) * 100%); max-width: none; height: auto;   /* the square photo keeps its shape */
+      transform: translateX(-49%);   /* centres her face and shoulders together (her face sits just left of the photo's middle) */
       filter: url(#portraitKey);
       display: block;
     }
@@ -1771,7 +1778,7 @@
   <div class="hero-right hero-right-enter">
     <div class="portrait">
       <div class="headshot-wrap">
-        <img src="Headshot.jpg" alt="Headshot of Angelina Ponce" class="headshot" width="1080" height="1080" fetchpriority="high" decoding="async" onerror="this.style.background='#12231a';this.style.height='360px'">
+        <div class="headshot-clip"><img src="Headshot.jpg" alt="Headshot of Angelina Ponce" class="headshot" width="1080" height="1080" fetchpriority="high" decoding="async" onerror="this.style.background='#12231a';this.style.height='360px'"></div>
         <div class="headshot-overlay"></div>
         <div class="headshot-namecard" aria-hidden="true">
           <div class="headshot-namecard-line"></div>
