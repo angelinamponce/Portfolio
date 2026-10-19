@@ -521,7 +521,7 @@
       justify-content: center; align-items: center;
       padding: calc(var(--nav-h) + 48px) 56px 64px 56px;
       position: relative; z-index: 1;
-      --shot-w: clamp(300px, 27vw, 430px);
+      --shot-w: clamp(240px, 27vw, 430px);
     }
 
     .hero-enter {
@@ -555,34 +555,24 @@
     }
     body.page-loaded .hero-right-enter { opacity: 1; transform: none; }
 
+    /* Portrait block: the brass frame (with the photo inside it) and the stat cards share one wrapper and one width,
+       so they line up at every breakpoint. The photo is centred with equal side padding and stands on the frame's
+       bottom edge; the frame's own canvas background keeps the hero motif from ever showing behind it. */
+    .portrait { width: var(--shot-w); }
     .headshot-wrap {
-      position: relative; width: var(--shot-w); margin-bottom: 32px;
+      position: relative; margin-bottom: 20px; overflow: hidden;
+      padding: clamp(16px, 1.6vw, 24px) clamp(16px, 1.6vw, 24px) 0;
+      border: 1px solid rgba(184,150,92,0.55);
+      background: radial-gradient(circle at 50% 42%, rgba(212,181,125,0.14) 0%, transparent 62%), var(--hero-bg);
+      transition: border-color 0.4s ease;
     }
-    .headshot-wrap::before {
-      content: '';
-      position: absolute;
-      top: 12px; left: 12px;
-      width: 100%; height: 100%;
-      border: 1px solid rgba(184,150,92,0.5);
-      z-index: 0;
-      transition: transform 0.5s cubic-bezier(.34,1.2,.64,1),
-                  border-color 0.4s ease;
-    }
-    .headshot-wrap:hover::before {
-      transform: translate(4px, 4px);
-      border-color: rgba(184,150,92,0.8);
-    }
+    .headshot-wrap:hover { border-color: rgba(184,150,92,0.85); }
 
     .headshot {
       width: 100%; height: auto; aspect-ratio: 4 / 5;
-      object-fit: cover; object-position: 50% 30%;
+      object-fit: cover; object-position: 46% 30%;   /* her face sits a little left of the photo's centre */
       position: relative; z-index: 1;
       filter: url(#portraitKey);
-      -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
-              mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
-      transition: transform 0.4s cubic-bezier(.34,1.2,.64,1),
-                  box-shadow 0.55s ease;
-      transform-style: preserve-3d;
       display: block;
     }
 
@@ -631,7 +621,7 @@
       margin-bottom: 8px;
     }
 
-    .stats-row { display: flex; gap: 12px; width: var(--shot-w); }
+    .stats-row { display: flex; gap: 12px; width: 100%; }
     .stat-flip { flex: 1; perspective: 900px; height: 88px; }
     .stat-flip-inner {
       position: relative; width: 100%; height: 100%;
@@ -1487,6 +1477,7 @@
       .hero { grid-template-columns: 1fr; }
       .hero-left { min-height: auto; padding: 130px 40px 64px; }
       .hero-glow { right: 50%; top: auto; bottom: 0; width: 120vw; transform: translate(50%, 30%); }
+      .hero-right { --shot-w: min(360px, 100%); }
       /* stacked: the motif becomes a band behind the portrait */
       .hero-motif { inset: auto 0 6% 0; height: 42%; opacity: 0.8; }
       .hero-right { padding: 60px 40px 80px; }
@@ -1775,35 +1766,37 @@
     </div>
   </div>
   <div class="hero-right hero-right-enter">
-    <div class="headshot-wrap">
-      <img src="Headshot.jpg" alt="Headshot of Angelina Ponce" class="headshot" width="1080" height="1080" fetchpriority="high" decoding="async" onerror="this.style.background='#12231a';this.style.height='360px'">
-      <div class="headshot-overlay"></div>
-      <div class="headshot-namecard" aria-hidden="true">
-        <div class="headshot-namecard-line"></div>
-        <div class="headshot-namecard-name">Angelina Ponce</div>
-        <div class="headshot-namecard-role">Economics · Data Analytics · CS · BU '27</div>
-      </div>
-    </div>
-    <div class="stats-row">
-      <div class="stat-flip" tabindex="0">
-        <div class="stat-flip-inner">
-          <div class="stat-face">
-            <span class="stat-num-big"><span data-target="600">600</span><span class="stat-unit">%</span></span>
-            <span class="stat-label">StackHacks Membership Growth</span>
-          </div>
-          <div class="stat-face stat-back">
-            <span class="stat-back-detail">Co-Founder and President of StackHacks</span>
-          </div>
+    <div class="portrait">
+      <div class="headshot-wrap">
+        <img src="Headshot.jpg" alt="Headshot of Angelina Ponce" class="headshot" width="1080" height="1080" fetchpriority="high" decoding="async" onerror="this.style.background='#12231a';this.style.height='360px'">
+        <div class="headshot-overlay"></div>
+        <div class="headshot-namecard" aria-hidden="true">
+          <div class="headshot-namecard-line"></div>
+          <div class="headshot-namecard-name">Angelina Ponce</div>
+          <div class="headshot-namecard-role">Economics · Data Analytics · CS · BU '27</div>
         </div>
       </div>
-      <div class="stat-flip" tabindex="0">
-        <div class="stat-flip-inner">
-          <div class="stat-face">
-            <span class="stat-num-big stat-num-mid">Top&nbsp;<span class="stat-accent"><span data-target="10">10</span>%</span></span>
-            <span class="stat-label">HackMIT Acceptance</span>
+      <div class="stats-row">
+        <div class="stat-flip" tabindex="0">
+          <div class="stat-flip-inner">
+            <div class="stat-face">
+              <span class="stat-num-big"><span data-target="600">600</span><span class="stat-unit">%</span></span>
+              <span class="stat-label">StackHacks Membership Growth</span>
+            </div>
+            <div class="stat-face stat-back">
+              <span class="stat-back-detail">Co-Founder and President of StackHacks</span>
+            </div>
           </div>
-          <div class="stat-face stat-back">
-            <span class="stat-back-detail">Selected from 5,000+ global applicants</span>
+        </div>
+        <div class="stat-flip" tabindex="0">
+          <div class="stat-flip-inner">
+            <div class="stat-face">
+              <span class="stat-num-big stat-num-mid">Top&nbsp;<span class="stat-accent"><span data-target="10">10</span>%</span></span>
+              <span class="stat-label">HackMIT Acceptance</span>
+            </div>
+            <div class="stat-face stat-back">
+              <span class="stat-back-detail">Selected from 5,000+ global applicants</span>
+            </div>
           </div>
         </div>
       </div>
@@ -3059,18 +3052,6 @@ document.querySelectorAll('.btn-mag').forEach(btn => {
 });
 
 if (!reduceMotion && finePointer) {
-  const headshotWrap = document.querySelector('.headshot-wrap');
-  const headshotImg  = document.querySelector('.headshot');
-  if (headshotWrap && headshotImg) {
-    headshotWrap.addEventListener('mousemove', e => {
-      const r = headshotWrap.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
-      headshotImg.style.transform = `perspective(800px) rotateY(${(px * 7).toFixed(2)}deg) rotateX(${(-py * 7).toFixed(2)}deg) translateY(-6px)`;
-    });
-    headshotWrap.addEventListener('mouseleave', () => { headshotImg.style.transform = ''; });
-  }
-
   document.querySelectorAll('.exp-card, .project-card, .conf-card').forEach(card => {
     card.addEventListener('mousemove', e => {
       const r = card.getBoundingClientRect();
