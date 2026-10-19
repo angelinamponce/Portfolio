@@ -673,8 +673,24 @@
       text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
       color: var(--brass-hi); margin: 0 0 18px;
     }
-    .logo-row { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px 56px; }
-    .logo-slot { min-height: 36px; display: flex; align-items: center; justify-content: center; }
+    .logo-row { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px var(--logo-gap); }
+    .logo-strip { --logo-gap: 56px; }
+    .logo-slot { min-height: 56px; display: flex; align-items: center; justify-content: center; }   /* the tallest logo box, so nothing shifts as files load */
+    /* Marquee (the script adds .is-marquee unless reduced motion is on; without it the row above stays static and
+       centred). The set is repeated until the strip is covered at every point of the loop (copies are aria-hidden),
+       each set ends with one gap of padding so copies tile exactly, and the track slides one set's width left to
+       right, linear, forever. Hover or keyboard focus pauses it. */
+    .logo-strip.is-marquee .logo-marquee {
+      overflow: hidden; border-radius: 4px;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
+              mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
+    }
+    .logo-strip.is-marquee .logo-track { display: flex; width: max-content; animation: logoDrift 50s linear infinite; will-change: transform; }
+    .logo-strip.is-marquee .logo-row { display: flex; flex-wrap: nowrap; flex-shrink: 0; padding-right: var(--logo-gap); }
+    .logo-strip.is-marquee .logo-marquee:hover .logo-track,
+    .logo-strip.is-marquee .logo-marquee:focus-within .logo-track { animation-play-state: paused; }
+    .logo-marquee:focus-visible { outline-offset: 6px; }
+    @keyframes logoDrift { from { transform: translateX(calc(-1 * var(--set-w, 0px))); } to { transform: none; } }
     .logo-pair { gap: 12px; }   /* HackMIT + MIT read as one item */
     .logo-item { display: flex; align-items: center; opacity: 0.6; transition: opacity 0.25s; }
     .logo-slot:hover .logo-item { opacity: 1; }
@@ -1508,7 +1524,8 @@
       .conf-card { grid-column: span 1; }
     }
     @media (max-width: 768px) {
-      .logo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 16px; }
+      .logo-strip { --logo-gap: 40px; }
+      .logo-strip:not(.is-marquee) .logo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 16px; }
       .logo-word { font-size: 19px; }
       .section { padding: 84px 0; }
       .projects-grid { grid-template-columns: 1fr; }
@@ -1556,7 +1573,7 @@
     }
     @media (max-width: 400px) {
       .logo-wrap > div:last-child { display: none; }
-      .logo-row { gap: 16px 10px; }
+      .logo-strip:not(.is-marquee) .logo-row { gap: 16px 10px; }
       .logo-word { font-size: 16px; letter-spacing: 0.2px; }
     }
 
@@ -1825,14 +1842,18 @@
 <section class="logo-strip" aria-labelledby="logoStripLabel">
   <div class="container">
     <h2 class="logo-strip-label" id="logoStripLabel">Experience, programs &amp; competitions</h2>
-    <ul class="logo-row">
-      <li class="logo-slot"><span class="logo-item" data-logo="cpc"><span class="logo-word"><span aria-hidden="true">CPC</span><span class="sr-only">Community Preservation Corporation</span></span></span></li>
-      <li class="logo-slot"><span class="logo-item" data-logo="brightshore"><span class="logo-word">Brightshore Capital<span class="sr-only"> (formerly GTIS Partners)</span></span></span></li>
-      <li class="logo-slot logo-pair"><span class="logo-item" data-logo="hackmit"><span class="logo-word">HackMIT</span></span><span class="logo-item" data-logo="mit"><span class="logo-word">MIT</span></span></li>
-      <li class="logo-slot"><span class="logo-item" data-logo="colorstack"><span class="logo-word">ColorStack</span></span></li>
-      <li class="logo-slot"><span class="logo-item" data-logo="ey"><span class="logo-word">EY</span></span></li>
-      <li class="logo-slot"><span class="logo-item" data-logo="barclays"><span class="logo-word">Barclays</span></span></li>
-    </ul>
+    <div class="logo-marquee" role="group" aria-labelledby="logoStripLabel">
+      <div class="logo-track">
+        <ul class="logo-row">
+          <li class="logo-slot"><span class="logo-item" data-logo="cpc"><span class="logo-word"><span aria-hidden="true">CPC</span><span class="sr-only">Community Preservation Corporation</span></span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="brightshore"><span class="logo-word">Brightshore Capital<span class="sr-only"> (formerly GTIS Partners)</span></span></span></li>
+          <li class="logo-slot logo-pair"><span class="logo-item" data-logo="hackmit"><span class="logo-word">HackMIT</span></span><span class="logo-item" data-logo="mit"><span class="logo-word">MIT</span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="colorstack"><span class="logo-word">ColorStack</span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="ey"><span class="logo-word">EY</span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="barclays"><span class="logo-word">Barclays</span></span></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -2644,6 +2665,40 @@ const revealObs = new IntersectionObserver(entries => {
   });
 }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// ── Logo strip marquee (see .is-marquee): fill the strip with enough copies of the set, and slide one set's width.
+//    The copies are rebuilt whenever the set's width changes (a logo file replacing its wordmark, a resize).
+(function logoMarquee() {
+  const strip = document.querySelector('.logo-strip'), marquee = strip && strip.querySelector('.logo-marquee');
+  if (!marquee || reduceMotion) return;
+  const track = marquee.querySelector('.logo-track'), set = track.querySelector('.logo-row');
+  strip.classList.add('is-marquee');
+  marquee.tabIndex = 0;   // so keyboard users can pause it by focusing it
+  let lastW = 0;
+  const fill = () => {
+    // The set gets a touch of extra end padding so its width on screen (after the page's content zoom) is a whole
+    // number of pixels: the loop then wraps exactly onto a copy, with no sub-pixel shimmer at the seam.
+    set.style.paddingRight = '';
+    const natural = set.offsetWidth, boxW = marquee.offsetWidth;   // layout px
+    if (!natural) return;
+    const zoom = set.currentCSSZoom || 1;
+    let setW = natural;
+    while (setW < natural + 40 && Math.abs(setW * zoom - Math.round(setW * zoom)) > 0.001) setW++;
+    if (setW !== natural) set.style.paddingRight = `calc(var(--logo-gap) + ${setW - natural}px)`;
+    if (setW === lastW) return;
+    lastW = setW;
+    track.querySelectorAll('.logo-row.is-copy').forEach(n => n.remove());
+    for (let i = 0, n = Math.max(1, Math.ceil(boxW / setW)); i < n; i++) {
+      const copy = set.cloneNode(true);
+      copy.classList.add('is-copy'); copy.setAttribute('aria-hidden', 'true');
+      track.appendChild(copy);
+    }
+    track.style.setProperty('--set-w', setW + 'px');
+  };
+  new ResizeObserver(fill).observe(set);
+  new ResizeObserver(() => { lastW = 0; fill(); }).observe(marquee);
+  fill();
+})();
 
 // ── Hero motif: a thin price line whose points drift apart into a node network, then settle back into the line.
 //    Reduced motion shows the network, still. The loop only runs while the hero is on screen and the tab is visible.
