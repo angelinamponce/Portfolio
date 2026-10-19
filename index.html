@@ -659,21 +659,22 @@
     .stat-back .stat-label { color: var(--brass-hi); }
     .stat-back-detail { font-size: 11.5px; color: var(--on-dark-2); text-align: center; line-height: 1.6; }
 
-    /* Logo strip under the hero: text wordmarks until SVGs are supplied (see the markup) */
+    /* Logo strip under the hero: logos from LOGOS (top of the script), each falling back to a serif wordmark. One
+       treatment for all: cream at 60%, full on hover. Six in one row on wide screens, two even rows of three below 768px. */
     .logo-strip { background: var(--hero-bg); border-top: 1px solid var(--line-dark); border-bottom: 1px solid var(--line-dark); padding: 30px 0 34px; }
     .logo-strip-label {
       text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
       color: var(--brass-hi); margin: 0 0 18px;
     }
     .logo-row { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px 56px; }
-    .logo-slot { height: 32px; display: flex; align-items: center; }
-    .logo-slot img { height: 28px; width: auto; opacity: 0.78; filter: brightness(0) invert(0.93) sepia(0.25); transition: opacity 0.25s; }
-    .logo-slot:hover img { opacity: 1; }
+    .logo-slot { min-height: 36px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.25s; }
+    .logo-slot:hover { opacity: 1; }
+    /* width and height come from LOGOS (explicit attributes, so nothing shifts); the file is tinted to cream */
+    .logo-slot img { display: block; max-width: 100%; object-fit: contain; filter: brightness(0) invert(94%) sepia(10%); }
     .logo-word {
       font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; letter-spacing: 0.4px;
-      color: var(--on-dark-2); transition: color 0.25s;
+      color: var(--cream); text-align: center; line-height: 1.15;
     }
-    .logo-slot:hover .logo-word { color: var(--cream); }
 
     .section { padding: 120px 0; }
     .container { max-width: 1320px; margin: 0 auto; padding: 0 48px; }
@@ -1495,6 +1496,8 @@
       .conf-card { grid-column: span 1; }
     }
     @media (max-width: 768px) {
+      .logo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 16px; }
+      .logo-word { font-size: 19px; }
       .section { padding: 84px 0; }
       .projects-grid { grid-template-columns: 1fr; }
       .value-grid { grid-template-columns: 1fr; }
@@ -1541,8 +1544,8 @@
     }
     @media (max-width: 400px) {
       .logo-wrap > div:last-child { display: none; }
-      .logo-row { gap: 10px 30px; }
-      .logo-word { font-size: 20px; }
+      .logo-row { gap: 16px 10px; }
+      .logo-word { font-size: 16px; letter-spacing: 0.2px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1806,15 +1809,13 @@
 
 <!-- Everything after the hero is drawn at --content-scale (see .content-zoom) -->
 <div class="content-zoom">
-<!-- Logo strip. Each slot shows a text wordmark until its SVG is supplied: replace the slot's <span class="logo-word">
-     with an <img>, e.g. <img src="Assets/logos/cpc.svg" alt="Community Preservation Corporation">. Single-colour SVGs
-     work best; .logo-slot img tints them to cream and sizes them to 28px tall. -->
+<!-- Logo strip. Each slot shows its wordmark until LOGOS (top of the script) gives it a file. -->
 <section class="logo-strip" aria-labelledby="logoStripLabel">
   <div class="container">
     <h2 class="logo-strip-label" id="logoStripLabel">Experience, programs &amp; competitions</h2>
     <ul class="logo-row">
-      <li class="logo-slot" data-logo="cpc"><span class="logo-word">CPC</span></li>
-      <li class="logo-slot" data-logo="gtis"><span class="logo-word">GTIS</span></li>
+      <li class="logo-slot" data-logo="cpc"><span class="logo-word"><span aria-hidden="true">CPC</span><span class="sr-only">Community Preservation Corporation</span></span></li>
+      <li class="logo-slot" data-logo="brightshore"><span class="logo-word">Brightshore Capital<span class="sr-only"> (formerly GTIS Partners)</span></span></li>
       <li class="logo-slot" data-logo="hackmit"><span class="logo-word">HackMIT</span></li>
       <li class="logo-slot" data-logo="colorstack"><span class="logo-word">ColorStack</span></li>
       <li class="logo-slot" data-logo="ey"><span class="logo-word">EY</span></li>
@@ -2287,6 +2288,18 @@ const SITE = {
   openTo: '',                        // one line naming the exact roles you're applying for; shown under the "Where I fit" cards
   buildLogNote: '',                  // one line shown at the top of every "How I built it" section in the project modals
 };
+// ── Logo strip. Fill in src (e.g. 'public/logos/cpc.svg') once a file is in the repo; until then, and if a file fails
+//    to load, the slot keeps its serif wordmark. src can list fallbacks, tried in order. w × h is the box the logo is
+//    fitted into (contained, never stretched): heights are set by optical weight, so the square, dense HackMIT mark
+//    starts at ~75% of the others. Every logo is tinted to cream, so use files with transparent backgrounds.
+const LOGOS = {
+  cpc:         { src: '', alt: 'Community Preservation Corporation',            w: 120, h: 28 },
+  brightshore: { src: '', alt: 'Brightshore Capital (formerly GTIS Partners)',  w: 170, h: 28 },
+  hackmit:     { src: [], alt: 'HackMIT',                                       w: 22,  h: 22 },  // ['public/logos/hackmit.svg', 'public/logos/hackmit.png']
+  colorstack:  { src: '', alt: 'ColorStack',                                    w: 150, h: 26 },
+  ey:          { src: '', alt: 'EY',                                            w: 44,  h: 30 },
+  barclays:    { src: '', alt: 'Barclays',                                      w: 140, h: 26 },
+};
 // ── "Where I fit": one card per lane, shown right after About (nothing renders when this is empty).
 // Each evidence bullet links to its proof: href is an anchor on the page, project is a project card's data-id (opens its modal).
 const FIT_ROLES = [
@@ -2396,6 +2409,20 @@ const introOn = document.documentElement.classList.contains('intro-on');
     }
     about.after(sec);
   }
+  // Logo strip: swap a wordmark for its logo only once the file has loaded, so a missing file never shows a broken image
+  document.querySelectorAll('.logo-slot').forEach(slot => {
+    const cfg = LOGOS[slot.dataset.logo];
+    const srcs = cfg ? [].concat(cfg.src).filter(Boolean) : [];
+    const tryNext = () => {
+      if (!srcs.length) return;
+      const img = new Image(cfg.w, cfg.h);
+      img.alt = cfg.alt; img.decoding = 'async';
+      img.onload = () => slot.replaceChildren(img);
+      img.onerror = tryNext;
+      img.src = srcs.shift();
+    };
+    tryNext();
+  });
   const ex = document.getElementById('exploringRow');
   if (ex && SITE.currentlyExploring) { ex.querySelector(':scope > div > span').textContent = SITE.currentlyExploring; ex.hidden = false; }
   const book = document.getElementById('bookCall');
