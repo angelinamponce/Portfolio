@@ -63,7 +63,7 @@
       --green-950:   #07100b;   /* footer */
       --green-900:   #0a140f;   /* dark page */
       --green-850:   #0d1a13;   /* green bands on the dark page */
-      --green-800:   #12231a;   /* raised dark surfaces: ticker, menus, pills */
+      --green-800:   #12231a;   /* raised dark surfaces: menus, pills, image frames */
       --green-700:   #1a3024;   /* hover on dark */
       --forest:      #0e1f16;   /* deep green: bands on the light page, dark buttons, headings on cream */
       --cream:       #f5efe3;   /* cards (dark page); text on green */
@@ -114,7 +114,7 @@
     /* Focus ring: dark brass on cream, light brass on green */
     :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
     .hero-left, .exp-section, .edu-section, header:not(.scrolled), #quick-view, footer, .lightbox, #intro,
-    .ticker-bar, .toast, #scroll-top { --focus: var(--brass-hi); }
+    .logo-strip, .toast, #scroll-top { --focus: var(--brass-hi); }
     .fact-card, .project-card, .value-card, .skill-card, .conf-card, .exp-card, .edu-card, .stat-face, .modal { --focus: var(--brass-ink); }
     main:focus, section:focus, .timeline-item:focus { outline: none; }
     .sr-only {
@@ -282,6 +282,11 @@
     header:not(.scrolled) nav a { color: var(--on-dark-2); border-radius: 100px; }
     header:not(.scrolled) nav a:hover { color: var(--on-dark); background: var(--line-dark); }
     header:not(.scrolled) nav a.active-nav { color: var(--brass-hi); background: none; box-shadow: inset 0 -1.5px 0 var(--brass); border-radius: 0; }
+    header:not(.scrolled) .theme-toggle, header:not(.scrolled) .menu-toggle { color: var(--cream); border-color: var(--line-dark-strong); }
+    header:not(.scrolled) .theme-toggle:hover { background: var(--line-dark); }
+    header:not(.scrolled) .recruiter-pill { background: var(--cream); color: var(--ink); }
+    header:not(.scrolled) .recruiter-pill::before { background: var(--brass-ink); }
+    header:not(.scrolled) .recruiter-pill:hover { background: transparent; color: var(--cream); border-color: var(--brass-hi); }
 
     .header-actions { display: flex; align-items: center; gap: 10px; }
     .menu-toggle {
@@ -324,26 +329,46 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
+    /* One green canvas for the whole hero (both themes): mesh, grid, a brass glow behind the portrait, light grain and
+       the chart-to-network motif sit behind the two columns */
     .hero {
       min-height: 100vh;
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
       position: relative; overflow: hidden;
+      background: var(--band);
     }
+    .hero::after {
+      content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.05; mix-blend-mode: screen;
+    }
+    .hero-glow {
+      position: absolute; z-index: 0; pointer-events: none;
+      right: 4%; top: 50%; width: min(62vw, 900px); aspect-ratio: 1; transform: translate(14%, -50%);
+      background: radial-gradient(circle, rgba(212,181,125,0.16) 0%, rgba(184,150,92,0.07) 32%, transparent 64%);
+    }
+    .hero-motif {
+      position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+      -webkit-mask-image: radial-gradient(ellipse 60% 70% at 72% 55%, #000 40%, transparent 100%);
+              mask-image: radial-gradient(ellipse 60% 70% at 72% 55%, #000 40%, transparent 100%);
+    }
+    .hero-motif line { stroke: var(--brass-hi); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .hero-motif .m-chain { stroke-opacity: 0.36; }
+    .hero-motif .m-link { stroke-opacity: 0.18; }
+    .hero-motif circle { fill: var(--brass-hi); fill-opacity: 0.7; }
 
     .hero-left {
       --hero-pad-x: clamp(40px, 5vw, 80px);
-      --hero-wedge: 56px;   /* average width of the cream diagonal that overlaps this column's right edge */
-      background: var(--band);
       min-height: 100vh;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
-      padding: calc(var(--nav-h) + 72px) calc(var(--hero-pad-x) + var(--hero-wedge)) 80px var(--hero-pad-x);
-      position: relative; overflow: hidden;
+      padding: calc(var(--nav-h) + 72px) var(--hero-pad-x) 80px;
+      position: relative; z-index: 1;
     }
 
     .hero-mesh {
-      position: absolute; inset: 0; z-index: 0;
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background:
         radial-gradient(ellipse 80% 60% at 20% 30%, rgba(26,48,36,0.55) 0%, transparent 60%),
         radial-gradient(ellipse 60% 80% at 80% 70%, rgba(184,150,92,0.08) 0%, transparent 55%),
@@ -356,20 +381,11 @@
     }
 
     .hero-grid {
-      position: absolute; inset: 0; z-index: 0;
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background-image:
         linear-gradient(rgba(245,239,227,0.035) 1px, transparent 1px),
         linear-gradient(90deg, rgba(245,239,227,0.035) 1px, transparent 1px);
       background-size: 60px 60px;
-    }
-
-    .hero-left::after {
-      content: '';
-      position: absolute; right: -1px; top: 0; bottom: 0;
-      width: 80px;
-      background: var(--page);
-      clip-path: polygon(100% 0, 100% 100%, 0 100%, 60% 0);
-      z-index: 2;
     }
 
     .hero-corner {
@@ -380,7 +396,7 @@
       writing-mode: vertical-rl;
     }
 
-    .hero-content { position: relative; z-index: 3; width: 100%; max-width: 576px; margin-inline: auto; }
+    .hero-content { position: relative; z-index: 3; width: 100%; max-width: 640px; margin-inline: auto; }
 
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 10px;
@@ -401,8 +417,8 @@
       --name-ink: var(--cream-hi);
       position: relative; isolation: isolate;
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(68px, 7.25vw, 122px);
-      font-weight: 700; line-height: 0.95;
+      font-size: clamp(76px, 8.6vw, 148px);
+      font-weight: 700; line-height: 0.92;
       color: var(--name-ink); margin-bottom: 28px;
       letter-spacing: -0.018em;
     }
@@ -443,14 +459,12 @@
       transform: none; transition: transform 1.5s ease-in-out;
     }
 
-    .hero-role-wrap { min-height: 30px; margin-bottom: 36px; }
+    .hero-role-wrap { margin: 6px 0 30px; }
     .hero-role {
-      font-size: 16px; font-weight: 300;
-      color: var(--on-dark-2);
-      letter-spacing: 0.4px;
+      font-family: 'Cormorant Garamond', serif; font-style: italic;
+      font-size: clamp(24px, 2.2vw, 32px); font-weight: 500; line-height: 1.2;
+      color: var(--cream); letter-spacing: 0.2px;
     }
-    .cursor-blink { animation: cursorBlink 1s step-end infinite; }
-    @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
 
     .hero-divider {
       width: 40px; height: 1px;
@@ -459,9 +473,9 @@
     }
 
     .hero-desc {
-      font-size: 14.5px; line-height: 2;
-      color: var(--on-dark-3);
-      max-width: 470px; margin-bottom: 52px;
+      font-size: 15.5px; line-height: 1.85;
+      color: var(--on-dark-2);
+      max-width: 500px; margin-bottom: 48px;
       font-weight: 300; letter-spacing: 0.2px;
     }
     .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
@@ -503,9 +517,8 @@
     .hero-right {
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
-      padding: calc(var(--nav-h) + 48px) 56px 64px 96px;
-      background: var(--page);
-      position: relative;
+      padding: calc(var(--nav-h) + 48px) 56px 64px 56px;
+      position: relative; z-index: 1;
       --shot-w: clamp(300px, 27vw, 430px);
     }
 
@@ -553,38 +566,22 @@
       transition: transform 0.5s cubic-bezier(.34,1.2,.64,1),
                   border-color 0.4s ease;
     }
-    .headshot-wrap::after {
-      content: '';
-      position: absolute;
-      top: -12px; left: -12px;
-      width: 100%; height: 100%;
-      border: 1px solid var(--page-line-strong);
-      z-index: 0;
-      transition: transform 0.5s cubic-bezier(.34,1.2,.64,1),
-                  border-color 0.4s ease;
-    }
     .headshot-wrap:hover::before {
       transform: translate(4px, 4px);
       border-color: rgba(184,150,92,0.8);
-    }
-    .headshot-wrap:hover::after {
-      transform: translate(-4px, -4px);
-      border-color: var(--page-ink-3);
     }
 
     .headshot {
       width: 100%; height: auto; aspect-ratio: 4 / 5;
       object-fit: cover; object-position: 50% 30%;
-      border: 1px solid rgba(14,31,22,0.15);
       position: relative; z-index: 1;
-      box-shadow: var(--shadow-xl);
+      filter: url(#portraitKey);
+      -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+              mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
       transition: transform 0.4s cubic-bezier(.34,1.2,.64,1),
                   box-shadow 0.55s ease;
       transform-style: preserve-3d;
       display: block;
-    }
-    .headshot-wrap:hover .headshot {
-      box-shadow: 0 40px 80px rgba(14,31,22,0.22), 0 8px 24px rgba(14,31,22,0.1);
     }
 
     .headshot-overlay {
@@ -666,26 +663,25 @@
     .stat-unit { font-size: 0.6em; color: var(--brass-ink); margin-left: 1px; }
     .stat-num-mid { font-size: 22px; }
     .stat-accent { color: var(--brass-ink); }
-    .stat-label { font-size: 9.5px; color: var(--ink-3); font-weight: 500; margin-top: 4px; text-align: center; letter-spacing: 0.5px; text-transform: uppercase; }
+    .stat-label { font-size: 9.5px; color: var(--ink-3); font-weight: 500; margin-top: 4px; text-align: center; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.35; }
     .stat-back .stat-label { color: var(--brass-hi); }
     .stat-back-detail { font-size: 11.5px; color: var(--on-dark-2); text-align: center; line-height: 1.6; }
 
-    .ticker-bar {
-      background: var(--green-800);
-      border-top: 1px solid var(--line-dark);
-      border-bottom: 1px solid var(--line-dark);
-      padding: 11px 0; overflow: hidden;
+    /* Logo strip under the hero: text wordmarks until SVGs are supplied (see the markup) */
+    .logo-strip { background: var(--band); border-top: 1px solid var(--line-dark); padding: 30px 0 34px; }
+    .logo-strip-label {
+      text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--brass-hi); margin: 0 0 18px;
     }
-    .ticker-track { display: flex; width: max-content; animation: ticker 38s linear infinite; }
-    .ticker-item {
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 0 52px; font-size: 11px;
-      color: var(--on-dark-3); font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap; letter-spacing: 0.5px;
+    .logo-row { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px 56px; }
+    .logo-slot { height: 32px; display: flex; align-items: center; }
+    .logo-slot img { height: 28px; width: auto; opacity: 0.78; filter: brightness(0) invert(0.93) sepia(0.25); transition: opacity 0.25s; }
+    .logo-slot:hover img { opacity: 1; }
+    .logo-word {
+      font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; letter-spacing: 0.4px;
+      color: var(--on-dark-2); transition: color 0.25s;
     }
-    .ticker-item strong { color: var(--brass-hi); font-weight: 500; }
-    .ticker-sep { color: var(--brass); opacity: 0.6; font-size: 8px; }
-    @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .logo-slot:hover .logo-word { color: var(--cream); }
 
     .section { padding: 120px 0; }
     .container { max-width: 1320px; margin: 0 auto; padding: 0 48px; }
@@ -1467,7 +1463,6 @@
     /* Menu button replaces the inline nav before the header runs out of room */
     @media (max-width: 1180px) {
       .menu-toggle { display: inline-flex; }
-      header:not(.scrolled) .menu-toggle { color: var(--cream); border-color: var(--line-dark-strong); }
       nav#primary-nav {
         position: absolute; top: calc(var(--nav-h) - 6px); right: 20px;
         display: none;
@@ -1490,7 +1485,9 @@
     @media (max-width: 1024px) {
       .hero { grid-template-columns: 1fr; }
       .hero-left { min-height: auto; padding: 130px 40px 64px; }
-      .hero-left::after { display: none; }
+      .hero-glow { right: 50%; top: auto; bottom: 0; width: 120vw; transform: translate(50%, 30%); }
+      /* stacked: the motif becomes a band behind the portrait */
+      .hero-motif { inset: auto 0 6% 0; height: 42%; opacity: 0.8; }
       .hero-right { padding: 60px 40px 80px; }
       .projects-grid { grid-template-columns: repeat(2, 1fr); }
       .skills-grid { grid-template-columns: 1fr; }
@@ -1499,8 +1496,6 @@
       .value-grid { grid-template-columns: repeat(2, 1fr); }
       .fit-grid { grid-template-columns: 1fr; }
       #side-nav, #quick-view { display: none; }
-      header:not(.scrolled) .recruiter-pill { background: var(--cream); color: var(--ink); }
-      header:not(.scrolled) .theme-toggle { color: var(--cream); border-color: var(--line-dark-strong); }
       .hero-right { padding: 56px 32px 72px; }
 
       /* Collapse conf-grid to 2 cols */
@@ -1546,6 +1541,7 @@
       .recruiter-pill::before { display: none; }
       .hero-name { font-size: 63px; }
       .hero-eyebrow { margin-bottom: 28px; }
+      .hero-corner { display: none; }
       .eyebrow-text { letter-spacing: 2px; }
       .contact-buttons { flex-direction: column; align-items: stretch; }
       .c-btn { justify-content: center; }
@@ -1554,6 +1550,8 @@
     }
     @media (max-width: 400px) {
       .logo-wrap > div:last-child { display: none; }
+      .logo-row { gap: 10px 30px; }
+      .logo-word { font-size: 20px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1770,22 +1768,38 @@
 
 <main id="main" tabindex="-1">
 <section class="hero" id="hero">
+  <div class="hero-mesh"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <svg class="hero-motif" id="heroMotif" viewBox="0 0 1000 600" preserveAspectRatio="xMaxYMid meet" aria-hidden="true" focusable="false"></svg>
+  <!-- Keys out the portrait's blue backdrop: anything bluer than it is red turns transparent (skin, hair, the blazer and
+       the white top are all warmer or neutral), and the faint blue left at the edges is pulled to neutral first.
+       Swap Headshot.jpg for a cut-out PNG and drop the filter line in .headshot to retire this. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="portraitKey" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -10 0 10 0 0.05" result="fringe"/>
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0.36 0.52 0.12 0 0.02  0.34 0.52 0.12 0 0.01  0.3 0.5 0.12 0 0  0 0 0 1 0" result="neutral"/>
+      <feComposite in="neutral" in2="fringe" operator="in" result="neutralFringe"/>
+      <feComposite in="neutralFringe" in2="SourceGraphic" operator="over" result="clean"/>
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -6 0 6 0 -0.25" result="backdrop"/>
+      <feMorphology in="backdrop" operator="dilate" radius="0.6" result="backdropWide"/>
+      <feComposite in="clean" in2="backdropWide" operator="out"/>
+    </filter>
+  </svg>
+  <div class="hero-corner" aria-hidden="true">Angelina Ponce · 2026</div>
   <div class="hero-left">
-    <div class="hero-mesh"></div>
-    <div class="hero-grid"></div>
-    <div class="hero-corner" aria-hidden="true">Angelina Ponce · 2026</div>
     <div class="hero-content">
       <div class="hero-eyebrow hero-enter hero-enter-1">
         <div class="eyebrow-line"></div>
-        <span class="eyebrow-text">Finance &amp; Technology · Binghamton University</span>
+        <span class="eyebrow-text">Finance × AI · Binghamton University</span>
         <div class="eyebrow-dot"></div>
       </div>
       <h1 class="hero-name hero-enter hero-enter-2">Angelina<br><em>Ponce<span class="name-underline"></span></em></h1>
       <div class="hero-role-wrap hero-enter hero-enter-3">
-        <p class="hero-role"><span class="sr-only">Private Equity Summer Analyst · Asset Management Summer Analyst · Co-Founder and President, StackHacks</span><span id="typewriter" aria-hidden="true"></span><span class="cursor-blink" style="color:var(--brass)" aria-hidden="true">|</span></p>
+        <p class="hero-role">Finance &amp; AI Builder</p>
       </div>
       <div class="hero-divider hero-enter hero-enter-4"></div>
-      <p class="hero-desc hero-enter hero-enter-5">Senior at Binghamton University bridging finance and technology, from PE deal pipelines to large-scale engineering organizations. Passionate about strategy, operations, AI and early-stage startups. Curious by nature, relentless in execution.</p>
+      <p class="hero-desc hero-enter hero-enter-5">Asset Management Summer Analyst at Community Preservation Corporation. Builder of PolyHedge, Prosperity and PromptForward.</p>
       <div class="hero-btns hero-enter hero-enter-6">
         <a href="Angelina%20Ponce%20Resume.pdf" download="Angelina-Ponce-Resume.pdf" class="btn-mag btn-primary-mag">↓ Download Resume</a>
         <a href="#contact" class="btn-mag btn-ghost-mag">Let's Connect →</a>
@@ -1807,7 +1821,7 @@
         <div class="stat-flip-inner">
           <div class="stat-face">
             <span class="stat-num-big"><span data-target="600">600</span><span class="stat-unit">%</span></span>
-            <span class="stat-label">Org Growth</span>
+            <span class="stat-label">StackHacks Membership Growth</span>
           </div>
           <div class="stat-face stat-back">
             <span class="stat-back-detail">Co-Founder and President of StackHacks</span>
@@ -1831,22 +1845,22 @@
 
 <!-- Everything after the hero is drawn at --content-scale (see .content-zoom) -->
 <div class="content-zoom">
-<div class="ticker-bar" aria-hidden="true">
-  <div class="ticker-track">
-    <span class="ticker-item"><strong>GTIS Partners</strong> <span class="ticker-sep">◆</span> Private Equity · Summer 2025</span>
-    <span class="ticker-item"><strong>StackHacks</strong> <span class="ticker-sep">◆</span> Co-Founder and President</span>
-    <span class="ticker-item"><strong>HackMIT '26 &amp; '25</strong> <span class="ticker-sep">◆</span> Selected from 5,000+ Applicants</span>
-    <span class="ticker-item"><strong>ColorStack</strong> <span class="ticker-sep">◆</span> StackedUp Summit · San Francisco</span>
-    <span class="ticker-item"><strong>Barclays</strong> <span class="ticker-sep">◆</span> Equity Research Competition · LNTH</span>
-    <span class="ticker-item"><strong>Harvard WeCode</strong> <span class="ticker-sep">◆</span> Harvard WECode Conference · Boston</span>
-    <span class="ticker-item"><strong>GTIS Partners</strong> <span class="ticker-sep">◆</span> Private Equity · Summer 2025</span>
-    <span class="ticker-item"><strong>StackHacks</strong> <span class="ticker-sep">◆</span> Co-Founder and President</span>
-    <span class="ticker-item"><strong>HackMIT '26 &amp; '25</strong> <span class="ticker-sep">◆</span> Selected from 5,000+ Applicants</span>
-    <span class="ticker-item"><strong>ColorStack</strong> <span class="ticker-sep">◆</span> StackedUp Summit · San Francisco</span>
-    <span class="ticker-item"><strong>Barclays</strong> <span class="ticker-sep">◆</span> Equity Research Competition · LNTH</span>
-    <span class="ticker-item"><strong>Harvard WeCode</strong> <span class="ticker-sep">◆</span> Harvard WECode Conference · Boston</span>
+<!-- Logo strip. Each slot shows a text wordmark until its SVG is supplied: replace the slot's <span class="logo-word">
+     with an <img>, e.g. <img src="Assets/logos/cpc.svg" alt="Community Preservation Corporation">. Single-colour SVGs
+     work best; .logo-slot img tints them to cream and sizes them to 28px tall. -->
+<section class="logo-strip" aria-labelledby="logoStripLabel">
+  <div class="container">
+    <h2 class="logo-strip-label" id="logoStripLabel">Experience, programs &amp; competitions</h2>
+    <ul class="logo-row">
+      <li class="logo-slot" data-logo="cpc"><span class="logo-word">CPC</span></li>
+      <li class="logo-slot" data-logo="gtis"><span class="logo-word">GTIS</span></li>
+      <li class="logo-slot" data-logo="hackmit"><span class="logo-word">HackMIT</span></li>
+      <li class="logo-slot" data-logo="colorstack"><span class="logo-word">ColorStack</span></li>
+      <li class="logo-slot" data-logo="ey"><span class="logo-word">EY</span></li>
+      <li class="logo-slot" data-logo="barclays"><span class="logo-word">Barclays</span></li>
+    </ul>
   </div>
-</div>
+</section>
 
 <section class="section" id="about">
   <div class="container">
@@ -2696,7 +2710,7 @@ window.addEventListener('scroll', () => {
 let lastScrollY = window.scrollY, qvTimer = null, qvMutedUntil = 0, qvCheckedAt = 0, qvCovered = false;
 const muteQuickView = () => { qvMutedUntil = performance.now() + 1500; };
 const QV_CONTENT = 'p, li, a, button, h1, h2, h3, h4, img, figure, .tag, .skill-tag, .fact-card, .value-card, .project-card, '
-  + '.exp-card, .skill-card, .conf-card, .edu-card, .highlight-box, .filter-tabs, .ticker-bar, .timeline-dot';
+  + '.exp-card, .skill-card, .conf-card, .edu-card, .highlight-box, .filter-tabs, .logo-row, .timeline-dot';
 function quickViewCovers() {
   // its footprint when shown: centred, 36px off the bottom (plus a little breathing room)
   const w = quickView.offsetWidth, h = quickView.offsetHeight, pad = 12;
@@ -2788,21 +2802,41 @@ const revealObs = new IntersectionObserver(entries => {
 }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
-const roles = ['Private Equity Summer Analyst', 'Asset Management Summer Analyst', 'Co-Founder and President, StackHacks', 'Economics · Data Analytics · Computer Science', 'Hackathon Builder · HackMIT \'26 & \'25'];
-let roleIdx = 0, charIdx = 0, deleting = false;
-const tw = document.getElementById('typewriter');
-function typeLoop() {
-  const role = roles[roleIdx];
-  if (!deleting) {
-    tw.textContent = role.slice(0, ++charIdx);
-    if (charIdx === role.length) { deleting = true; setTimeout(typeLoop, 2400); return; }
-  } else {
-    tw.textContent = role.slice(0, --charIdx);
-    if (charIdx === 0) { deleting = false; roleIdx = (roleIdx + 1) % roles.length; }
-  }
-  setTimeout(typeLoop, deleting ? 38 : 65);
-}
-typeLoop();
+// ── Hero motif: a thin price line whose points drift apart into a node network, then settle back into the line.
+//    Reduced motion shows the network, still. The loop only runs while the hero is on screen and the tab is visible.
+(function heroMotif() {
+  const svg = document.getElementById('heroMotif');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  // viewBox 0 0 1000 600, kept to the portrait side (x 470–985) so it never runs behind the copy. The line climbs with
+  // small dips; the network spreads the same ten points into a loose cluster.
+  const LINE = [[470, 520], [528, 494], [585, 506], [642, 452], [700, 464], [757, 404], [815, 418], [872, 352], [930, 300], [985, 236]];
+  const NET  = [[560, 330], [640, 200], [760, 250], [660, 400], [800, 430], [880, 300], [540, 470], [720, 520], [930, 440], [950, 190]];
+  const LINKS = [[0, 3], [0, 6], [1, 5], [2, 4], [2, 5], [3, 6], [3, 7], [4, 7], [4, 8], [5, 9], [8, 9], [5, 8]];
+  const mk = (tag, cls) => { const n = document.createElementNS(NS, tag); if (cls) n.setAttribute('class', cls); svg.appendChild(n); return n; };
+  const links = LINKS.map(() => mk('line', 'm-link'));
+  const chain = LINE.slice(1).map(() => mk('line', 'm-chain'));
+  const dots = LINE.map(() => mk('circle'));
+  const ease = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const draw = k => {
+    const pts = LINE.map((p, i) => [p[0] + (NET[i][0] - p[0]) * k, p[1] + (NET[i][1] - p[1]) * k]);
+    const set = (el, a, b) => { el.setAttribute('x1', a[0].toFixed(1)); el.setAttribute('y1', a[1].toFixed(1)); el.setAttribute('x2', b[0].toFixed(1)); el.setAttribute('y2', b[1].toFixed(1)); };
+    chain.forEach((el, i) => set(el, pts[i], pts[i + 1]));
+    links.forEach((el, i) => { set(el, pts[LINKS[i][0]], pts[LINKS[i][1]]); el.style.opacity = k.toFixed(3); });
+    dots.forEach((el, i) => { el.setAttribute('cx', pts[i][0].toFixed(1)); el.setAttribute('cy', pts[i][1].toFixed(1)); el.setAttribute('r', (1.4 + 1.8 * k).toFixed(2)); });
+  };
+  if (reduceMotion) { draw(1); return; }
+  // one cycle: line (3s) → to network (4.5s) → network (3s) → back to the line (4.5s)
+  const HOLD = 3000, MOVE = 4500, CYCLE = 2 * (HOLD + MOVE);
+  const at = t => { t %= CYCLE; if (t < HOLD) return 0; t -= HOLD; if (t < MOVE) return ease(t / MOVE); t -= MOVE; if (t < HOLD) return 1; return 1 - ease((t - HOLD) / MOVE); };
+  let elapsed = 0, last = null, raf = 0, onScreen = true;
+  const frame = now => { if (last !== null) elapsed += Math.min(100, now - last); last = now; draw(at(elapsed)); raf = requestAnimationFrame(frame); };
+  const run = () => { if (!raf && onScreen && !document.hidden) { last = null; raf = requestAnimationFrame(frame); } };
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; onScreen ? run() : stop(); }).observe(svg);
+  document.addEventListener('visibilitychange', () => document.hidden ? stop() : run());
+  draw(0); run();
+})();
 
 function countUp(el) {
   const target = +el.dataset.target;
