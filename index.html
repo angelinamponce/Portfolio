@@ -27,11 +27,13 @@
   <script>
     /* Intro replay settings. They live here (INTRO points to them) because the choice has to be made before first paint.
        introMode: 'always' plays on every load | 'once-per-session' skips it for the rest of the tab's session |
-       'days' skips it for introReplayDays after it plays (per browser). Blocked storage just means it plays. */
-    var INTRO_REPLAY = { introMode: 'always', introReplayDays: 7 };
+       'days' skips it for introReplayDays after it plays (per browser). Blocked storage just means it plays.
+       Visitors who ask for reduced motion never get the intro. */
+    var INTRO_REPLAY = { introMode: 'once-per-session', introReplayDays: 7 };
     (function () {
       var root = document.documentElement, seen = false, mode = INTRO_REPLAY.introMode;
-      try {
+      try { seen = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+      if (!seen) try {
         if (mode === 'once-per-session') seen = sessionStorage.getItem('apIntroSeen') === '1';
         else if (mode === 'days') seen = Date.now() < Number(localStorage.getItem('apIntroUntil') || 0);
       } catch (e) {}
@@ -1879,6 +1881,7 @@
         <li><a href="#projects"    data-nav="projects">Projects</a></li>
         <li><a href="#skills"      data-nav="skills">Skills</a></li>
         <li><a href="#conferences" data-nav="conferences">Conferences</a></li>
+        <li><a href="#education"   data-nav="education">Education</a></li>
         <li><a href="#contact"     data-nav="contact">Contact</a></li>
       </ul>
     </nav>
@@ -2604,12 +2607,6 @@ function presentName() {
   heroName.classList.add('is-shining');
 }
 
-document.documentElement.style.overflow = 'hidden';
-if (!introOn) {
-  window.addEventListener('load', () => {
-    setTimeout(() => { startHero(); setTimeout(unlockScroll, 1600); }, 80);
-  });
-}
 
 const finePointer  = window.matchMedia('(pointer: fine)').matches;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2617,10 +2614,15 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const BIRD_DEBUG = new URLSearchParams(location.search).get('birdDebug') === '1';
 const BIRD_DEV = BIRD_DEBUG || ['localhost', '127.0.0.1', ''].includes(location.hostname);
 
+// Without the intro the page scrolls freely from the start; the hero's entrance plays once everything has loaded
+// (straight away with reduced motion, which has no entrance to wait for)
 if (introOn) runIntro();
+else if (reduceMotion) startHero();
+else window.addEventListener('load', () => setTimeout(startHero, 80));
 
 function runIntro() {
   const intro = document.getElementById('intro');
+  document.documentElement.style.overflow = 'hidden';   // unlocked when the intro finishes or is skipped
   try {
     if (INTRO.introMode === 'once-per-session') sessionStorage.setItem('apIntroSeen', '1');
     else if (INTRO.introMode === 'days') localStorage.setItem('apIntroUntil', String(Date.now() + INTRO.introReplayDays * 864e5));
@@ -2652,10 +2654,11 @@ function runIntro() {
   const timers = [];
   const later  = (fn, ms) => timers.push(setTimeout(fn, ms));
   let done = false, overlayGone = false, reperch = null;
-  // The 3D bird (Assets/intro-bird3d.js) loads during the intro's first second; phones, reduced motion, no WebGL or a load over
-  // 2.5s keep the flat bird
+  // The 3D bird (Assets/intro-bird3d.js) loads during the intro's first second; phones, Save-Data or a 2G connection, no WebGL
+  // or a load over 2.5s keep the flat bird
+  const conn = navigator.connection || {}, slowNet = conn.saveData || /2g/.test(conn.effectiveType || '');
   let three3D = null;
-  try { if (!reduceMotion && window.innerWidth >= 768) (three3D = loadBird3D(2500)).catch(() => {}); } catch (e) { three3D = null; }
+  try { if (window.innerWidth >= 768 && !slowNet) (three3D = loadBird3D(2500)).catch(() => {}); } catch (e) { three3D = null; }
   let b3 = null;
   const parity = { n: 0, pos: 0, scale: 0 };   // dev check: largest dove vs flat-bird gap over the run (see playFull)
   const disposeBird3D = () => {
@@ -2678,6 +2681,7 @@ function runIntro() {
     done = true;
     timers.forEach(clearTimeout);
     window.removeEventListener('keydown', onKey);
+    ['wheel', 'touchmove', 'pointerdown'].forEach(t => window.removeEventListener(t, onKey));
     window.removeEventListener('resize', onResize);
     bird.style.willChange = 'auto';
     disposeBird3D();
@@ -2693,6 +2697,8 @@ function runIntro() {
   const onKey = () => finish(350);
   const onResize = () => { if (reperch) reperch(); if (b3) b3.resize(); };
   window.addEventListener('keydown', onKey);
+  // trying to scroll, a tap or a click also skips it, so the page is never held up
+  ['wheel', 'touchmove', 'pointerdown'].forEach(t => window.addEventListener(t, onKey, { passive: true }));
   window.addEventListener('resize', onResize);
   skip.addEventListener('click', () => finish(350));
   later(() => finish(500), 11000); // hard cap, whatever happens
@@ -2706,7 +2712,7 @@ function runIntro() {
     : Promise.resolve();
   Promise.race([fontsReady, new Promise(r => setTimeout(r, 700))]).then(() => {
     if (done) return;
-    try { reduceMotion ? playReduced() : playFull(); } catch (e) { finish(300); }
+    try { playFull(); } catch (e) { finish(300); }
   });
 
   // Chart: an intraday-style price line below the copy. It trends up with small irregular peaks and dips, consolidates,
@@ -2773,19 +2779,6 @@ function runIntro() {
     const len = path.getTotalLength(), brkLen = brk.getTotalLength();
     return { narrow, path, len, lenA: len - brkLen, brk, brkLen, x0,
       revealRect: chart.querySelector('#introReveal rect'), markDots: [...chart.querySelectorAll('.intro-mark')] };
-  }
-
-  function playReduced() {
-    chars.forEach(c => { c.style.opacity = 1; });
-    line.style.transform = 'none';
-    tag.style.opacity = 1;
-    // The finished chart, breakout included: no drawing, no bird, no flight
-    const { revealRect, markDots } = buildChart(window.innerWidth, window.innerHeight);
-    revealRect.setAttribute('width', window.innerWidth + 60);
-    markDots.forEach(m => m.setAttribute('opacity', 0.55));
-    chart.querySelector('.intro-peak').setAttribute('opacity', 1);
-    [copy, chart].forEach(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, easing: 'ease-out', fill: 'backwards' }));
-    later(() => finish(400), 1800);
   }
 
   function playFull() {
@@ -3377,9 +3370,25 @@ window.addEventListener('scroll', () => {
 });
 
 // Floating pill: only past the hero, only while scrolling up, and it tucks away again after a
-// moment or near the footer, so it never parks on top of text you're reading.
-let lastScrollY = window.scrollY, qvTimer = null, qvMutedUntil = 0;
+// moment or near the footer. It also stays hidden (or hides) whenever text, a card or a control sits where it
+// would be, so it never covers anything you're reading.
+let lastScrollY = window.scrollY, qvTimer = null, qvMutedUntil = 0, qvCheckedAt = 0, qvCovered = false;
 const muteQuickView = () => { qvMutedUntil = performance.now() + 1500; };
+const QV_CONTENT = 'p, li, a, button, h1, h2, h3, h4, img, figure, .tag, .skill-tag, .fact-card, .value-card, .project-card, '
+  + '.exp-card, .skill-card, .conf-card, .edu-card, .highlight-box, .filter-tabs, .ticker-bar, .timeline-dot';
+function quickViewCovers() {
+  // its footprint when shown: centred, 36px off the bottom (plus a little breathing room)
+  const w = quickView.offsetWidth, h = quickView.offsetHeight, pad = 12;
+  const left = (window.innerWidth - w) / 2 - pad, top = window.innerHeight - 36 - h - pad;
+  // sampled every ~10px down and ~60px across, so even a single line of small text is caught
+  const cols = Math.ceil((w + 2 * pad) / 60), rows = Math.ceil((h + 2 * pad) / 10);
+  for (let ix = 0; ix <= cols; ix++) for (let iy = 0; iy <= rows; iy++) {
+    const x = left + (w + 2 * pad) * ix / cols, y = top + (h + 2 * pad) * iy / rows;
+    const under = document.elementsFromPoint(x, y).find(el => !quickView.contains(el));
+    if (under && (under.closest(QV_CONTENT) || [...under.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))) return true;
+  }
+  return false;
+}
 function updateQuickView(st, docH) {
   const dy = st - lastScrollY;
   lastScrollY = st;
@@ -3387,6 +3396,11 @@ function updateQuickView(st, docH) {
   if (performance.now() < qvMutedUntil) return hide();
   const pastHero = st > document.getElementById('hero').offsetHeight - 80;
   if (!pastHero || st > docH - 400 || dy > 0) return hide();
+  if (getComputedStyle(quickView).display === 'none') return;   // tablets and phones don't use it
+  // the overlap check is a few dozen hit tests, so it runs at most every 100ms while scrolling up
+  const now = performance.now();
+  if (now - qvCheckedAt > 100) { qvCheckedAt = now; qvCovered = quickViewCovers(); }
+  if (qvCovered) return hide();
   if (dy < -6) {
     quickView.classList.add('show');
     clearTimeout(qvTimer);
@@ -3402,17 +3416,28 @@ function scrollToSection(el, gap = 4) {
   window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
 }
 
-const sections = ['hero','about','experience','projects','skills','conferences','education','contact'];
+// Active section for the header nav and side dots: the section crossing a reading line 30% down the screen. Sections
+// without their own nav entry count as the one they follow (Where I fit and Testimonials sit under About). At the very
+// bottom the last section wins, since a short Contact can never reach the line.
 const sideDots  = document.querySelectorAll('.side-dot');
+const navParent = { fit: 'about', testimonials: 'about' };
+const navSections = [...document.querySelectorAll('main section[id]')];
+let lineSection = 'hero', currentSection = null;
 function updateSideDots() {
-  let current = 'hero';
-  sections.forEach(id => {
-    const el = document.getElementById(id);
-    if (el && el.getBoundingClientRect().top <= window.innerHeight / 2) current = id;
-  });
-  sideDots.forEach(d => d.classList.toggle('active', d.dataset.section === current));
-  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active-nav', a.dataset.nav === current));
+  const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+  const id = atBottom ? navSections[navSections.length - 1].id : lineSection;
+  const next = navParent[id] || id;
+  if (next === currentSection) return;
+  currentSection = next;
+  sideDots.forEach(d => d.classList.toggle('active', d.dataset.section === next));
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active-nav', a.dataset.nav === next));
 }
+const sectionObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) lineSection = e.target.id; });
+  updateSideDots();
+}, { rootMargin: '-30% 0px -69% 0px' });
+navSections.forEach(s => sectionObs.observe(s));
+updateSideDots();
 sideDots.forEach(d => {
   d.addEventListener('click', () => {
     const el = document.getElementById(d.dataset.section);
