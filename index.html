@@ -82,7 +82,14 @@
       --page-line-strong: var(--line-strong);
       --page-accent: var(--brass-ink);   /* brass text on the page */
       --card:        var(--cream-hi);
-      --band:        var(--forest);      /* hero, experience, education */
+      --hero-bg:     var(--forest);      /* hero, logo strip and intro: green in both themes */
+      /* Type scale (serif display, sans text) */
+      --fs-h2:       clamp(38px, 3.7vw, 56px);   /* section titles */
+      --fs-h3-lg:    clamp(26px, 2.2vw, 30px);   /* education school, modal title */
+      --fs-h3:       23px;                       /* card titles */
+      --fs-lead:     16px;                       /* section intros */
+      --fs-body:     15px;
+      --fs-label:    10px;                       /* uppercase eyebrows and meta */
       --focus:       var(--brass-ink);
       --radius:      16px;
       --radius-sm:   8px;
@@ -104,7 +111,7 @@
 
     /* Focus ring: dark brass on cream, light brass on green */
     :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
-    .hero-left, .exp-section, .edu-section, header:not(.scrolled), #quick-view, footer, .lightbox, #intro,
+    .hero-left, header:not(.scrolled), #quick-view, footer, .lightbox, #intro,
     .logo-strip, .toast, #scroll-top { --focus: var(--brass-hi); }
     .fact-card, .project-card, .value-card, .skill-card, .conf-card, .exp-card, .edu-card, .stat-face, .modal { --focus: var(--brass-ink); }
     main:focus, section:focus, .timeline-item:focus { outline: none; }
@@ -327,7 +334,7 @@
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
       position: relative; overflow: hidden;
-      background: var(--band);
+      background: var(--hero-bg);
     }
     .hero::after {
       content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
@@ -659,7 +666,7 @@
     .stat-back-detail { font-size: 11.5px; color: var(--on-dark-2); text-align: center; line-height: 1.6; }
 
     /* Logo strip under the hero: text wordmarks until SVGs are supplied (see the markup) */
-    .logo-strip { background: var(--band); border-top: 1px solid var(--line-dark); padding: 30px 0 34px; }
+    .logo-strip { background: var(--hero-bg); border-top: 1px solid var(--line-dark); border-bottom: 1px solid var(--line-dark); padding: 30px 0 34px; }
     .logo-strip-label {
       text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
       color: var(--brass-hi); margin: 0 0 18px;
@@ -679,22 +686,28 @@
 
     .section-label {
       display: inline-flex; align-items: center; gap: 14px;
-      font-size: 10px; font-weight: 600; letter-spacing: 3px;
-      text-transform: uppercase; color: var(--page-accent); margin-bottom: 18px;
+      font-size: var(--fs-label); font-weight: 600; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--page-accent); margin-bottom: 20px;
     }
-    .section-label::before { content: ''; width: 28px; height: 1px; background: var(--brass); }
+    /* the ornament: a hairline into a small diamond, drawn in brass through a mask */
+    .section-label::before, .contact-content .section-label::after {
+      content: ''; width: 46px; height: 9px; flex-shrink: 0; background: var(--brass);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 9'%3E%3Cpath d='M0 4.5h34' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M40.5 1 44 4.5 40.5 8 37 4.5z' fill='%23000'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+              mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 9'%3E%3Cpath d='M0 4.5h34' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M40.5 1 44 4.5 40.5 8 37 4.5z' fill='%23000'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    }
+    .contact-content .section-label::after { transform: scaleX(-1); }
 
     .section-title {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(40px, 4vw, 62px);
-      font-weight: 600; line-height: 1.05;
-      color: var(--page-ink); margin-bottom: 16px;
+      font-size: var(--fs-h2);
+      font-weight: 600; line-height: 1.04;
+      color: var(--page-ink); margin-bottom: 18px;
       letter-spacing: -0.5px;
     }
-    .section-title em { font-style: italic; }
+    .section-title em { font-style: italic; color: var(--page-accent); }
     .section-sub {
-      font-size: 15px; color: var(--page-ink-3); font-weight: 300;
-      max-width: 520px; line-height: 1.9; letter-spacing: 0.15px;
+      font-size: var(--fs-lead); color: var(--page-ink-3); font-weight: 300;
+      max-width: 560px; line-height: 1.8; letter-spacing: 0.15px;
     }
 
     /* Scroll reveal (only with JS on, so content never stays hidden). --d staggers siblings;
@@ -732,7 +745,7 @@
     .fact-emoji .i { width: 20px; height: 20px; }
     .fact-card strong { display: block; font-size: 12.5px; color: var(--ink); font-weight: 600; margin-bottom: 2px; letter-spacing: 0.2px; }
     .fact-card span { font-size: 12px; color: var(--ink-3); }
-    .about-text p { font-size: 15px; line-height: 2.05; color: var(--page-ink-2); margin-bottom: 20px; font-weight: 300; }
+    .about-text p { font-size: var(--fs-body); line-height: 1.95; color: var(--page-ink-2); margin-bottom: 20px; font-weight: 300; }
     /* Optional pieces driven by SITE (top of the script): they stay hidden until their data is filled in */
     .fact-card[hidden], .c-btn[hidden] { display: none; }
     .testimonials { display: grid; gap: 16px; max-width: 760px; margin: 0 auto; }
@@ -760,12 +773,6 @@
       font-style: italic; font-weight: 400;
     }
 
-    /* Green bands (experience, education): page tokens switch to their on-green values inside them */
-    .exp-section, .edu-section {
-      background: var(--band);
-      --page-ink: var(--on-dark); --page-ink-2: var(--on-dark-2); --page-ink-3: var(--on-dark-3);
-      --page-line: var(--line-dark); --page-line-strong: var(--line-dark-strong); --page-accent: var(--brass-hi);
-    }
 
     .timeline { position: relative; margin-top: 72px; padding-left: 52px; }
     .timeline::before {
@@ -784,7 +791,7 @@
       position: absolute; left: -44px; top: 22px;
       width: 12px; height: 12px;
       border-radius: 50%;
-      background: var(--band); border: 1.5px solid var(--brass);
+      background: var(--page); border: 1.5px solid var(--brass);
       transition: all 0.4s ease; z-index: 2;
     }
     .timeline-item.reached .timeline-dot {
@@ -827,7 +834,7 @@
     .exp-card:hover::after { opacity: 1; }
     .exp-card > * { position: relative; z-index: 1; }
     .exp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 22px; }
-    .exp-title h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--ink); margin-bottom: 5px; font-weight: 600; }
+    .exp-title h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3); color: var(--ink); margin-bottom: 5px; font-weight: 600; }
     .exp-company { font-size: 13px; color: var(--brass-ink); font-weight: 500; margin-bottom: 2px; letter-spacing: 0.3px; }
     .exp-location { font-size: 12px; color: var(--ink-3); font-style: italic; }
     .exp-date {
@@ -942,7 +949,7 @@
       transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
     }
     .project-card:hover .project-icon { transform: rotate(-8deg) scale(1.1); }
-    .project-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 21px; color: var(--ink); margin-bottom: 5px; font-weight: 600; line-height: 1.25; }
+    .project-card h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3); color: var(--ink); margin-bottom: 5px; font-weight: 600; line-height: 1.25; }
     .project-meta { font-size: 10px; color: var(--brass-ink); font-weight: 700; letter-spacing: 1.5px; line-height: 1.6; margin-bottom: 14px; text-transform: uppercase; }
     /* Only the description stretches, so every card keeps the same title → subtitle → text rhythm */
     .project-card p:not(.project-meta) { font-size: 13px; color: var(--ink-3); line-height: 1.85; margin-bottom: 20px; flex: 1; font-weight: 300; }
@@ -959,7 +966,7 @@
     .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 68px; }
     .skills-col { display: flex; flex-direction: column; gap: 24px; }
     .skill-card-compact { padding: 28px 40px 32px; }
-    .skill-card-compact h3 { font-size: 21px; margin-bottom: 16px; padding-bottom: 12px; }
+    .skill-card-compact h3 { margin-bottom: 16px; padding-bottom: 12px; }
     /* Leadership card stretches to the left column's height; its entries share the space evenly */
     .skill-card-lead { display: flex; flex-direction: column; }
     .skill-card-lead .org-list { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
@@ -973,8 +980,8 @@
     .skill-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-5px); }
     .skill-card h3 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 25px; color: var(--ink);
-      margin-bottom: 28px; padding-bottom: 18px;
+      font-size: var(--fs-h3); color: var(--ink);
+      margin-bottom: 26px; padding-bottom: 16px;
       border-bottom: 1px solid var(--line); font-weight: 600;
     }
     .skill-group { margin-bottom: 22px; }
@@ -1012,7 +1019,7 @@
     .skills-bars-section { margin-top: 80px; }
     .skills-bars-section h3 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 28px; color: var(--page-ink); margin-bottom: 32px; font-weight: 600;
+      font-size: var(--fs-h3-lg); color: var(--page-ink); margin-bottom: 28px; font-weight: 600;
     }
     .value-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
     .value-card {
@@ -1100,7 +1107,7 @@
       color: var(--brass-hi); flex-shrink: 0;
       box-shadow: 0 4px 14px rgba(14,31,22,0.2);
     }
-    .conf-body h3 { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--ink); font-weight: 600; margin-bottom: 3px; }
+    .conf-body h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3); color: var(--ink); font-weight: 600; margin-bottom: 3px; }
     .conf-loc { font-size: 11px; color: var(--brass-ink); font-weight: 600; font-style: italic; margin-bottom: 13px; letter-spacing: 0.5px; }
     .conf-body p { font-size: 12.5px; color: var(--ink-3); line-height: 1.85; margin-bottom: 14px; font-weight: 300; }
     .conf-badge {
@@ -1123,7 +1130,7 @@
       transition: all 0.35s;
     }
     .edu-card:hover { border-color: var(--line-strong); box-shadow: var(--shadow-lg); }
-    .edu-school { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: var(--ink); font-weight: 600; margin-bottom: 8px; letter-spacing: -0.3px; }
+    .edu-school { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3-lg); color: var(--ink); font-weight: 600; margin-bottom: 8px; letter-spacing: -0.3px; }
     .edu-system { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--ink-3); font-style: italic; margin-bottom: 18px; }
     .edu-degree { font-size: 14.5px; color: var(--brass-ink); font-weight: 500; margin-bottom: 6px; letter-spacing: 0.2px; }
     .edu-minors { font-size: 13px; color: var(--ink-3); margin-bottom: 7px; }
@@ -1189,7 +1196,6 @@
     }
     .contact-content { max-width: 640px; margin: 0 auto; position: relative; }
     .contact-content .section-label { justify-content: center; }
-    .contact-content .section-label::before { display: none; }
     .contact-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 52px; }
     .c-btn {
       display: inline-flex; align-items: center; gap: 10px;
@@ -1313,7 +1319,7 @@
     .modal-close:hover { background: var(--forest); color: var(--cream); transform: rotate(90deg); }
     .modal-head { display: flex; align-items: center; gap: 18px; margin-bottom: 26px; padding-right: 48px; }
     .modal-head .project-icon { margin: 0; flex-shrink: 0; }
-    .modal-head h3 { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; color: var(--ink); line-height: 1.1; margin-bottom: 4px; }
+    .modal-head h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3-lg); font-weight: 600; color: var(--ink); line-height: 1.1; margin-bottom: 4px; }
     .modal-head .project-meta { margin: 0; }
     /* Prev/next between projects: the lightbox's arrows (fixed to the screen edges, on the backdrop). They fade in once
        the modal's opening slide (a transform, which would carry fixed children with it) has finished. */
@@ -1415,7 +1421,7 @@
     [data-theme="dark"] {
       --page: var(--green-900); --page-ink: var(--on-dark); --page-ink-2: var(--on-dark-2); --page-ink-3: var(--on-dark-3);
       --page-line: var(--line-dark); --page-line-strong: var(--line-dark-strong); --page-accent: var(--brass-hi);
-      --card: var(--cream); --band: var(--green-850); --focus: var(--brass-hi);
+      --card: var(--cream); --hero-bg: var(--green-900); --focus: var(--brass-hi);
       color-scheme: dark;
     }
     [data-theme="dark"] body::before { mix-blend-mode: screen; opacity: 0.018; }
@@ -1434,8 +1440,8 @@
        Body text is floored at 14px on screen: copy that was 14px+ never renders smaller than 14px, and copy
        that was already under 14px keeps its current on-screen size. Divide by the scale to undo the zoom. */
     .content-zoom { zoom: var(--content-scale); }
-    .content-zoom .about-text p,
-    .content-zoom .section-sub        { font-size: max(15px, calc(14px / var(--content-scale))); }
+    .content-zoom .about-text p       { font-size: max(15px, calc(14px / var(--content-scale))); }
+    .content-zoom .section-sub        { font-size: max(16px, calc(15px / var(--content-scale))); }
     .content-zoom .exp-bullets li     { font-size: calc(13.5px / var(--content-scale)); }
     .content-zoom .project-card p:not(.project-meta),
     .content-zoom .edu-courses        { font-size: calc(13px / var(--content-scale)); }
@@ -1518,7 +1524,6 @@
       .header-inner { padding: 0 20px; }
       .container { padding: 0 24px; }
       .modal-inner { padding: 30px 22px 26px; }
-      .modal-head h3 { font-size: 25px; }
       .lightbox-prev, .lightbox-next { top: auto; bottom: 24px; transform: none; }
       .lightbox-prev { left: calc(50% - 56px); }
       .lightbox-next { right: calc(50% - 56px); }
@@ -1563,7 +1568,7 @@
       display: flex; align-items: center; justify-content: center;
       position: fixed; inset: 0; z-index: 9980; /* under the grain layer so texture matches */
       overflow: hidden; cursor: pointer;
-      background: var(--green-850);
+      background: var(--hero-bg);
       animation: introFailsafe 0.4s ease 3s forwards;
     }
     @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
