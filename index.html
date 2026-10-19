@@ -97,7 +97,7 @@
     .hero-left :focus-visible, .exp-section :focus-visible, .edu-section :focus-visible,
     header:not(.scrolled) :focus-visible, #quick-view :focus-visible, footer :focus-visible,
     .lightbox :focus-visible, #intro :focus-visible, #intro-bird-layer :focus-visible, [data-theme="dark"] :focus-visible { outline-color: var(--sage-light); }
-    main:focus, section:focus { outline: none; }
+    main:focus, section:focus, .timeline-item:focus { outline: none; }
     .sr-only {
       position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
       overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -733,6 +733,22 @@
     .testimonials blockquote { margin: 0; }
     .testimonials figcaption { margin-top: 10px; font: 600 11px 'Outfit', sans-serif; font-style: normal; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sage-text); }
     [data-theme="dark"] .testimonials figcaption { color: var(--sage-light); }
+    /* "Where I fit" (FIT_ROLES at the top of the script): role lanes on the value-card style, each bullet links to its proof */
+    .section.fit-section { padding: 40px 0 88px; }
+    .fit-section .section-sub { max-width: 640px; }
+    .fit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 44px; }
+    .fit-evidence { list-style: none; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(78,128,96,0.12); display: grid; gap: 10px; }
+    .fit-evidence li { font-size: 12.5px; line-height: 1.7; padding-left: 16px; position: relative; }
+    .fit-evidence li::before { content: '→'; position: absolute; left: 0; color: var(--sage); }
+    .fit-evidence a { color: var(--gray-700); text-decoration: underline; text-decoration-color: rgba(78,128,96,0.35); text-underline-offset: 3px; transition: color 0.2s, text-decoration-color 0.2s; }
+    .fit-evidence a:hover { color: var(--forest); text-decoration-color: var(--sage); }
+    .fit-open { margin-top: 26px; font-size: 13.5px; color: var(--gray-700); }
+    .fit-open strong { font-size: 10px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase; color: var(--gold-text); margin-right: 10px; }
+    [data-theme="dark"] .fit-evidence { border-top-color: var(--d-line); }
+    [data-theme="dark"] .fit-evidence a, [data-theme="dark"] .fit-open { color: var(--d-muted); }
+    [data-theme="dark"] .fit-evidence a:hover { color: var(--cream); text-decoration-color: var(--sage-light); }
+    [data-theme="dark"] .fit-evidence li::before { color: var(--sage-light); }
+    [data-theme="dark"] .fit-open strong { color: var(--gold-light); }
     .highlight-box {
       background: linear-gradient(135deg, var(--sage-pale) 0%, var(--gold-pale) 100%);
       border-left: 2px solid var(--sage);
@@ -1344,6 +1360,27 @@
     }
     .modal-links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(78,128,96,0.14); }
     .modal-links:empty { display: none; }
+    /* "How I built it" (BUILD_LOG in the script): a closed-by-default <details> styled as a story step */
+    .build-step { margin-top: 22px; }
+    .build-step[hidden] { display: none; }
+    .build-log summary {
+      list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase; color: var(--gold-text);
+      border-radius: 4px;
+    }
+    .build-log summary::-webkit-details-marker { display: none; }
+    .build-log summary .i { width: 13px; height: 13px; transition: transform 0.3s cubic-bezier(.22,1,.36,1); }
+    .build-log[open] summary .i { transform: rotate(90deg); }
+    .build-body { overflow: hidden; }
+    .build-body > :first-child { margin-top: 10px; }
+    .build-body h5 { font-size: 12px; font-weight: 600; color: var(--forest); margin: 16px 0 4px; letter-spacing: 0.2px; }
+    .build-body p, .build-body li { font-size: 14.5px; line-height: 1.85; color: var(--gray-700); font-weight: 300; }
+    .build-body ul { padding-left: 18px; }
+    .build-body .build-lead { font-weight: 400; }
+    .build-body .build-note { font-size: 13px; font-style: italic; }
+    .build-body .build-commits { margin-top: 12px; }
+    .build-body a { color: var(--sage-text); text-underline-offset: 3px; }
+    .build-body a:hover { color: var(--forest); }
     .modal-link {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 10px 18px; border-radius: 8px;
@@ -1462,6 +1499,11 @@
     [data-theme="dark"] .modal-shot, [data-theme="dark"] .project-shot { background: var(--d-surface-2); }
     [data-theme="dark"] .modal-link { background: var(--sage); }
     [data-theme="dark"] .modal-links { border-top-color: var(--d-line); }
+    [data-theme="dark"] .build-log summary { color: var(--gold-light); }
+    [data-theme="dark"] .build-body h5 { color: var(--cream); }
+    [data-theme="dark"] .build-body p, [data-theme="dark"] .build-body li { color: var(--d-muted); }
+    [data-theme="dark"] .build-body a { color: var(--sage-light); }
+    [data-theme="dark"] .build-body a:hover { color: var(--cream); }
     .theme-anim, .theme-anim *, .theme-anim *::before, .theme-anim *::after {
       transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease !important;
     }
@@ -1477,7 +1519,8 @@
     .content-zoom .project-card p:not(.project-meta),
     .content-zoom .edu-courses        { font-size: calc(13px / var(--content-scale)); }
     .content-zoom .conf-body p,
-    .content-zoom .value-card p       { font-size: calc(12.5px / var(--content-scale)); }
+    .content-zoom .value-card p,
+    .content-zoom .fit-evidence li    { font-size: calc(12.5px / var(--content-scale)); }
     .content-zoom .fact-card span,
     .content-zoom .org-item span      { font-size: calc(12px / var(--content-scale)); }
     @media (max-width: 899px) { :root { --content-scale: 1; } }
@@ -1520,6 +1563,7 @@
       .about-grid { grid-template-columns: 1fr; gap: 52px; }
       .edu-card { grid-template-columns: 1fr; }
       .value-grid { grid-template-columns: repeat(2, 1fr); }
+      .fit-grid { grid-template-columns: 1fr; }
       #side-nav, #quick-view { display: none; }
       header:not(.scrolled) .recruiter-pill { background: var(--sage); }
       header:not(.scrolled) .theme-toggle { color: var(--cream); border-color: rgba(232,240,235,0.25); }
@@ -1865,7 +1909,7 @@
         <p class="hero-role"><span class="sr-only">Private Equity Summer Analyst · Asset Management Summer Analyst · Co-Founder and President, StackHacks</span><span id="typewriter" aria-hidden="true"></span><span class="cursor-blink" style="color:var(--sage)" aria-hidden="true">|</span></p>
       </div>
       <div class="hero-divider hero-enter hero-enter-4"></div>
-      <p class="hero-desc hero-enter hero-enter-5">Senior at Binghamton University bridging finance and technology, from PE deal pipelines to large-scale engineering organizations. Passionate about AI and early-stage startups. Curious by nature, relentless in execution.</p>
+      <p class="hero-desc hero-enter hero-enter-5">Senior at Binghamton University bridging finance and technology, from PE deal pipelines to large-scale engineering organizations. Passionate about strategy, operations, AI and early-stage startups. Curious by nature, relentless in execution.</p>
       <div class="hero-btns hero-enter hero-enter-6">
         <a href="Angelina%20Ponce%20Resume.pdf" download="Angelina-Ponce-Resume.pdf" class="btn-mag btn-primary-mag">↓ Download Resume</a>
         <a href="#contact" class="btn-mag btn-ghost-mag">Let's Connect →</a>
@@ -1938,7 +1982,7 @@
       <div class="reveal reveal-delay-1">
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-graduation-cap"/></svg></span><div><strong>Binghamton University</strong><span>BA Economics · Data Analytics and Computer Science Minors</span></div></div>
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div><strong>Based in</strong><span>New York, NY</span></div></div>
-        <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-briefcase"/></svg></span><div><strong>Focus</strong><span>Product Management · Asset &amp; Wealth Management · AI &amp; Startups</span></div></div>
+        <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-briefcase"/></svg></span><div><strong>Focus</strong><span>Strategy &amp; Operations · Asset &amp; Wealth Management · Product Management · AI &amp; Startups</span></div></div>
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-activity"/></svg></span><div><strong>Currently</strong><span>Leading StackHacks · Seeking full-time roles in asset &amp; wealth management and AI</span></div></div>
         <div class="fact-card" id="exploringRow" hidden><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></span><div><strong>Currently exploring</strong><span></span></div></div>
       </div>
@@ -1963,7 +2007,7 @@
     <div class="timeline">
       <div class="timeline-progress" aria-hidden="true"></div>
 
-      <div class="timeline-item reveal reveal-delay-1">
+      <div class="timeline-item reveal reveal-delay-1" id="exp-cpc">
         <div class="timeline-dot"></div>
         <div class="exp-card">
           <div class="exp-header">
@@ -1981,7 +2025,7 @@
         </div>
       </div>
 
-      <div class="timeline-item reveal reveal-delay-2">
+      <div class="timeline-item reveal reveal-delay-2" id="exp-gtis">
         <div class="timeline-dot"></div>
         <div class="exp-card">
           <div class="exp-header">
@@ -2000,7 +2044,7 @@
         </div>
       </div>
 
-      <div class="timeline-item reveal reveal-delay-3">
+      <div class="timeline-item reveal reveal-delay-3" id="exp-stackhacks">
         <div class="timeline-dot"></div>
         <div class="exp-card">
           <div class="exp-header">
@@ -2317,7 +2361,7 @@
     <div class="contact-content reveal">
       <div class="section-label">Let's Connect :)</div>
       <h2 class="section-title">Ready to make<br><em>an impact</em></h2>
-      <p class="section-sub" style="margin:16px auto 0;text-align:center;">I'm actively seeking Full-Time & Post Grad Internship opportunities in asset &amp; wealth management, operations, and AI-focused startups. Let's talk about how I can contribute to your team.</p>
+      <p class="section-sub" style="margin:16px auto 0;text-align:center;">I'm actively seeking Full-Time & Post Grad Internship opportunities in asset &amp; wealth management, strategy and operations, and AI-focused startups. Let's talk about how I can contribute to your team.</p>
       <div class="contact-buttons">
         <a href="mailto:angelinaponce163@gmail.com" class="c-btn btn-email"><svg class="i" aria-hidden="true"><use href="#i-mail"/></svg> Email Me</a>
         <a href="https://www.linkedin.com/in/angelina-ponce" target="_blank" rel="noopener" class="c-btn btn-li"><svg class="i" aria-hidden="true"><use href="#i-linkedin"/></svg> LinkedIn</a>
@@ -2351,6 +2395,12 @@
       <h4>Tech used</h4>
       <div class="project-tags" id="modalTags"></div>
     </div>
+    <div class="story-step build-step" id="modalBuild" hidden>
+      <details class="build-log">
+        <summary>How I built it <svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></summary>
+        <div class="build-body" id="modalBuildBody"></div>
+      </details>
+    </div>
     <div class="modal-links" id="modalLinks"></div>
   </div>
   <button type="button" class="lightbox-btn lightbox-prev modal-nav" id="modalPrev" aria-label="Previous project"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
@@ -2383,6 +2433,65 @@ const SITE = {
   currentlyExploring: '',            // one line, shown as a "Currently exploring" row in About
   bookingUrl: '',                    // e.g. a scheduling link; adds a "Book a call" button to Contact
   analyticsDomain: '',               // e.g. 'angelinaponce.com'; loads Plausible (no cookies) when set
+  openTo: '',                        // one line naming the exact roles you're applying for; shown under the "Where I fit" cards
+  buildLogNote: '',                  // one line shown at the top of every "How I built it" section in the project modals
+};
+// ── "Where I fit": one card per lane, shown right after About (nothing renders when this is empty).
+// Each evidence bullet links to its proof: href is an anchor on the page, project is a project card's data-id (opens its modal).
+const FIT_ROLES = [
+  {
+    title: 'Strategy & Operations',
+    icon: 'layers',
+    pitch: 'Portfolio monitoring, cost analysis and pipeline organization, plus building and running a student organization.',
+    evidence: [
+      { text: 'Monitored a $353M, 10,000+ unit portfolio with monthly DSCR analysis and watchlist tracking (CPC)', href: '#exp-cpc' },
+      { text: 'Organized and categorized a deal pipeline and ran a Microsoft licensing analysis projecting ~15% cost savings (GTIS)', href: '#exp-gtis' },
+      { text: 'Manage a 10-member executive board and built an internship program from scratch (StackHacks)', href: '#exp-stackhacks' },
+    ],
+  },
+  {
+    title: 'Product & AI Builder',
+    icon: 'code',
+    pitch: 'Full-stack products built at hackathons, from AI literacy to prediction markets to financial planning.',
+    evidence: [
+      { text: 'PromptForward: AI literacy platform that scores every prompt on efficiency (HackMIT 2026)', project: 'promptforward' },
+      { text: 'PolyHedge: YHack finalist across five sponsor tracks', project: 'polyhedge' },
+      { text: 'Prosperity: full-stack financial planning platform built in 24 hours (HackMIT 2025)', project: 'prosperity' },
+    ],
+  },
+  {
+    title: 'Asset & Wealth Management',
+    icon: 'trending-up',
+    pitch: 'Asset management experience backed by equity research and finance training.',
+    evidence: [
+      { text: 'Asset Management Summer Analyst at Community Preservation Corporation', href: '#exp-cpc' },
+      { text: 'Lantheus (LNTH) equity research: WACC 9.8%, $130.00 price target', project: 'equity' },
+      { text: 'SEO Careers Alternative Investment Banking track and the BofA M&A Competition', href: '#skills' },
+    ],
+  },
+];
+// ── "How I built it" in the project modals, keyed by project id. Every field is optional and an empty one renders
+// nothing; a project with no entry gets no section at all. Text fields take a string or a list of strings;
+// links is a list of { label, href }. The GitHub commit history link is added from the card's data-github.
+const BUILD_ORDER = 'Built in order: Prosperity (HackMIT 2025), then PolyHedge (YHack 2026), then PromptForward (HackMIT 2026).';
+const BUILD_AI_TOOLS = "Claude Code and Devin (Cognition's AI software engineer).";
+const BUILD_LOG = {
+  prosperity: {
+    workflow: '', aiTools: BUILD_AI_TOOLS, prompting: '', decisions: '', verification: '', iterations: '', links: [],
+  },
+  polyhedge: {
+    workflow: 'Full-stack prediction markets platform built with React/Vite and a Node.js backend, integrating the Polymarket API for live market data and K2 Think V2 via the Lava endpoint for AI-powered position analysis. Hex was used for real-time data pipelines and analytics.',
+    aiTools: BUILD_AI_TOOLS, prompting: '', decisions: '', verification: '', iterations: '', links: [],
+  },
+  promptforward: {
+    workflow: '',
+    aiTools: BUILD_AI_TOOLS, prompting: '',
+    decisions: [
+      'Efficiency is calculated deterministically on the backend from accuracy, prompt quality and length, and token usage.',
+      'Training Mode evaluates your prompt before any generation is spent.',
+    ],
+    verification: '', iterations: '', links: [],
+  },
 };
 // ── Intro settings: the bird's size, perch, head turn, take-off direction and sparkles
 const INTRO = {
@@ -2428,6 +2537,40 @@ const introOn = document.documentElement.classList.contains('intro-on');
       fig.append(q, cap); list.appendChild(fig);
     });
     if (list.children.length && about) about.after(sec);
+  }
+  // "Where I fit" goes in after testimonials so it lands directly under About
+  const about = document.getElementById('about');
+  if (FIT_ROLES.length && about) {
+    const sec = document.createElement('section');
+    sec.className = 'section fit-section'; sec.id = 'fit'; sec.setAttribute('aria-labelledby', 'fitTitle');
+    sec.innerHTML = '<div class="container"><div class="reveal"><div class="section-label">Roles</div><h2 class="section-title" id="fitTitle">Where I <em>fit</em></h2>'
+      + '<p class="section-sub">Three lanes where my experience lines up, each linked to the work behind it.</p></div><div class="fit-grid"></div></div>';
+    const grid = sec.querySelector('.fit-grid');
+    FIT_ROLES.forEach(({ title, icon, pitch, evidence = [] }, i) => {
+      const card = document.createElement('article'), ic = document.createElement('div'), h = document.createElement('strong'), p = document.createElement('p'), ul = document.createElement('ul');
+      card.className = `value-card reveal reveal-delay-${i % 3 + 1}`;
+      ic.className = 'value-icon'; ic.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${icon || 'briefcase'}"/></svg>`;
+      h.textContent = title; p.textContent = pitch || '';
+      ul.className = 'fit-evidence';
+      evidence.forEach(({ text, href, project }) => {
+        if (!text) return;
+        const li = document.createElement('li'), a = document.createElement('a');
+        a.textContent = text;
+        a.href = project ? '#projects' : href;
+        if (project) { a.dataset.project = project; a.setAttribute('aria-haspopup', 'dialog'); }
+        li.appendChild(a); ul.appendChild(li);
+      });
+      card.append(ic, h, p);
+      if (ul.children.length) card.appendChild(ul);
+      grid.appendChild(card);
+    });
+    if (SITE.openTo) {
+      const open = document.createElement('p'), label = document.createElement('strong');
+      open.className = 'fit-open reveal'; label.textContent = 'Open to';
+      open.append(label, SITE.openTo);
+      grid.after(open);
+    }
+    about.after(sec);
   }
   const ex = document.getElementById('exploringRow');
   if (ex && SITE.currentlyExploring) { ex.querySelector(':scope > div > span').textContent = SITE.currentlyExploring; ex.hidden = false; }
@@ -3465,12 +3608,62 @@ function renderProject(card) {
   const { github, demo, report } = card.dataset;
   const demoLabel = /devpost\.com/i.test(demo || '') ? 'Devpost' : 'Live site';
   document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel) + link(report, 'external-link', 'Report');
+  renderBuildLog(id, github);
   // Position among the cards the current filter shows; with only one, there is nothing to step to
   const shown = visibleProjects();
   document.getElementById('modalCount').textContent = `${shown.indexOf(card) + 1} / ${shown.length}`;
   modalPrev.hidden = modalNext.hidden = shown.length < 2;
   modal.lastCard = card;
 }
+// "How I built it": filled from BUILD_LOG; hidden entirely when the project has no entry or every field is empty
+const buildStep = document.getElementById('modalBuild'), buildLog = buildStep.querySelector('details'), buildBody = document.getElementById('modalBuildBody');
+const BUILD_FIELDS = [['workflow', 'Workflow'], ['aiTools', 'AI tools'], ['prompting', 'Prompting'], ['decisions', 'Key decisions'],
+  ['verification', 'Verification'], ['iterations', 'Iterations']];
+function renderBuildLog(id, github) {
+  const entry = BUILD_LOG[id] || {};
+  const list = v => (Array.isArray(v) ? v : [v]).map(x => (x || '').trim()).filter(Boolean);
+  const el = (tag, text, cls) => { const n = document.createElement(tag); n.textContent = text; if (cls) n.className = cls; return n; };
+  const parts = [];
+  BUILD_FIELDS.forEach(([key, label]) => {
+    const items = list(entry[key]);
+    if (!items.length) return;
+    parts.push(el('h5', label));
+    if (items.length === 1) parts.push(el('p', items[0]));
+    else { const ul = document.createElement('ul'); items.forEach(t => ul.appendChild(el('li', t))); parts.push(ul); }
+  });
+  const links = (entry.links || []).filter(l => l && l.href && l.label);
+  if (links.length) {
+    parts.push(el('h5', 'Links'));
+    const ul = document.createElement('ul');
+    links.forEach(l => { const li = document.createElement('li'), a = el('a', l.label); a.href = l.href; a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); ul.appendChild(li); });
+    parts.push(ul);
+  }
+  buildBody.getAnimations().forEach(a => a.cancel());
+  buildLog.open = false;
+  if (!parts.length) { buildStep.hidden = true; buildBody.replaceChildren(); return; }
+  const top = [];
+  if (BUILD_ORDER) top.push(el('p', BUILD_ORDER, 'build-lead'));
+  if (SITE.buildLogNote) top.push(el('p', SITE.buildLogNote, 'build-note'));
+  if (github) {
+    const p = el('p', '', 'build-commits'), a = el('a', 'See the commit history');
+    a.href = github.replace(/\/+$/, '') + '/commits'; a.target = '_blank'; a.rel = 'noopener';
+    p.appendChild(a); parts.push(p);
+  }
+  buildBody.replaceChildren(...top, ...parts);
+  buildStep.hidden = false;
+}
+// Opens and closes with a height slide (instant with reduced motion); the summary keeps native keyboard toggling
+buildLog.querySelector('summary').addEventListener('click', e => {
+  if (reduceMotion) return;
+  e.preventDefault();
+  buildBody.getAnimations().forEach(a => a.cancel());
+  const opening = !buildLog.open;
+  if (opening) buildLog.open = true;
+  const h = buildBody.scrollHeight + 'px';
+  const anim = buildBody.animate(opening ? [{ height: '0px', opacity: 0 }, { height: h, opacity: 1 }] : [{ height: h, opacity: 1 }, { height: '0px', opacity: 0 }],
+    { duration: opening ? 380 : 260, easing: 'cubic-bezier(.22,1,.36,1)' });
+  if (!opening) anim.onfinish = () => { buildLog.open = false; };
+});
 function openProject(card) {
   renderProject(card);
   openDialog(modal);
@@ -3484,6 +3677,8 @@ function stepProject(dir) {
   const shown = visibleProjects();
   if (shown.length < 2) return;
   renderProject(shown[(shown.indexOf(modal.lastCard) + dir + shown.length) % shown.length]);
+  // the focused element can vanish with the old project (e.g. its "How I built it" or a link); keep focus in the modal
+  if (!modal.contains(document.activeElement) || document.activeElement.closest('[hidden]')) modal.querySelector('.modal-close').focus({ preventScroll: true });
   modal.scrollTop = 0;
   modalInner.classList.remove('swap'); void modalInner.offsetWidth; modalInner.classList.add('swap');
 }
@@ -3493,11 +3688,37 @@ modal.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') stepProject(-1);
   if (e.key === 'ArrowRight') stepProject(1);
 });
-modal.addEventListener('close', () => { if (modal.lastCard) modal.lastCard.focus({ preventScroll: true }); });
+modal.addEventListener('close', () => {
+  const back = modal.returnTo || modal.lastCard;   // a "Where I fit" link that opened the modal gets focus back instead of the card
+  modal.returnTo = null;
+  if (back) back.focus({ preventScroll: true });
+});
 projectCards.forEach(card => {
   card.addEventListener('click', () => openProject(card));
   card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProject(card); } });
 });
+// "Where I fit" evidence links: a project link opens that project's modal (clearing any filter that hides it);
+// a section link scrolls under the fixed header and moves keyboard focus there
+document.querySelectorAll('.fit-evidence a').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  const card = a.dataset.project && projectCards.find(c => c.dataset.id === a.dataset.project);
+  if (card) {
+    if (card.classList.contains('hidden')) {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
+      clearSkillHighlight();
+      projectCards.forEach(c => { c.classList.remove('hidden'); finishReveal(c); });
+    }
+    openProject(card);
+    modal.returnTo = a;
+    return;
+  }
+  const target = document.querySelector(a.getAttribute('href'));
+  if (!target) return;
+  muteQuickView();
+  scrollToSection(target, 16);
+  if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+}));
 
 // ── Conference lightbox
 const lightbox = document.getElementById('lightbox');
