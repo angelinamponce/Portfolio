@@ -23,7 +23,7 @@
   <link rel="icon" type="image/svg+xml" href="Assets/favicon.svg">
   <link rel="icon" type="image/png" href="Assets/abuelitapajarito.png">
   <link rel="apple-touch-icon" href="Assets/abuelitapajarito.png">
-  <link rel="preload" as="image" href="Headshot.jpg">
+  <link rel="preload" as="image" href="public/headshot-cutout-clean.webp" type="image/webp" fetchpriority="high">
   <script>
     /* Intro replay settings. They live here because the choice has to be made before first paint.
        introMode: 'always' plays on every load | 'once-per-session' skips it for the rest of the tab's session |
@@ -560,10 +560,13 @@
        bottom inner edges: the photo is wider than the frame and anchored to its bottom centre, so the blazer and arm run
        out past both sides, and the layer reaches 30% above the frame so the head can rise over the top border (the
        border belongs to the frame, so the photo layer is painted over it). The frame's canvas background keeps the
-       hero motif from showing behind her. */
+       hero motif from showing behind her; the layer itself has no background, so it is transparent above the frame.
+       The photo is a cut-out (public/headshot-cutout-clean.webp, PNG fallback) positioned so the frame's bottom edge
+       falls across her crossed arms, the widest part of the figure: the blazer then runs past both bottom corners,
+       and the photo's own narrower bottom is clipped away below the frame. */
     .portrait { width: var(--shot-w); }
     .headshot-wrap {
-      --shot-scale: 1.36;   /* photo width ÷ frame width; the photo's edges fall outside the frame */
+      --shot-scale: 1.36;   /* photo width ÷ frame width */
       position: relative; margin: 8% 0 20px; aspect-ratio: 4 / 5;
       border: 1px solid rgba(184,150,92,0.55);
       background: radial-gradient(circle at 50% 38%, rgba(212,181,125,0.14) 0%, transparent 62%), var(--hero-bg);
@@ -575,12 +578,20 @@
       clip-path: inset(0);   /* left, right and bottom are the frame's inner edges; the top is 30% above the frame */
       pointer-events: none;
     }
-    .headshot {
-      position: absolute; bottom: -1%; left: 50%;
-      width: calc(var(--shot-scale) * 100%); max-width: none; height: auto;   /* the square photo keeps its shape */
-      transform: translateX(-49%);   /* centres her face and shoulders together (her face sits just left of the photo's middle) */
-      filter: url(#portraitKey);
+    /* The photo and its tint share one box: 1080x1350 (4:5) scaled to --shot-scale x the frame width. translate() is a
+       share of the photo's own size: -53.7% puts its x=580 (her centre line) on the frame's centre, and 18.5% drops its
+       row 1100 (just under the crossed arms) onto the frame's bottom edge. */
+    .headshot, .headshot-tint {
+      position: absolute; bottom: 0; left: 50%;
+      width: calc(var(--shot-scale) * 100%); max-width: none; aspect-ratio: 1080 / 1350; height: auto;
+      transform: translate(-53.7%, 18.5%);
       display: block;
+    }
+    /* Green grade on her alone: a soft-light wash masked by the photo's own alpha, so nothing around her is tinted */
+    .headshot-tint {
+      background: #1d3a2b; mix-blend-mode: soft-light; opacity: 0.55;
+      -webkit-mask: url("public/headshot-cutout-clean.webp") center / 100% 100% no-repeat;
+              mask: url("public/headshot-cutout-clean.webp") center / 100% 100% no-repeat;
     }
 
     .headshot-overlay {
@@ -1759,20 +1770,6 @@
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
   <svg class="hero-motif" id="heroMotif" viewBox="0 0 1000 600" preserveAspectRatio="xMaxYMid meet" aria-hidden="true" focusable="false"></svg>
-  <!-- Keys out the portrait's blue backdrop: anything bluer than it is red turns transparent (skin, hair, the blazer and
-       the white top are all warmer or neutral), and the faint blue left at the edges is pulled to neutral first.
-       Swap Headshot.jpg for a cut-out PNG and drop the filter line in .headshot to retire this. -->
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <filter id="portraitKey" color-interpolation-filters="sRGB">
-      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -10 0 10 0 0.05" result="fringe"/>
-      <feColorMatrix in="SourceGraphic" type="matrix" values="0.36 0.52 0.12 0 0.02  0.34 0.52 0.12 0 0.01  0.3 0.5 0.12 0 0  0 0 0 1 0" result="neutral"/>
-      <feComposite in="neutral" in2="fringe" operator="in" result="neutralFringe"/>
-      <feComposite in="neutralFringe" in2="SourceGraphic" operator="over" result="clean"/>
-      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -6 0 6 0 -0.25" result="backdrop"/>
-      <feMorphology in="backdrop" operator="dilate" radius="0.6" result="backdropWide"/>
-      <feComposite in="clean" in2="backdropWide" operator="out"/>
-    </filter>
-  </svg>
   <div class="hero-corner" aria-hidden="true">Angelina Ponce · 2026</div>
   <div class="hero-left">
     <div class="hero-content">
@@ -1800,7 +1797,13 @@
   <div class="hero-right hero-right-enter">
     <div class="portrait">
       <div class="headshot-wrap">
-        <div class="headshot-clip"><img src="Headshot.jpg" alt="Headshot of Angelina Ponce" class="headshot" width="1080" height="1080" fetchpriority="high" decoding="async" onerror="this.style.background='#12231a';this.style.height='360px'"></div>
+        <div class="headshot-clip">
+          <picture>
+            <source srcset="public/headshot-cutout-clean.webp" type="image/webp">
+            <img src="public/headshot-cutout-clean.png" alt="Headshot of Angelina Ponce" class="headshot" width="1080" height="1350" fetchpriority="high" decoding="async">
+          </picture>
+          <span class="headshot-tint" aria-hidden="true"></span>
+        </div>
         <div class="headshot-overlay"></div>
         <div class="headshot-namecard" aria-hidden="true">
           <div class="headshot-namecard-line"></div>
