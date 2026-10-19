@@ -470,12 +470,16 @@
       margin-bottom: 28px;
     }
 
+    /* Subhead: three lines, each led by a short brass tick */
     .hero-desc {
-      font-size: 15.5px; line-height: 1.85;
+      list-style: none; display: grid; gap: 8px;
+      font-size: 15.5px; line-height: 1.6;
       color: var(--on-dark-2);
-      max-width: 500px; margin-bottom: 48px;
+      max-width: 600px; margin-bottom: 40px;
       font-weight: 300; letter-spacing: 0.2px;
     }
+    .hero-desc li { position: relative; padding-left: 20px; }
+    .hero-desc li::before { content: ''; position: absolute; left: 0; top: 0.8em; width: 9px; height: 1px; background: var(--brass); }
     .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
 
     .btn-mag {
@@ -1455,7 +1459,7 @@
     /* ─── RESPONSIVE ─── */
     @media (min-width: 1700px) {
       .hero-right { --shot-w: clamp(300px, 24vw, 480px); }
-      .hero-desc { font-size: 15.5px; max-width: 520px; }
+      .hero-desc { font-size: 16px; max-width: 620px; }
     }
     /* Menu button replaces the inline nav before the header runs out of room */
     @media (max-width: 1180px) {
@@ -1759,7 +1763,11 @@
         <p class="hero-role">Finance &amp; AI Builder</p>
       </div>
       <div class="hero-divider hero-enter hero-enter-4"></div>
-      <p class="hero-desc hero-enter hero-enter-5">Asset Management Summer Analyst at Community Preservation Corporation. Builder of PolyHedge, Prosperity and PromptForward.</p>
+      <ul class="hero-desc hero-enter hero-enter-5">
+        <li>Private Equity Summer Analyst at Brightshore Capital (formerly GTIS Partners)</li>
+        <li>Asset Management Summer Analyst at Community Preservation Corporation</li>
+        <li>Builder of PolyHedge, Prosperity and PromptForward.</li>
+      </ul>
       <div class="hero-btns hero-enter hero-enter-6">
         <a href="Angelina%20Ponce%20Resume.pdf" download="Angelina-Ponce-Resume.pdf" class="btn-mag btn-primary-mag">↓ Download Resume</a>
         <a href="#contact" class="btn-mag btn-ghost-mag">Let's Connect →</a>
