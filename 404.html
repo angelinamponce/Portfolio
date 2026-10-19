@@ -7,16 +7,17 @@
 <title>Page not found · Angelina Ponce</title>
 <link rel="icon" type="image/svg+xml" href="/Assets/favicon.svg">
 <script>
-  /* follow the site's saved theme (set on the main page) */
-  try { if (localStorage.getItem('apTheme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+  /* follow the site's theme: dark unless light was picked on the main page */
+  var theme = 'dark';
+  try { theme = localStorage.getItem('apTheme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+  if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 </script>
 <style>
   :root {
-    --forest: #0e1f16; --sage: #4e8060; --sage-text: #3d6b4f; --sage-light: #8cbd9e;
-    --gold: #b49660; --cream: #faf7f0; --ink: #1b2a21; --muted: #5a6b60;
-    --bg: var(--cream); --heading: var(--forest); --text: var(--muted); --link: var(--sage-text);
+    --forest: #0e1f16; --cream: #f5efe3; --brass: #b8965c; --brass-hi: #d4b57d; --brass-ink: #7a5c2a;
+    --bg: #f2ecdf; --heading: var(--forest); --text: #45433b; --accent: var(--brass-ink);
   }
-  [data-theme="dark"] { --bg: #0c1611; --heading: var(--cream); --text: rgba(227,236,230,0.7); --link: var(--sage-light); }
+  [data-theme="dark"] { --bg: #0a140f; --heading: var(--cream); --text: rgba(245,239,227,0.74); --accent: var(--brass-hi); }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
@@ -25,19 +26,18 @@
     font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   main { max-width: 520px; text-align: center; }
-  .code { font: 500 12px/1 ui-monospace, "SFMono-Regular", Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
+  .code { font: 500 12px/1 ui-monospace, "SFMono-Regular", Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
   h1 { margin: 14px 0 12px; font: 600 clamp(36px, 8vw, 56px)/1.05 "Cormorant Garamond", Georgia, "Times New Roman", serif; color: var(--heading); }
-  h1 em { font-style: italic; color: var(--sage); }
-  [data-theme="dark"] h1 em { color: var(--sage-light); }
-  .rule { width: 56px; height: 2px; margin: 0 auto 20px; background: linear-gradient(90deg, var(--gold), var(--sage)); }
+  h1 em { font-style: italic; color: var(--accent); }
+  .rule { width: 56px; height: 2px; margin: 0 auto 20px; background: var(--brass); }
   p { margin: 0 0 28px; }
   a.home {
     display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 22px;
-    border: 1px solid currentColor; border-radius: 100px; color: var(--link); text-decoration: none;
+    border: 1px solid currentColor; border-radius: 100px; color: var(--accent); text-decoration: none;
     font-weight: 600; font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
   }
-  a.home:hover { background: var(--forest); border-color: var(--forest); color: var(--cream); }
-  a.home:focus-visible { outline: 2px solid var(--sage); outline-offset: 3px; }
+  a.home:hover { background: var(--brass); border-color: var(--brass); color: var(--forest); }
+  a.home:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 </style>
 </head>
 <body>
