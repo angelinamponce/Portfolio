@@ -674,10 +674,15 @@
       color: var(--brass-hi); margin: 0 0 18px;
     }
     .logo-row { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 14px 56px; }
-    .logo-slot { min-height: 36px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.25s; }
-    .logo-slot:hover { opacity: 1; }
+    .logo-slot { min-height: 36px; display: flex; align-items: center; justify-content: center; }
+    .logo-pair { gap: 12px; }   /* HackMIT + MIT read as one item */
+    .logo-item { display: flex; align-items: center; opacity: 0.6; transition: opacity 0.25s; }
+    .logo-slot:hover .logo-item { opacity: 1; }
     /* width and height come from LOGOS (explicit attributes, so nothing shifts); the file is tinted to cream */
-    .logo-slot img { display: block; max-width: 100%; object-fit: contain; filter: brightness(0) invert(94%) sepia(10%); }
+    .logo-item img { display: block; max-width: 100%; object-fit: contain; filter: brightness(0) invert(94%) sepia(10%); }
+    /* HackMIT's dense logo loses its inner detail at the shared treatment: a touch brighter and less transparent */
+    .logo-item[data-logo="hackmit"] { opacity: 0.82; }
+    .logo-item[data-logo="hackmit"] img { filter: brightness(0) invert(100%) sepia(8%); }
     .logo-word {
       font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; letter-spacing: 0.4px;
       color: var(--cream); text-align: center; line-height: 1.15;
@@ -1821,12 +1826,12 @@
   <div class="container">
     <h2 class="logo-strip-label" id="logoStripLabel">Experience, programs &amp; competitions</h2>
     <ul class="logo-row">
-      <li class="logo-slot" data-logo="cpc"><span class="logo-word"><span aria-hidden="true">CPC</span><span class="sr-only">Community Preservation Corporation</span></span></li>
-      <li class="logo-slot" data-logo="brightshore"><span class="logo-word">Brightshore Capital<span class="sr-only"> (formerly GTIS Partners)</span></span></li>
-      <li class="logo-slot" data-logo="hackmit"><span class="logo-word">HackMIT</span></li>
-      <li class="logo-slot" data-logo="colorstack"><span class="logo-word">ColorStack</span></li>
-      <li class="logo-slot" data-logo="ey"><span class="logo-word">EY</span></li>
-      <li class="logo-slot" data-logo="barclays"><span class="logo-word">Barclays</span></li>
+      <li class="logo-slot"><span class="logo-item" data-logo="cpc"><span class="logo-word"><span aria-hidden="true">CPC</span><span class="sr-only">Community Preservation Corporation</span></span></span></li>
+      <li class="logo-slot"><span class="logo-item" data-logo="brightshore"><span class="logo-word">Brightshore Capital<span class="sr-only"> (formerly GTIS Partners)</span></span></span></li>
+      <li class="logo-slot logo-pair"><span class="logo-item" data-logo="hackmit"><span class="logo-word">HackMIT</span></span><span class="logo-item" data-logo="mit"><span class="logo-word">MIT</span></span></li>
+      <li class="logo-slot"><span class="logo-item" data-logo="colorstack"><span class="logo-word">ColorStack</span></span></li>
+      <li class="logo-slot"><span class="logo-item" data-logo="ey"><span class="logo-word">EY</span></span></li>
+      <li class="logo-slot"><span class="logo-item" data-logo="barclays"><span class="logo-word">Barclays</span></span></li>
     </ul>
   </div>
 </section>
@@ -2302,7 +2307,8 @@ const SITE = {
 const LOGOS = {
   cpc:         { src: 'public/logos/cpc.png',         alt: 'Community Preservation Corporation',           w: 112, h: 56 },  // the file has ~14% padding top and bottom
   brightshore: { src: 'public/logos/brightshore.svg', alt: 'Brightshore Capital (formerly GTIS Partners)', w: 125, h: 44 },
-  hackmit:     { src: 'public/logos/hackmit.svg',     alt: 'HackMIT',                                      w: 34,  h: 38 },  // square and dense: ~80% of the others' optical height
+  hackmit:     { src: 'public/logos/hackmit.svg',     alt: 'HackMIT',                                      w: 40,  h: 44 },  // square and dense; sits brighter (see .logo-item[data-logo="hackmit"])
+  mit:         { src: 'public/logos/mit.svg',         alt: 'MIT',                                          w: 39,  h: 22 },  // shares HackMIT's item; kept smaller than HackMIT
   colorstack:  { src: 'public/logos/colorstack.png',  alt: 'ColorStack',                                   w: 151, h: 23 },
   ey:          { src: 'public/logos/ey.svg',          alt: 'EY',                                           w: 44,  h: 48 },  // includes the tagline (the only version ey.com serves)
   barclays:    { src: 'public/logos/barclays.svg',    alt: 'Barclays',                                     w: 129, h: 22 },
@@ -2417,7 +2423,7 @@ const introOn = document.documentElement.classList.contains('intro-on');
     about.after(sec);
   }
   // Logo strip: swap a wordmark for its logo only once the file has loaded, so a missing file never shows a broken image
-  document.querySelectorAll('.logo-slot').forEach(slot => {
+  document.querySelectorAll('.logo-item').forEach(slot => {
     const cfg = LOGOS[slot.dataset.logo];
     const srcs = cfg ? [].concat(cfg.src).filter(Boolean) : [];
     const tryNext = () => {
