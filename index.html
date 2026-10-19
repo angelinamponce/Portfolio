@@ -25,7 +25,7 @@
   <link rel="apple-touch-icon" href="Assets/abuelitapajarito.png">
   <link rel="preload" as="image" href="Headshot.jpg">
   <script>
-    /* Intro replay settings. They live here (INTRO points to them) because the choice has to be made before first paint.
+    /* Intro replay settings. They live here because the choice has to be made before first paint.
        introMode: 'always' plays on every load | 'once-per-session' skips it for the rest of the tab's session |
        'days' skips it for introReplayDays after it plays (per browser). Blocked storage just means it plays.
        Visitors who ask for reduced motion never get the intro. */
@@ -38,15 +38,6 @@
         else if (mode === 'days') seen = Date.now() < Number(localStorage.getItem('apIntroUntil') || 0);
       } catch (e) {}
       root.classList.add(seen ? 'intro-skip' : 'intro-on', 'js');
-      if (!seen) {
-        // The intro starts at the top of the page: no restored scroll on refresh, and a deep link (/#contact) is held
-        // back so the browser doesn't jump there under the overlay; runIntro scrolls to it once the intro ends.
-        try { history.scrollRestoration = 'manual'; } catch (e) {}
-        if (location.hash.length > 1) {
-          INTRO_REPLAY.pendingHash = location.hash;
-          try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) { INTRO_REPLAY.pendingHash = ''; }
-        }
-      }
       // dark by default; light only when the visitor has picked it with the toggle
       var theme = 'dark';
       try { theme = localStorage.getItem('apTheme') === 'light' ? 'light' : 'dark'; } catch (e) {}
@@ -1564,88 +1555,51 @@
       .js .reveal { transform: none; }
     }
 
-    /* ── Intro overlay ── */
+    /* ── Intro overlay (first visit in a tab, ~2s): the AP monogram draws in brass, the name fades up, a brass rule
+       draws, then the overlay lifts away. It is decorative (aria-hidden, nothing focusable) and never locks scrolling;
+       the hero renders underneath from the start. If the script never runs, the CSS failsafe clears it after 3s. ── */
     #intro { display: none; }
     .intro-on #intro {
-      display: block;
+      display: flex; align-items: center; justify-content: center;
       position: fixed; inset: 0; z-index: 9980; /* under the grain layer so texture matches */
-      overflow: hidden;
-      /* CSS-only failsafe: if the script never runs, get out of the way after 11s */
-      animation: introFailsafe 0.5s ease 11s forwards;
+      overflow: hidden; cursor: pointer;
+      background: var(--green-850);
+      animation: introFailsafe 0.4s ease 3s forwards;
     }
     @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
-    /* Two copies of the dark panel, one per side of the hero's diagonal; their masks (set by the script) feather the
-       seam so no hard line shows when they part */
-    .intro-panel {
-      position: absolute; inset: 0;
-      background: var(--forest);
-      will-change: transform, opacity;
-    }
-    .intro-panel::before, .intro-panel::after { content: ''; position: absolute; inset: 0; }
-    .intro-panel::before {
+    /* the hero's mesh, grid and brass glow, so the lift reveals the same canvas */
+    #intro::before, #intro::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+    #intro::before {
       background:
+        radial-gradient(circle at 50% 46%, rgba(212,181,125,0.14) 0%, rgba(184,150,92,0.05) 26%, transparent 52%),
         radial-gradient(ellipse 80% 60% at 20% 30%, rgba(26,48,36,0.55) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 80% at 80% 70%, rgba(184,150,92,0.08) 0%, transparent 55%);
+        radial-gradient(ellipse 100% 100% at 50% 100%, rgba(7,16,11,0.6) 0%, transparent 70%);
     }
-    .intro-panel::after {
+    #intro::after {
       background-image:
         linear-gradient(rgba(245,239,227,0.035) 1px, transparent 1px),
         linear-gradient(90deg, rgba(245,239,227,0.035) 1px, transparent 1px);
       background-size: 60px 60px;
     }
-
-    .intro-stage {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      padding-bottom: 26vh; /* copy sits in the upper third; the chart rises beneath it */
-      pointer-events: none;
-    }
-    .intro-copy { display: flex; flex-direction: column; align-items: center; }
+    .intro-stage { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+    .intro-mark { width: clamp(84px, 9vw, 112px); height: auto; overflow: visible; }
+    .intro-mark path, .intro-mark rect { fill: none; stroke: var(--brass-hi); stroke-linecap: round; stroke-linejoin: round; }
+    .intro-mark .m-frame { stroke-width: 1.25; stroke: var(--brass); }
+    .intro-mark .m-letter { stroke-width: 3; }
     .intro-name {
-      position: relative;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(42px, 10.5vw, 112px);
-      font-weight: 600; line-height: 1;
-      letter-spacing: -1px; white-space: nowrap;
-      color: var(--cream);
-      padding-bottom: 0.18em;
+      margin-top: 26px;
+      font-family: 'Cormorant Garamond', serif; font-size: clamp(26px, 3vw, 36px); font-weight: 600;
+      letter-spacing: 0.06em; color: var(--cream); line-height: 1.1;
     }
-    .intro-name em { font-style: italic; color: var(--brass-hi); }
-    .intro-ch { display: inline-block; opacity: 0; }
-    .intro-line {
-      position: absolute; left: 2px; right: 2px; bottom: 0; height: 2px;
-      background: linear-gradient(90deg, var(--brass) 0%, var(--brass-hi) 100%);
-      transform: scaleX(0); transform-origin: left center;
+    .intro-rule {
+      display: block; width: clamp(120px, 14vw, 180px); height: 1px; margin-top: 18px;
+      background: linear-gradient(90deg, transparent, var(--brass-hi) 20%, var(--brass-hi) 80%, transparent);
+      transform-origin: center;
     }
-    .intro-tag {
-      margin-top: 22px;
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(10px, 1.1vw, 13px); font-weight: 400;
-      letter-spacing: 0.28em; text-transform: uppercase;
-      color: var(--on-dark-3);
-      opacity: 0;
-    }
-    .intro-chart {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      overflow: visible; pointer-events: none;
-    }
-    .intro-chart-line { filter: drop-shadow(0 0 5px rgba(226,201,146,0.3)); }
-    .intro-breakout { filter: drop-shadow(0 0 6px rgba(239,220,176,0.45)); }
-    .intro-peak { filter: drop-shadow(0 0 4px rgba(239,220,176,0.9)); }
-    .intro-skip-btn {
-      position: absolute; right: 16px; bottom: 12px; pointer-events: auto;
-      display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; /* comfortable tap target */
-      background: none; border: 0; cursor: pointer;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px; letter-spacing: 2px; text-transform: uppercase;
-      color: rgba(245,239,227,0.86); /* about 11:1 on the dark panel */
-      padding: 12px 14px;
-      transition: color 0.2s ease;
-    }
-    .intro-skip-btn:hover { color: var(--cream); }
-    @media (max-width: 768px) {
-      .intro-skip-btn { right: 8px; bottom: 8px; }
-    }
+    /* before the script animates them: drawn-out strokes, hidden name and rule */
+    .intro-on .intro-mark path, .intro-on .intro-mark rect { stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .intro-on .intro-name { opacity: 0; }
+    .intro-on .intro-rule { transform: scaleX(0); }
   </style>
 </head>
 <body>
@@ -1694,17 +1648,18 @@
   <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></symbol>
 </svg>
 
-<div id="intro">
-  <div class="intro-panel"></div>
-  <div class="intro-panel"></div>
-  <svg class="intro-chart" aria-hidden="true"></svg>
-  <div class="intro-stage" aria-hidden="true">
-    <div class="intro-copy">
-      <div class="intro-name"><span class="intro-ch">A</span><span class="intro-ch">n</span><span class="intro-ch">g</span><span class="intro-ch">e</span><span class="intro-ch">l</span><span class="intro-ch">i</span><span class="intro-ch">n</span><span class="intro-ch">a</span> <em><span class="intro-ch">P</span><span class="intro-ch">o</span><span class="intro-ch">n</span><span class="intro-ch">c</span><span class="intro-ch">e</span></em><span class="intro-line"></span></div>
-      <p class="intro-tag">Bridging finance and technology</p>
-    </div>
+<div id="intro" aria-hidden="true">
+  <div class="intro-stage">
+    <!-- The AP monogram: the header badge's square, with the A and P drawn as single strokes -->
+    <svg class="intro-mark" viewBox="0 0 120 120" focusable="false">
+      <rect class="m-frame" x="4" y="4" width="112" height="112" rx="20" pathLength="1"/>
+      <path class="m-letter" d="M24 88 L43 32 L62 88" pathLength="1"/>
+      <path class="m-letter" d="M31 70 H55" pathLength="1"/>
+      <path class="m-letter" d="M74 88 V32 H86 C98 32 102 40 102 47 C102 54 98 62 86 62 H74" pathLength="1"/>
+    </svg>
+    <p class="intro-name">Angelina Ponce</p>
+    <span class="intro-rule"></span>
   </div>
-  <button type="button" class="intro-skip-btn" id="introSkip">Skip intro →</button>
 </div>
 
 
@@ -2383,11 +2338,6 @@ const BUILD_LOG = {
     verification: '', iterations: '', links: [],
   },
 };
-// ── Intro settings (the replay choice lives in INTRO_REPLAY in <head>, since it is made before first paint)
-const INTRO = {
-  introMode: INTRO_REPLAY.introMode,             // 'always' | 'once-per-session' | 'days'
-  introReplayDays: INTRO_REPLAY.introReplayDays, // for 'days' mode
-};
 const introOn = document.documentElement.classList.contains('intro-on');
 
 // ── Optional pieces from SITE (text goes in as text, never as HTML)
@@ -2450,13 +2400,13 @@ const introOn = document.documentElement.classList.contains('intro-on');
     document.head.appendChild(sc);
   }
 })();
-const startHero    = () => {
+// holdMs: how long something still covers the hero (the intro); its entrance runs now, the sheen and count-up after
+const startHero    = (holdMs = 0) => {
   if (document.body.classList.contains('page-loaded')) return;
   document.body.classList.add('page-loaded');
-  setTimeout(presentName, 900);   // once the name has risen in
-  setTimeout(() => document.querySelectorAll('#hero [data-target]').forEach(countUp), 650);
+  setTimeout(presentName, holdMs + 900);   // once the name has risen in
+  setTimeout(() => document.querySelectorAll('#hero [data-target]').forEach(countUp), holdMs + 650);
 };
-const unlockScroll = () => { document.documentElement.style.overflow = ''; };
 
 // The name's gold sheen: one sweep (with the underline drawing beneath it), then a soft glow.
 // Reduced motion goes straight to the settled state.
@@ -2484,209 +2434,56 @@ else window.addEventListener('load', () => setTimeout(startHero, 80));
 
 function runIntro() {
   const intro = document.getElementById('intro');
-  document.documentElement.style.overflow = 'hidden';   // unlocked when the intro finishes or is skipped
-  try {
-    if (INTRO.introMode === 'once-per-session') sessionStorage.setItem('apIntroSeen', '1');
-    else if (INTRO.introMode === 'days') localStorage.setItem('apIntroUntil', String(Date.now() + INTRO.introReplayDays * 864e5));
+  try {   // remember it has played (INTRO_REPLAY in <head> decides whether it plays at all)
+    if (INTRO_REPLAY.introMode === 'once-per-session') sessionStorage.setItem('apIntroSeen', '1');
+    else if (INTRO_REPLAY.introMode === 'days') localStorage.setItem('apIntroUntil', String(Date.now() + INTRO_REPLAY.introReplayDays * 864e5));
   } catch (e) {}
-  // A deep link held back in <head>: put the hash back and scroll to its section once the intro is out of the way
-  function landOnHash() {
-    const hash = INTRO_REPLAY.pendingHash;
-    if (!hash) return;
-    INTRO_REPLAY.pendingHash = '';
-    try { history.replaceState(history.state, '', hash); } catch (e) {}
-    let t = null;
-    try { t = document.querySelector(hash); } catch (e) {}
-    if (t) requestAnimationFrame(() => scrollToSection(t));
-  }
-  if (!intro || !intro.animate) { if (intro) intro.remove(); startHero(); unlockScroll(); landOnHash(); return; }
-
-  const copy   = intro.querySelector('.intro-copy');
-  const tag    = intro.querySelector('.intro-tag');
-  const chart  = intro.querySelector('.intro-chart');
-  const chars  = [...intro.querySelectorAll('.intro-ch')];
-  const line   = intro.querySelector('.intro-line');
-  const skip   = document.getElementById('introSkip');
-  const panels = [...intro.querySelectorAll('.intro-panel')];
+  if (!intro || !intro.animate) { if (intro) intro.remove(); startHero(); return; }
+  const strokes = [...intro.querySelectorAll('.intro-mark rect, .intro-mark path')];
+  const name = intro.querySelector('.intro-name'), rule = intro.querySelector('.intro-rule');
+  const LIFT_AT = 1450, LIFT_MS = 650;
   const timers = [];
-  const later  = (fn, ms) => timers.push(setTimeout(fn, ms));
   let done = false;
+  // the hero renders underneath straight away (no LCP delay); its sheen and count-up wait for the lift
+  startHero(LIFT_AT);
 
-  // End of the sequence, Skip, a keypress, a scroll/tap or the hard cap: the overlay fades if it is still up
+  // End: after the lift, or at once on a click, tap, key or scroll (a short fade), or on any error
   function finish(fadeMs) {
     if (done) return;
     done = true;
     timers.forEach(clearTimeout);
-    window.removeEventListener('keydown', onKey);
-    ['wheel', 'touchmove', 'pointerdown'].forEach(t => window.removeEventListener(t, onKey));
-    startHero();
-    unlockScroll();
-    landOnHash();
+    ['keydown', 'pointerdown', 'wheel', 'touchmove'].forEach(t => window.removeEventListener(t, skip));
     if (!fadeMs) return intro.remove();
     intro.style.pointerEvents = 'none';
+    intro.getAnimations({ subtree: true }).forEach(a => a.pause());
     intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: fadeMs, easing: 'ease', fill: 'forwards' })
       .finished.then(() => intro.remove(), () => intro.remove());
   }
-  const onKey = () => finish(350);
-  window.addEventListener('keydown', onKey);
-  // trying to scroll, a tap or a click also skips it, so the page is never held up
-  ['wheel', 'touchmove', 'pointerdown'].forEach(t => window.addEventListener(t, onKey, { passive: true }));
-  skip.addEventListener('click', () => finish(350));
-  later(() => finish(500), 8000); // hard cap, whatever happens
-  // Back/forward from the browser's page cache: never resume or replay the intro, just clear it away
-  window.addEventListener('pageshow', e => { if (e.persisted) finish(0); });
+  const skip = () => finish(250);
+  ['keydown', 'pointerdown', 'wheel', 'touchmove'].forEach(t => window.addEventListener(t, skip, { passive: true }));
+  window.addEventListener('pageshow', e => { if (e.persisted) finish(0); });   // back/forward cache: never replay
 
-  // Warm the hero's fonts during the intro; start once the display face is ready (or after 700ms regardless).
-  const fontsReady = document.fonts
-    ? Promise.all(['600 1em "Cormorant Garamond"', 'italic 600 1em "Cormorant Garamond"', '300 1em Outfit',
-        '600 1em Outfit', '400 1em "JetBrains Mono"'].map(f => document.fonts.load(f).catch(() => {})))
-    : Promise.resolve();
-  Promise.race([fontsReady, new Promise(r => setTimeout(r, 700))]).then(() => {
-    if (done) return;
-    try { play(); } catch (e) { finish(300); }
-  });
-
-  // Chart: an intraday-style price line below the copy. It trends up with small irregular peaks and dips, consolidates,
-  // then breaks out: the last ~20% climbs steeply to a clear new high, traced by a brighter, thicker stroke. Vertices
-  // sit on the background grid's half-steps and the range spans whole grid rows, so the grid reads as the chart's
-  // gridlines. A fixed seed draws the same line on every visit.
-  function buildChart(vw, vh) {
-    const narrow = vw < 640, portrait = vh > vw;
-    const GRID = 60, STEP = narrow ? 15 : 30;
-    const copyRect = copy.getBoundingClientRect();
-    const top = Math.ceil((copyRect.bottom + Math.max(36, vh * (portrait ? 0.12 : 0.07))) / GRID) * GRID;
-    const bottom = Math.max(top + 2 * GRID, Math.round(vh * (portrait ? 0.8 : 0.9) / GRID) * GRID);
-    const x0 = -STEP, x1 = Math.round(vw * (narrow ? 0.8 : 0.84) / STEP) * STEP;
-    const n = (x1 - x0) / STEP, nb = Math.round(n * 0.8), trendTo = Math.round(nb * 0.72);
-    let seed = 20261010;
-    const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
-    const amp = narrow ? 0.2 : 0.17;
-    const raw = [0];
-    for (let i = 1; i <= nb; i++)                 // moderate climb, then sideways consolidation into the breakout
-      raw.push(raw[i - 1] + (i <= trendTo ? 0.55 / trendTo + (rnd() - 0.46) * amp : (rnd() - 0.5) * amp * 0.8));
-    const steps = Array.from({ length: n - nb }, () => 0.7 + 0.6 * rnd());
-    const climb = Math.max(...raw) + 0.8 - raw[nb], total = steps.reduce((a, b) => a + b);
-    steps.forEach(st => raw.push(raw[raw.length - 1] + climb * st / total));
-    const lo = Math.min(...raw), hi = raw[n];
-    const pts = raw.map((v, i) => [x0 + i * STEP, bottom - (bottom - top) * (v - lo) / (hi - lo)]);
-    // A few faint data points on the clearest peaks before the breakout
-    const marks = (narrow ? [[0.3, 0.5], [0.52, 0.74]] : [[0.2, 0.38], [0.4, 0.58], [0.58, 0.74]]).map(([a, b]) => {
-      let best = -1;
-      for (let i = Math.ceil(n * a); i <= Math.floor(n * b); i++)
-        if (raw[i] > raw[i - 1] && raw[i] > raw[i + 1] && (best < 0 || raw[i] > raw[best])) best = i;
-      return best;
-    }).filter(i => i > 0).map(i => pts[i]);
-    // Sharp-ish corners: Catmull-Rom with a very short handle takes only the edge off each vertex
-    const k = 0.06, f = p => p.map(c => c.toFixed(1)).join(',');
-    const segs = pts.slice(0, -1).map((p1, i) => {
-      const p0 = pts[i - 1] || p1, p2 = pts[i + 1], p3 = pts[i + 2] || p2;
-      return ` C${f([p1[0] + (p2[0] - p0[0]) * k, p1[1] + (p2[1] - p0[1]) * k])} ${f([p2[0] - (p3[0] - p1[0]) * k, p2[1] - (p3[1] - p1[1]) * k])} ${f(p2)}`;
-    });
-    const d = `M${f(pts[0])}${segs.join('')}`, dBreak = `M${f(pts[nb])}${segs.slice(nb).join('')}`;
-    const peak = pts[n];
-    chart.setAttribute('viewBox', `0 0 ${vw} ${vh}`);
-    chart.innerHTML = `
-      <defs>
-        <linearGradient id="introStroke" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${x1}" y2="0">
-          <stop offset="0" stop-color="#8f6e40" stop-opacity="0.75"/><stop offset="0.6" stop-color="#c4a46a" stop-opacity="0.9"/>
-          <stop offset="1" stop-color="#efdcb0"/>
-        </linearGradient>
-        <linearGradient id="introBreak" gradientUnits="userSpaceOnUse" x1="${pts[nb][0]}" y1="0" x2="${peak[0]}" y2="0">
-          <stop offset="0" stop-color="#efdcb0" stop-opacity="0"/><stop offset="0.35" stop-color="#efdcb0" stop-opacity="0.85"/>
-          <stop offset="1" stop-color="#fbf0d6"/>
-        </linearGradient>
-        <linearGradient id="introArea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#d9bf8a" stop-opacity="0.12"/><stop offset="1" stop-color="#d9bf8a" stop-opacity="0"/>
-        </linearGradient>
-        <clipPath id="introReveal"><rect x="${x0}" y="0" width="0" height="${vh}"/></clipPath>
-      </defs>
-      <path d="${d} L${peak[0].toFixed(1)},${vh} L${x0},${vh} Z" fill="url(#introArea)" clip-path="url(#introReveal)"/>
-      <path class="intro-chart-line" d="${d}" fill="none" stroke="url(#introStroke)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-      <path class="intro-breakout" d="${dBreak}" fill="none" stroke="url(#introBreak)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      ${marks.map(m => `<circle class="intro-mark" cx="${m[0]}" cy="${m[1].toFixed(1)}" r="2" fill="#e6cf9c" opacity="0"/>`).join('')}
-      <circle class="intro-peak-ring" cx="${peak[0]}" cy="${peak[1]}" r="4" fill="none" stroke="#efdcb0" vector-effect="non-scaling-stroke" opacity="0" style="transform-box: fill-box; transform-origin: center"/>
-      <circle class="intro-peak" cx="${peak[0]}" cy="${peak[1]}" r="3.5" fill="#efdcb0" opacity="0"/>`;
-    const path = chart.querySelector('.intro-chart-line'), brk = chart.querySelector('.intro-breakout');
-    const len = path.getTotalLength(), brkLen = brk.getTotalLength();
-    return { narrow, path, len, lenA: len - brkLen, brk, brkLen, x0,
-      revealRect: chart.querySelector('#introReveal rect'), markDots: [...chart.querySelectorAll('.intro-mark')] };
-  }
-
-  function play() {
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const easeOut = 'cubic-bezier(.22,1,.36,1)';
-    // Phones get a shorter intro: the chart starts sooner and runs quicker
-    const short = vw < 768;
-    const NAME_LINE_AT = 900, TAG_AT = 1000, CHART_AT = short ? 1100 : 1500, CHART_MS = short ? 1100 : 1400;
-
-    // 1. Name: letters rise in one at a time, the brass rule draws, then the one-liner
-    chars.forEach((c, i) => c.animate(
-      [{ opacity: 0, transform: 'translateY(0.45em)' }, { opacity: 1, transform: 'none' }],
-      { duration: 650, delay: 120 + i * 55, easing: easeOut, fill: 'both' }));
-    line.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
-      { duration: 650, delay: NAME_LINE_AT, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'both' });
-    tag.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
-      { duration: 600, delay: TAG_AT, easing: easeOut, fill: 'both' });
-
-    // 2. Chart (see buildChart): the line draws left to right, easing in, quicker through the breakout, settling on the peak
-    const { path, len, lenA, brk, brkLen, revealRect, markDots, x0 } = buildChart(vw, vh);
-    path.style.strokeDasharray = len;
-    path.style.strokeDashoffset = len;
-    brk.style.strokeDasharray = brkLen;
-    brk.style.strokeDashoffset = brkLen;
-    const pace = (() => {
-      const ramp = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
-      const ss = [0]; let s = 0, t = 0;
-      while (s < len) {
-        const v = Math.min(1, 0.12 + t / 220) * (1 + 0.8 * ramp((s - lenA + 30) / 120)) * Math.max(0.1, Math.min(1, (len - s) / 90));
-        s = Math.min(len, s + v * 4); t += 4; ss.push(s);
-      }
-      return u => { const f = u * (ss.length - 1), i = Math.floor(f); return i >= ss.length - 1 ? len : ss[i] + (ss[i + 1] - ss[i]) * (f - i); };
-    })();
-    later(() => {
-      const t0 = performance.now();
-      const tick = now => {
-        if (done) return;
-        // the first frame's timestamp can be a little before t0; a negative u would send pace() off the line
-        const u = Math.max(0, Math.min(1, (now - t0) / CHART_MS)), s = pace(u);
-        path.style.strokeDashoffset = len - s;
-        brk.style.strokeDashoffset = brkLen - Math.max(0, Math.min(brkLen, s - lenA));
-        const tipX = path.getPointAtLength(s).x;
-        revealRect.setAttribute('width', Math.max(0, tipX - 2 - x0));   // the area fill follows just behind the tip
-        while (markDots.length && +markDots[0].getAttribute('cx') <= tipX)
-          markDots.shift().animate([{ opacity: 0 }, { opacity: 0.55 }], { duration: 350, fill: 'forwards' });
-        if (u < 1) requestAnimationFrame(tick);
-        else later(reveal, 350);
-      };
-      requestAnimationFrame(tick);
-      chart.querySelector('.intro-peak').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: CHART_MS, fill: 'forwards' });
-      chart.querySelector('.intro-peak-ring').animate([{ opacity: 0.9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(5.5)' }],
-        { duration: 700, delay: CHART_MS, easing: 'ease-out', fill: 'forwards' });
-    }, CHART_AT);
-
-    // 3. Reveal: the copy and chart fade, the dark panels part along the hero's diagonal (their seams are feathered,
-    //    see the masks below) and fade out, and the hero eases in underneath
-    const split = vw > 1024;
-    if (split) {
-      const a = Math.atan(48 / vh), deg = (90 + a * 180 / Math.PI).toFixed(3), L = vw * Math.cos(a) + vh * Math.sin(a);
-      const seam = (vw * 0.55 - 55 - vw / 2) * Math.cos(a) + L / 2, F = 90;
-      const masks = [`linear-gradient(${deg}deg, #000 ${seam.toFixed(1)}px, transparent ${(seam + F).toFixed(1)}px)`,
-                     `linear-gradient(${deg}deg, transparent ${(seam - F).toFixed(1)}px, #000 ${seam.toFixed(1)}px)`];
-      panels.forEach((p, i) => { p.style.webkitMaskImage = masks[i]; p.style.maskImage = masks[i]; });
-    }
-    function reveal() {
-      startHero();
-      [copy, chart, skip].forEach(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-in-out', fill: 'forwards' }));
-      const part = { duration: 900, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' };
-      if (split) {
-        panels[0].animate([{ transform: 'none', opacity: 1 }, { opacity: 0.85, offset: 0.4 }, { transform: `translateX(${-Math.ceil(vw * 0.6)}px)`, opacity: 0 }], part);
-        panels[1].animate([{ transform: 'none', opacity: 1 }, { opacity: 0.85, offset: 0.4 }, { transform: `translateX(${Math.ceil(vw * 0.5 + 90)}px)`, opacity: 0 }], part);
-      } else {
-        panels.forEach(p => p.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-32px)', opacity: 0 }], part));
-      }
-      later(() => finish(0), 950);
-    }
-  }
+  try {
+    const draw = { easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' };
+    // 1–2. the frame, then the A (two strokes and its bar) and the P, drawn in brass
+    strokes[0].animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { ...draw, duration: 700, delay: 60 });
+    strokes[1].animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { ...draw, duration: 420, delay: 220 });
+    strokes[2].animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { ...draw, duration: 200, delay: 560 });
+    strokes[3].animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { ...draw, duration: 460, delay: 480 });
+    // 3. the name fades up beneath it, then the rule draws out from the centre
+    name.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 500, delay: 700, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+    rule.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 450, delay: 950, easing: 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' });
+    // 4. the overlay lifts away, uncovering the hero from the bottom up
+    timers.push(setTimeout(() => {
+      if (done) return;
+      intro.style.pointerEvents = 'none';
+      intro.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 100% 0)' }],
+        { duration: LIFT_MS, easing: 'cubic-bezier(.76,0,.24,1)', fill: 'forwards' })
+        .finished.then(() => finish(0), () => finish(0));
+    }, LIFT_AT));
+    timers.push(setTimeout(() => finish(0), 2600));   // whatever happens, it is gone by 2.6s
+  } catch (e) { finish(0); }
 }
 
 const progressBar = document.getElementById('progress-bar');
@@ -2840,6 +2637,7 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
 function countUp(el) {
   const target = +el.dataset.target;
+  el.dataset.counted = '1';
   if (reduceMotion) { el.textContent = target; return; }
   const t0 = performance.now(), dur = 1400;
   const tick = now => {
@@ -2850,7 +2648,8 @@ function countUp(el) {
   requestAnimationFrame(tick);
 }
 // Hero counters wait for the hero entrance (see startHero); start them from 0 so nothing flashes
-document.querySelectorAll('#hero [data-target]').forEach(el => { if (!document.body.classList.contains('page-loaded')) el.textContent = '0'; });
+// (the intro starts the hero early but holds the count-up back until it lifts, so check the counter, not the hero)
+if (!reduceMotion) document.querySelectorAll('#hero [data-target]').forEach(el => { if (!el.dataset.counted) el.textContent = '0'; });
 const counterObs = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (!e.isIntersecting) return;
