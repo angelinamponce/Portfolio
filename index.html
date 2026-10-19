@@ -2293,12 +2293,12 @@ const SITE = {
 //    fitted into (contained, never stretched): heights are set by optical weight, so the square, dense HackMIT mark
 //    starts at ~75% of the others. Every logo is tinted to cream, so use files with transparent backgrounds.
 const LOGOS = {
-  cpc:         { src: '', alt: 'Community Preservation Corporation',            w: 120, h: 28 },
-  brightshore: { src: '', alt: 'Brightshore Capital (formerly GTIS Partners)',  w: 170, h: 28 },
-  hackmit:     { src: [], alt: 'HackMIT',                                       w: 22,  h: 22 },  // ['public/logos/hackmit.svg', 'public/logos/hackmit.png']
-  colorstack:  { src: '', alt: 'ColorStack',                                    w: 150, h: 26 },
-  ey:          { src: '', alt: 'EY',                                            w: 44,  h: 30 },
-  barclays:    { src: '', alt: 'Barclays',                                      w: 140, h: 26 },
+  cpc:         { src: 'public/logos/cpc.png',         alt: 'Community Preservation Corporation',           w: 112, h: 56 },  // the file has ~14% padding top and bottom
+  brightshore: { src: 'public/logos/brightshore.svg', alt: 'Brightshore Capital (formerly GTIS Partners)', w: 125, h: 44 },
+  hackmit:     { src: 'public/logos/hackmit.svg',     alt: 'HackMIT',                                      w: 34,  h: 38 },  // square and dense: ~80% of the others' optical height
+  colorstack:  { src: 'public/logos/colorstack.png',  alt: 'ColorStack',                                   w: 151, h: 23 },
+  ey:          { src: 'public/logos/ey.svg',          alt: 'EY',                                           w: 44,  h: 48 },  // includes the tagline (the only version ey.com serves)
+  barclays:    { src: 'public/logos/barclays.svg',    alt: 'Barclays',                                     w: 129, h: 22 },
 };
 // ── "Where I fit": one card per lane, shown right after About (nothing renders when this is empty).
 // Each evidence bullet links to its proof: href is an anchor on the page, project is a project card's data-id (opens its modal).
