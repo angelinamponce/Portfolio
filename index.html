@@ -46,7 +46,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -700,7 +700,23 @@
     /* HackMIT's dense logo loses its inner detail at the shared treatment: a touch brighter and less transparent */
     .logo-item[data-logo="hackmit"] { opacity: 0.82; }
     .logo-item[data-logo="hackmit"] img { filter: brightness(0) invert(100%) sepia(8%); }
+    /* CPC: just the round "cpc" emblem, clipped from the full logo file (emblem at x 109–844, y 144–879 of 2048×1024).
+       The clip hides the name; the matching negative margins shrink the layout box to the 42px emblem, so spacing and
+       centring work as for any other logo. */
+    .logo-item[data-logo="cpc"] img {
+      clip-path: inset(14.06% 58.74% 14.06% 5.32%);
+      margin: -8.23px -68.73px -8.23px -6.23px;
+      max-width: none;   /* the box is emblem-sized, but the image itself must keep its full width */
+    }
     .logo-item[data-logo="wecode"] img { object-fit: cover; }   /* the file is a square with wide margins: show the lettering band */
+    /* "HARVARD" before the WECode mark (the asset has no university name): monospaced caps to echo its pixel lettering,
+       in the strip's cream; the image's alt already says "Harvard WECode", so this text is hidden from screen readers */
+    .logo-prefix {
+      font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; line-height: 1;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #efe7d8;
+    }
+    .logo-lockup { gap: 8px; }   /* HARVARD and the mark read as one logo, tighter than the HackMIT + MIT pair */
+    .logo-lockup .logo-prefix { margin-right: -5px; }   /* the mark's file has ~5px of empty margin on its left; the visible gap stays 8px */
     .logo-word {
       font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; letter-spacing: 0.4px;
       color: var(--cream); text-align: center; line-height: 1.15;
@@ -1982,9 +1998,7 @@
           <li class="logo-slot"><span class="logo-item" data-logo="seo"><span class="logo-word">SEO Career</span></span></li>
           <li class="logo-slot"><span class="logo-item" data-logo="alpfa"><span class="logo-word"><span aria-hidden="true">ALPFA</span><span class="sr-only">Association of Latino Professionals for America</span></span></span></li>
           <li class="logo-slot"><span class="logo-item" data-logo="shpe"><span class="logo-word"><span aria-hidden="true">SHPE</span><span class="sr-only">Society of Hispanic Professional Engineers</span></span></span></li>
-          <li class="logo-slot"><span class="logo-item" data-logo="wecode"><span class="logo-word">Harvard WECode</span></span></li>
-          <li class="logo-slot"><span class="logo-item" data-logo="ey"><span class="logo-word">EY</span></span></li>
-          <li class="logo-slot"><span class="logo-item" data-logo="barclays"><span class="logo-word">Barclays</span></span></li>
+          <li class="logo-slot logo-pair logo-lockup"><span class="logo-item logo-prefix" aria-hidden="true">Harvard</span><span class="logo-item" data-logo="wecode"><span class="logo-word"><span aria-hidden="true">WECode</span><span class="sr-only">Harvard WECode</span></span></span></li>
         </ul>
       </div>
     </div>
@@ -2494,7 +2508,7 @@ const SITE = {
 //    fitted into (contained, never stretched): heights are set by optical weight, so the square, dense HackMIT mark
 //    starts at ~75% of the others. Every logo is tinted to cream, so use files with transparent backgrounds.
 const LOGOS = {
-  cpc:         { src: 'public/logos/cpc.png',         alt: 'Community Preservation Corporation',           w: 112, h: 56 },  // the file has ~14% padding top and bottom
+  cpc:         { src: 'public/logos/cpc.png',         alt: 'Community Preservation Corporation',           w: 117, h: 58.5 },  // drawn as the round emblem only (see .logo-item[data-logo="cpc"])
   brightshore: { src: 'public/logos/brightshore.svg', alt: 'Brightshore Capital (formerly GTIS Partners)', w: 125, h: 44 },
   hackmit:     { src: 'public/logos/hackmit.svg',     alt: 'HackMIT',                                      w: 40,  h: 44 },  // square and dense; sits brighter (see .logo-item[data-logo="hackmit"])
   mit:         { src: 'public/logos/mit.svg',         alt: 'MIT',                                          w: 39,  h: 22 },  // shares HackMIT's item; kept smaller than HackMIT
@@ -2503,8 +2517,6 @@ const LOGOS = {
   alpfa:       { src: 'public/logos/alpfa.png',       alt: 'ALPFA',                                        w: 52,  h: 48 },  // the mark carries the name; its thin strokes need the height
   shpe:        { src: 'public/logos/shpe-wordmark.png', alt: 'SHPE',                                       w: 120, h: 37 },
   wecode:      { src: 'public/logos/wecode.png',      alt: 'Harvard WECode',                               w: 78,  h: 34 },  // a square file with wide margins: cropped to its lettering (see .logo-item[data-logo="wecode"])
-  ey:          { src: 'public/logos/ey.svg',          alt: 'EY',                                           w: 44,  h: 48 },  // includes the tagline (the only version ey.com serves)
-  barclays:    { src: 'public/logos/barclays.svg',    alt: 'Barclays',                                     w: 129, h: 22 },
 };
 // ── "Where I fit": one card per lane, shown right after About (nothing renders when this is empty).
 // Each evidence bullet links to its proof: href is an anchor on the page, project is a project card's data-id (opens its modal).
