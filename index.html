@@ -870,6 +870,15 @@
     .exp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 22px; }
     .exp-title h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3); color: var(--ink); margin-bottom: 5px; font-weight: 600; }
     .exp-company { font-size: 13px; color: var(--brass-ink); font-weight: 500; margin-bottom: 2px; letter-spacing: 0.3px; }
+    .exp-company a {
+      color: inherit; text-decoration: none; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 4px;
+      background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+      transition: background-size 0.25s ease, color 0.2s ease;
+    }
+    .exp-company a:hover, .exp-company a:focus-visible { background-size: 100% 1px; color: var(--brass); }
+    .exp-company a .i { width: 12px; height: 12px; stroke-width: 2.25; opacity: 0.85; transition: transform 0.2s ease, opacity 0.2s ease; }
+    .exp-company a:hover .i, .exp-company a:focus-visible .i { opacity: 1; transform: translate(1px, -1px); }
     .exp-location { font-size: 12px; color: var(--ink-3); font-style: italic; }
     .exp-date {
       background: var(--brass-wash); border: 0;
@@ -1938,7 +1947,7 @@
           <div class="exp-header">
             <div class="exp-title">
               <h3>Co-Founder &amp; President</h3>
-              <p class="exp-company">StackHacks</p>
+              <p class="exp-company"><a href="https://stackhacksbu.com/" target="_blank" rel="noopener noreferrer" aria-label="StackHacks (opens in a new tab)">StackHacks <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></a></p>
               <p class="exp-location">Binghamton University</p>
             </div>
             <div class="exp-date">2024 – Present</div>
