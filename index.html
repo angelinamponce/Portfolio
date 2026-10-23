@@ -667,7 +667,8 @@
     .stat-back-detail { font-size: 12.5px; color: var(--on-dark-2); line-height: 1.6; }
 
     /* Logo strip under the hero: logos from LOGOS (top of the script), each falling back to a serif wordmark. One
-       treatment for all: cream at 60%, full on hover. Six in one row on wide screens, two even rows of three below 768px. */
+       treatment for all: cream at 60%, full on hover. Without the marquee (reduced motion) they wrap, centred; two even
+       columns below 768px. */
     .logo-strip { background: var(--hero-bg); border-top: 1px solid var(--line-dark); border-bottom: 1px solid var(--line-dark); padding: 30px 0 34px; }
     .logo-strip-label {
       text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
@@ -690,7 +691,7 @@
     .logo-strip.is-marquee .logo-marquee:hover .logo-track,
     .logo-strip.is-marquee .logo-marquee:focus-within .logo-track { animation-play-state: paused; }
     .logo-marquee:focus-visible { outline-offset: 6px; }
-    @keyframes logoDrift { from { transform: translateX(calc(-1 * var(--set-w, 0px))); } to { transform: none; } }
+    @keyframes logoDrift { from { transform: translateX(calc(-1 * var(--set-w, 0px))); } to { transform: none; } }   /* duration: set by the script from the set's width */
     .logo-pair { gap: 12px; }   /* HackMIT + MIT read as one item */
     .logo-item { display: flex; align-items: center; opacity: 0.6; transition: opacity 0.25s; }
     .logo-slot:hover .logo-item { opacity: 1; }
@@ -699,6 +700,7 @@
     /* HackMIT's dense logo loses its inner detail at the shared treatment: a touch brighter and less transparent */
     .logo-item[data-logo="hackmit"] { opacity: 0.82; }
     .logo-item[data-logo="hackmit"] img { filter: brightness(0) invert(100%) sepia(8%); }
+    .logo-item[data-logo="wecode"] img { object-fit: cover; }   /* the file is a square with wide margins: show the lettering band */
     .logo-word {
       font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; letter-spacing: 0.4px;
       color: var(--cream); text-align: center; line-height: 1.15;
@@ -707,7 +709,7 @@
     /* Sections are open, editorial pages: no card surfaces, items separated by --rule hairlines. Content inside a
        section is drawn straight on the page, so the "on cream" ink, brass and line tokens take the page's values. */
     .section { padding: 140px 0; }
-    .section:not(.edu-section):not(.contact-section) {
+    .section:not(.contact-section) {
       --ink: var(--page-ink); --ink-2: var(--page-ink-2); --ink-3: var(--page-ink-3);
       --brass-ink: var(--page-accent); --line: var(--rule); --focus: var(--page-accent);
     }
@@ -971,8 +973,7 @@
     .showcase-more .i { width: 16px; height: 16px; }
     .showcase-more:hover, .showcase-more:focus-visible { gap: 12px; }
     /* The arrows float just outside the frame's left and right edges, centred on the project. They sit outside the
-       stage, so the swap animation never fades them; centring uses top (not a transform) so the magnetic pull can
-       use transform freely. */
+       stage, so the swap animation never fades them, and they stay put on hover (no magnetic pull). */
     .showcase-frame { position: relative; }
     .showcase-arrow {
       --arrow: 44px;
@@ -981,7 +982,7 @@
       display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
       background: rgba(251,248,242,0.72); color: var(--ink); border: 1px solid rgba(14,31,22,0.16);
       backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      transition: background-color 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.3s, transform 0.25s ease;
+      transition: background-color 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.3s;   /* hover changes colour only; the arrows never move */
     }
     .showcase-arrow:hover, .showcase-arrow:focus-visible {
       border-color: var(--brass); color: var(--brass-ink);
@@ -1074,9 +1075,20 @@
     .skill-tag.is-active { color: var(--brass-ink); font-weight: 500; text-decoration-color: var(--brass-ink); text-decoration-thickness: 2px; }
     .skill-hint { font-size: 11.5px; color: var(--ink-3); margin-top: 16px; display: flex; align-items: center; gap: 10px; }
     .skill-hint::before { content: ''; width: 14px; height: 1px; background: var(--brass); }
-    .org-item { padding: 16px 0; border-top: 1px solid var(--rule); }
+    /* Each organization: its logo on a small dark tile (both themes), top-aligned with the name and description */
+    .org-item { display: flex; align-items: flex-start; gap: 16px; padding: 16px 0; border-top: 1px solid var(--rule); }
     .org-item:last-child { border-bottom: 1px solid var(--rule); }
-    .org-dot { display: none; }
+    .org-logo {
+      width: 48px; height: 48px; flex-shrink: 0; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--green-800); border: 1px solid rgba(205,178,126,0.22); border-radius: 2px;
+    }
+    .org-logo img { width: 66%; height: 66%; object-fit: contain; }
+    .org-logo[data-logo="colorstack"] img { width: 58%; height: 58%; object-fit: cover; object-position: left center; }   /* the wordmark, cropped to its stack icon */
+    .org-logo[data-logo="alpfa"] img, .org-logo[data-logo="shpe"] img { width: 86%; height: 86%; }   /* light marks with built-in padding: a little larger to match the others' weight */
+    .org-logo[data-logo="finance-society"] img { width: 76%; height: 76%; }
+    .org-logo[data-logo="finance-society"] { isolation: isolate; }
+    .org-logo[data-logo="finance-society"] img { filter: invert(1); mix-blend-mode: screen; }   /* navy on white, drawn light on the tile */
     .org-item strong { font-size: 14px; color: var(--ink); display: block; margin-bottom: 2px; font-weight: 500; }
     .org-item span { font-size: 12.5px; color: var(--ink-3); line-height: 1.65; }
 
@@ -1180,17 +1192,18 @@
     .conf-summary { max-width: none; }
 
 
+    /* Education: an open panel on the page itself, edged by one hairline with sharp corners; in dark mode the text
+       steps up to full cream (secondary lines to the 74% tone) with brass-hi accents */
     .edu-card {
-      background: var(--card); box-shadow: var(--shadow-sm);
-      border: 1px solid var(--line);
-      border-radius: var(--radius); padding: 52px 60px;
+      border: 1px solid var(--rule); border-radius: 2px; padding: 52px 60px;
       margin-top: 68px;
       display: grid; grid-template-columns: 2fr 1fr;
       gap: 60px; align-items: center;
       max-width: 940px;
-      transition: all 0.35s;
+      transition: border-color 0.35s ease;
     }
-    .edu-card:hover { border-color: var(--line-strong); box-shadow: var(--shadow-lg); }
+    .edu-card:hover { border-color: rgba(184,150,92,0.45); }
+    [data-theme="dark"] .edu-card { --ink-2: var(--on-dark); --ink-3: var(--on-dark-2); }
     .edu-school { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3-lg); color: var(--ink); font-weight: 600; margin-bottom: 8px; letter-spacing: -0.3px; }
     .edu-system { font-family: 'Cormorant Garamond', serif; font-size: 15px; color: var(--ink-3); font-style: italic; margin-bottom: 18px; }
     .edu-degree { font-size: 14.5px; color: var(--brass-ink); font-weight: 500; margin-bottom: 6px; letter-spacing: 0.2px; }
@@ -1631,7 +1644,7 @@
     }
     @media (max-width: 768px) {
       .logo-strip { --logo-gap: 40px; }
-      .logo-strip:not(.is-marquee) .logo-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 16px; }
+      .logo-strip:not(.is-marquee) .logo-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
       .logo-word { font-size: 19px; }
       .section { padding: 96px 0; }
       .value-grid { grid-template-columns: 1fr; gap: 32px; }
@@ -1966,6 +1979,10 @@
           <li class="logo-slot"><span class="logo-item" data-logo="brightshore"><span class="logo-word">Brightshore Capital<span class="sr-only"> (formerly GTIS Partners)</span></span></span></li>
           <li class="logo-slot logo-pair"><span class="logo-item" data-logo="hackmit"><span class="logo-word">HackMIT</span></span><span class="logo-item" data-logo="mit"><span class="logo-word">MIT</span></span></li>
           <li class="logo-slot"><span class="logo-item" data-logo="colorstack"><span class="logo-word">ColorStack</span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="seo"><span class="logo-word">SEO Career</span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="alpfa"><span class="logo-word"><span aria-hidden="true">ALPFA</span><span class="sr-only">Association of Latino Professionals for America</span></span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="shpe"><span class="logo-word"><span aria-hidden="true">SHPE</span><span class="sr-only">Society of Hispanic Professional Engineers</span></span></span></li>
+          <li class="logo-slot"><span class="logo-item" data-logo="wecode"><span class="logo-word">Harvard WECode</span></span></li>
           <li class="logo-slot"><span class="logo-item" data-logo="ey"><span class="logo-word">EY</span></span></li>
           <li class="logo-slot"><span class="logo-item" data-logo="barclays"><span class="logo-word">Barclays</span></span></li>
         </ul>
@@ -2241,11 +2258,11 @@
       <div class="skill-card skill-card-lead reveal reveal-delay-2">
         <h3>Leadership &amp; Involvement</h3>
         <div class="org-list">
-        <div class="org-item"><div class="org-dot"></div><div><strong>SEO Careers</strong><span>Dual enrollment in Alternative Investment Banking and Finance/Corporate Tracks</span></div></div>
-        <div class="org-item"><div class="org-dot"></div><div><strong>ColorStack</strong><span>National member · Selected for 2025 & 2026 StackedUp Summit in San Francisco, CA</span></div></div>
-        <div class="org-item"><div class="org-dot"></div><div><strong>Association of Latino Professionals for America </strong><span>National member  · 2026 ALPFA Convention in Charlotte, NC</span></div></div>
-        <div class="org-item"><div class="org-dot"></div><div><strong>Finance Society</strong><span>Active member · Networking &amp; case competitions</span></div></div>
-        <div class="org-item"><div class="org-dot"></div><div><strong>Society of Hispanic Professional Engineers</strong><span>National member</span></div></div>
+        <div class="org-item"><div class="org-logo" data-logo="seo"><img src="public/logos/seo.png" width="270" height="270" alt="" loading="lazy" decoding="async"></div><div><strong>SEO Careers</strong><span>Dual enrollment in Alternative Investment Banking and Finance/Corporate Tracks</span></div></div>
+        <div class="org-item"><div class="org-logo" data-logo="colorstack"><img src="public/logos/colorstack.png" width="422" height="64" alt="" loading="lazy" decoding="async"></div><div><strong>ColorStack</strong><span>National member · Selected for 2025 & 2026 StackedUp Summit in San Francisco, CA</span></div></div>
+        <div class="org-item"><div class="org-logo" data-logo="alpfa"><img src="public/logos/alpfa.png" width="256" height="236" alt="" loading="lazy" decoding="async"></div><div><strong>Association of Latino Professionals for America </strong><span>National member  · 2026 ALPFA Convention in Charlotte, NC</span></div></div>
+        <div class="org-item"><div class="org-logo" data-logo="finance-society"><img src="public/logos/finance-society.jpg" width="500" height="500" alt="" loading="lazy" decoding="async"></div><div><strong>Finance Society</strong><span>Active member · Networking &amp; case competitions</span></div></div>
+        <div class="org-item"><div class="org-logo" data-logo="shpe"><img src="public/logos/shpe.png" width="270" height="270" alt="" loading="lazy" decoding="async"></div><div><strong>Society of Hispanic Professional Engineers</strong><span>National member</span></div></div>
         </div>
       </div>
     </div>
@@ -2482,6 +2499,10 @@ const LOGOS = {
   hackmit:     { src: 'public/logos/hackmit.svg',     alt: 'HackMIT',                                      w: 40,  h: 44 },  // square and dense; sits brighter (see .logo-item[data-logo="hackmit"])
   mit:         { src: 'public/logos/mit.svg',         alt: 'MIT',                                          w: 39,  h: 22 },  // shares HackMIT's item; kept smaller than HackMIT
   colorstack:  { src: 'public/logos/colorstack.png',  alt: 'ColorStack',                                   w: 151, h: 23 },
+  seo:         { src: 'public/logos/seo-career.png',  alt: 'SEO Career',                                   w: 135, h: 21 },
+  alpfa:       { src: 'public/logos/alpfa.png',       alt: 'ALPFA',                                        w: 52,  h: 48 },  // the mark carries the name; its thin strokes need the height
+  shpe:        { src: 'public/logos/shpe-wordmark.png', alt: 'SHPE',                                       w: 120, h: 37 },
+  wecode:      { src: 'public/logos/wecode.png',      alt: 'Harvard WECode',                               w: 78,  h: 34 },  // a square file with wide margins: cropped to its lettering (see .logo-item[data-logo="wecode"])
   ey:          { src: 'public/logos/ey.svg',          alt: 'EY',                                           w: 44,  h: 48 },  // includes the tagline (the only version ey.com serves)
   barclays:    { src: 'public/logos/barclays.svg',    alt: 'Barclays',                                     w: 129, h: 22 },
 };
@@ -2825,6 +2846,7 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
   const track = marquee.querySelector('.logo-track'), set = track.querySelector('.logo-row');
   strip.classList.add('is-marquee');
   marquee.tabIndex = 0;   // so keyboard users can pause it by focusing it
+  const LOGO_SPEED = 18;   // on-screen px per second
   let lastW = 0;
   const fill = () => {
     // The set gets a touch of extra end padding so its width on screen (after the page's content zoom) is a whole
@@ -2845,6 +2867,7 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
       track.appendChild(copy);
     }
     track.style.setProperty('--set-w', setW + 'px');
+    track.style.animationDuration = (setW * zoom / LOGO_SPEED).toFixed(2) + 's';   // same speed however many logos there are
   };
   new ResizeObserver(fill).observe(set);
   new ResizeObserver(() => { lastW = 0; fill(); }).observe(marquee);
@@ -3468,7 +3491,6 @@ document.querySelectorAll('.btn-mag').forEach(btn => magnetize(btn, 0.18));
 
 if (!reduceMotion && finePointer) {
   document.querySelectorAll('.c-btn, .showcase-more').forEach(btn => magnetize(btn, 0.14));
-  document.querySelectorAll('.showcase-arrow').forEach(btn => magnetize(btn, 0.3));
   // the spotlight glow (see "Cursor spotlight" in the CSS) follows the pointer
   document.querySelectorAll('.project-card, .project-showcase, .conf-card, .modal-inner').forEach(card => {
     card.addEventListener('mousemove', e => {
