@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Angelina Ponce | Finance & Technology</title>
+  <title>Angelina Ponce | Finance & AI Building</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Binghamton University economics student bridging finance and technology, focused on asset &amp; wealth management and AI.">
   <link rel="canonical" href="https://angelinaponce.com/">
@@ -10,14 +10,14 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://angelinaponce.com/">
   <meta property="og:site_name" content="Angelina Ponce">
-  <meta property="og:title" content="Angelina Ponce | Finance &amp; Technology">
+  <meta property="og:title" content="Angelina Ponce | Finance &amp; AI Building">
   <meta property="og:description" content="Binghamton University economics student bridging finance and technology, focused on asset &amp; wealth management and AI.">
   <meta property="og:image" content="https://angelinaponce.com/Assets/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Angelina Ponce, Finance &amp; Technology">
+  <meta property="og:image:alt" content="Angelina Ponce, Finance &amp; AI Building">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Angelina Ponce | Finance &amp; Technology">
+  <meta name="twitter:title" content="Angelina Ponce | Finance &amp; AI Building">
   <meta name="twitter:description" content="Binghamton University economics student bridging finance and technology, focused on asset &amp; wealth management and AI.">
   <meta name="twitter:image" content="https://angelinaponce.com/Assets/og-image.jpg">
   <link rel="icon" type="image/svg+xml" href="Assets/favicon.svg">
@@ -396,21 +396,6 @@
 
     .hero-content { position: relative; z-index: 3; width: 100%; max-width: 640px; margin-inline: auto; }
 
-    .hero-eyebrow {
-      display: inline-flex; align-items: center; gap: 10px;
-      margin-bottom: 38px;
-    }
-    .eyebrow-line { width: 28px; height: 1px; background: var(--brass); }
-    .eyebrow-text {
-      font-size: 10px; font-weight: 600; color: var(--brass-hi);
-      letter-spacing: 3px; text-transform: uppercase;
-    }
-    .eyebrow-dot {
-      width: 4px; height: 4px;
-      background: var(--brass); border-radius: 50%;
-      animation: blink 2s ease infinite;
-    }
-
     .hero-name {
       --name-ink: var(--cream-hi);
       position: relative; isolation: isolate;
@@ -463,6 +448,16 @@
       font-size: clamp(24px, 2.2vw, 32px); font-weight: 500; line-height: 1.2;
       color: var(--cream); letter-spacing: 0.2px;
     }
+    /* Identity strip under the role: school, a thin brass rule, city (stacks under 768px) */
+    .hero-id {
+      list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+      margin-top: 14px;
+      font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 400; letter-spacing: 0.3px;
+      color: var(--on-dark-2);
+    }
+    .hero-id li { display: inline-flex; align-items: center; gap: 8px; }
+    .hero-id li + li::before { content: ''; width: 1px; height: 14px; margin-right: 8px; background: var(--brass); }
+    .hero-id .i { width: 15px; height: 15px; color: var(--brass-hi); }
 
     .hero-divider {
       width: 40px; height: 1px;
@@ -537,7 +532,6 @@
     .hero-enter-3  { transition-delay: 0.30s; }
     .hero-enter-4  { transition-delay: 0.40s; }
     .hero-enter-5  { transition-delay: 0.50s; }
-    .hero-enter-6  { transition-delay: 0.62s; }
 
     header {
       transform: translateY(-8px);
@@ -872,13 +866,15 @@
     .exp-company { font-size: 13px; color: var(--brass-ink); font-weight: 500; margin-bottom: 2px; letter-spacing: 0.3px; }
     .exp-company a {
       color: inherit; text-decoration: none; font-weight: 700;
-      display: inline-flex; align-items: center; gap: 4px;
+      display: inline;
       background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
       transition: background-size 0.25s ease, color 0.2s ease;
     }
     .exp-company a:hover, .exp-company a:focus-visible { background-size: 100% 1px; color: var(--brass); }
-    .exp-company a .i { width: 12px; height: 12px; stroke-width: 2.25; opacity: 0.85; transition: transform 0.2s ease, opacity 0.2s ease; }
+    .exp-company a .i { width: 12px; height: 12px; margin-left: 2px; vertical-align: -1px; stroke-width: 2.25; opacity: 0.85; transition: transform 0.2s ease, opacity 0.2s ease; }
     .exp-company a:hover .i, .exp-company a:focus-visible .i { opacity: 1; transform: translate(1px, -1px); }
+    .exp-company a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
+    .exp-company .nowrap { white-space: nowrap; }   /* the arrow never wraps onto a line by itself */
     .exp-location { font-size: 12px; color: var(--ink-3); font-style: italic; }
     .exp-date {
       background: var(--brass-wash); border: 0;
@@ -905,14 +901,16 @@
     }
     .filter-tab.active { background: var(--brass); color: var(--ink); border-color: var(--brass); }
     .filter-tab:hover:not(.active) { border-color: var(--brass); color: var(--page-ink); background: var(--page-line); }
+    .filter-tab.active { box-shadow: 0 4px 14px rgba(184,150,92,0.22); }
+    .filter-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 
-    .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 20px; }
     .project-card {
       --gx: 50%; --gy: 50%;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 32px;
+      padding: 24px;
       transition: all 0.45s cubic-bezier(.34,1.2,.64,1);
       position: relative; overflow: hidden;
       display: flex; flex-direction: column;
@@ -933,9 +931,9 @@
     }
     .project-card { cursor: pointer; }
     .project-card:hover, .project-card:focus-visible {
-      transform: translateY(-8px);
-      box-shadow: var(--shadow-xl);
-      border-color: var(--line-strong);
+      transform: translateY(-5px);
+      border-color: rgba(184,150,92,0.55);
+      box-shadow: 0 0 0 1px rgba(184,150,92,0.2), 0 0 28px rgba(184,150,92,0.14), var(--shadow-lg);
     }
     .project-card:focus-visible { outline: 2px solid var(--page-accent); outline-offset: 3px; }
     .project-more {
@@ -967,9 +965,9 @@
     .project-card.hidden { display: none; }
     /* Header image: the project's screenshot, edge to edge (the card's rounded corners clip it), also used by the modal */
     .project-shot {
-      /* explicit width (not just negative margins) so Safari sizes the 16:10 box from the full card width */
-      width: calc(100% + 64px); align-self: flex-start;
-      margin: -32px 0 24px -32px; aspect-ratio: 16 / 10;
+      /* explicit width (not just negative margins) so Safari sizes the 16:9 box from the full card width */
+      width: calc(100% + 48px); align-self: flex-start; flex-shrink: 0;
+      margin: -24px 0 22px -24px; aspect-ratio: 16 / 9;
       overflow: hidden; background: var(--green-800);
     }
     .project-shot img {
@@ -980,6 +978,17 @@
     .project-shot::after {
       content: ''; position: absolute; inset: 0; pointer-events: none;
       background: linear-gradient(to top, rgba(14,31,22,0.38) 0%, transparent 42%);
+    }
+    /* Per-card crop (data-shot-pos) so the key content stays in frame */
+    .project-shot[data-shot-pos="left-top"] img { object-position: left top; }
+    .project-shot[data-shot-pos="center"] img { object-position: center; }
+    /* Outcome chip: one fact already on the card, pinned to the image's bottom-left */
+    .project-chip {
+      position: absolute; left: 12px; bottom: 12px; z-index: 1;
+      padding: 4px 11px; border-radius: 100px;
+      background: rgba(10,20,15,0.84); border: 1px solid rgba(205,178,126,0.4);
+      color: var(--brass-hi); font: 600 10.5px/1.5 'Outfit', sans-serif; letter-spacing: 1px; text-transform: uppercase;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     }
     .project-card:hover .project-shot img, .project-card:focus-visible .project-shot img { transform: scale(1.03); }
     @media (prefers-reduced-motion: reduce) {
@@ -992,11 +1001,22 @@
       transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
     }
     .project-card:hover .project-icon { transform: rotate(-8deg) scale(1.1); }
-    .project-card h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3); color: var(--ink); margin-bottom: 5px; font-weight: 600; line-height: 1.25; }
-    .project-meta { font-size: 10px; color: var(--brass-ink); font-weight: 700; letter-spacing: 1.5px; line-height: 1.6; margin-bottom: 14px; text-transform: uppercase; }
-    /* Only the description stretches, so every card keeps the same title → subtitle → text rhythm */
-    .project-card p:not(.project-meta) { font-size: 13px; color: var(--ink-3); line-height: 1.85; margin-bottom: 20px; flex: 1; font-weight: 300; }
+    .project-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 25px; color: var(--ink); margin-bottom: 5px; font-weight: 600; line-height: 1.25; }
+    .project-meta { font-size: 10px; color: var(--brass-ink); font-weight: 700; letter-spacing: 1.1px; line-height: 1.6; margin-bottom: 14px; text-transform: uppercase; }
+    /* Descriptions clamp at five lines; a clamped one fades out and shows "Read more" (the card opens the full story) */
+    .project-card p:not(.project-meta) {
+      font-size: 13px; color: var(--ink-3); line-height: 1.85; font-weight: 300;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; overflow: hidden;
+    }
+    .project-card p.is-clamped, .conf-body p.is-clamped:not(.is-open) {
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.85em), rgba(0,0,0,0.25));
+              mask-image: linear-gradient(to bottom, #000 calc(100% - 1.85em), rgba(0,0,0,0.25));
+    }
+    .project-readmore { display: none; margin-top: 8px; font-size: 10.5px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass-ink); }
+    .project-card p.is-clamped + .project-readmore { display: block; }
     .project-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
+    /* tags and "View details" sit on the card's floor */
+    .project-card .project-tags { padding-top: 20px; }
     .tag {
       background: var(--brass-wash); color: var(--brass-ink);
       border: 0;
@@ -1102,6 +1122,7 @@
       transition: all 0.45s cubic-bezier(.34,1.2,.64,1);
       box-shadow: var(--shadow-sm);
       position: relative;
+      display: flex; flex-direction: column;
     }
     .conf-card::after {
       content: '';
@@ -1110,11 +1131,16 @@
       opacity: 0; transition: opacity 0.4s ease; z-index: 1;
     }
     .conf-card:hover::after { opacity: 1; }
-    .conf-card:hover { transform: translateY(-12px); box-shadow: var(--shadow-xl); }
+    .conf-card:hover { transform: translateY(-12px); box-shadow: 0 0 0 1px rgba(184,150,92,0.2), 0 0 28px rgba(184,150,92,0.14), var(--shadow-xl); border-color: rgba(184,150,92,0.55); }
     .conf-img-wrap {
-      height: 196px; overflow: hidden; position: relative;
+      aspect-ratio: 16 / 10; flex-shrink: 0; overflow: hidden; position: relative;
       display: block; width: 100%; padding: 0; border: 0; background: var(--green-800);
       cursor: zoom-in;
+    }
+    /* Shared photo treatment: a 10% deep-green wash over a lightly normalized photo (the lightbox shows the original) */
+    .conf-img-wrap::before {
+      content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: rgba(14,31,22,0.1);
     }
     .conf-zoom {
       position: absolute; right: 12px; top: 12px; z-index: 2;
@@ -1127,7 +1153,7 @@
     .conf-card:hover .conf-zoom, .conf-img-wrap:focus-visible .conf-zoom { opacity: 1; transform: none; }
     /* missing photo: show the brand bird on a soft panel instead of a broken image */
     .conf-img-wrap.is-missing { cursor: default; background: var(--green-800) url("Assets/favicon.svg") center / 64px no-repeat; }
-    .conf-img-wrap.is-missing img, .conf-img-wrap.is-missing .conf-zoom, .conf-img-wrap.is-missing::after { display: none; }
+    .conf-img-wrap.is-missing img, .conf-img-wrap.is-missing .conf-zoom, .conf-img-wrap.is-missing::before, .conf-img-wrap.is-missing::after { display: none; }
     .conf-img-wrap::after {
       content: '';
       position: absolute; inset: 0;
@@ -1137,22 +1163,39 @@
     .conf-card:hover .conf-img-wrap::after { opacity: 0.35; }
     .conf-img {
       width: 100%; height: 100%; object-fit: cover;
+      filter: contrast(1.05) saturate(0.88);
       transform: translateY(var(--py, 0px)) scale(var(--zoom, 1.06));
       transition: transform 0.75s cubic-bezier(.22,1,.36,1);
     }
+    /* Per-photo framing so no face is cut: a group too wide for 16:10 is shown whole on the frame colour;
+       a face at the right edge keeps the parallax zoom anchored near that edge */
+    .conf-img-wrap[data-shot-fit="contain"] .conf-img { object-fit: contain; }
+    .conf-img-wrap[data-shot-pos="right"] .conf-img { object-position: right center; transform-origin: 85% 50%; }
     .conf-card:hover .conf-img { --zoom: 1.12; }
-    .conf-body { padding: 28px; position: relative; z-index: 2; }
-    .conf-icon-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .conf-body { padding: 24px; position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: flex-start; }
+    /* Icon | title + place on a fixed grid; the icon lines up with the title's first line however it wraps */
+    .conf-icon-row { display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: 14px; align-items: start; margin-bottom: 16px; width: 100%; }
     .conf-icon {
-      width: 40px; height: 40px;
+      width: 36px; height: 36px; margin-top: -5px;
       background: var(--forest);
       border-radius: 8px; display: flex; align-items: center; justify-content: center;
       color: var(--brass-hi); flex-shrink: 0;
       box-shadow: 0 4px 14px rgba(14,31,22,0.2);
     }
-    .conf-body h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3); color: var(--ink); font-weight: 600; margin-bottom: 3px; }
-    .conf-loc { font-size: 11px; color: var(--brass-ink); font-weight: 600; font-style: italic; margin-bottom: 13px; letter-spacing: 0.5px; }
-    .conf-body p { font-size: 12.5px; color: var(--ink-3); line-height: 1.85; margin-bottom: 14px; font-weight: 300; }
+    .conf-body h3 { font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1.3; color: var(--ink); font-weight: 600; margin-bottom: 3px; }
+    .conf-loc { font-size: 11px; color: var(--brass-ink); font-weight: 600; font-style: italic; letter-spacing: 0.5px; }
+    /* Four lines, then "Read more" opens the rest in place */
+    .conf-body p:not(.conf-loc) {
+      font-size: 12.5px; color: var(--ink-3); line-height: 1.85; font-weight: 300;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
+    }
+    .conf-body p.is-open { display: block; }
+    .conf-more {
+      margin-top: 8px; padding: 0; border: 0; background: none; cursor: pointer;
+      font: 600 10.5px 'Outfit', sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass-ink);
+    }
+    .conf-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .conf-more[hidden] { display: none; }
     .conf-badge {
       display: inline-block;
       background: var(--brass-wash); color: var(--brass-ink);
@@ -1161,6 +1204,11 @@
       font-size: 10.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
       letter-spacing: 1px;
     }
+    /* the year sits on the card's floor, 12px under the text or its "Read more" */
+    .conf-body p:not(.conf-loc), .conf-more { margin-bottom: 12px; }
+    .conf-more { margin-top: -4px; }
+    .conf-body .conf-badge { margin-top: auto; }
+    .conf-summary { max-width: none; }
 
     .edu-card {
       background: var(--card); box-shadow: var(--shadow-sm);
@@ -1474,6 +1522,28 @@
     [data-theme="dark"] .recruiter-pill:hover { background: transparent; color: var(--cream); border-color: var(--brass-hi); }
     [data-theme="dark"] .btn-email { background: var(--cream); color: var(--ink); border-color: var(--cream); }
     [data-theme="dark"] .highlight-box { background: rgba(245,239,227,0.04); }
+    /* Project and conference cards continue the hero: deep green surface, brass hairline, soft inner glow */
+    [data-theme="dark"] .project-card, [data-theme="dark"] .conf-card {
+      --focus: var(--brass-hi);
+      background: linear-gradient(160deg, #14231a 0%, #101a14 100%);
+      border-color: rgba(205,178,126,0.18);
+      box-shadow: inset 0 1px 0 rgba(245,239,227,0.05), inset 0 0 48px rgba(205,178,126,0.04), 0 10px 30px rgba(0,0,0,0.22);
+    }
+    [data-theme="dark"] .project-card:hover, [data-theme="dark"] .project-card:focus-visible, [data-theme="dark"] .conf-card:hover {
+      border-color: rgba(205,178,126,0.5);
+      box-shadow: inset 0 1px 0 rgba(245,239,227,0.05), 0 0 0 1px rgba(205,178,126,0.2), 0 0 30px rgba(205,178,126,0.12), 0 18px 44px rgba(0,0,0,0.35);
+    }
+    [data-theme="dark"] .project-card.is-related { border-color: var(--brass); box-shadow: 0 0 0 1px var(--brass), 0 18px 44px rgba(0,0,0,0.35); }
+    [data-theme="dark"] .project-card h3, [data-theme="dark"] .conf-body h3 { color: var(--cream); }
+    [data-theme="dark"] .project-card p:not(.project-meta), [data-theme="dark"] .conf-body p:not(.conf-loc) { color: var(--on-dark-2); }
+    [data-theme="dark"] .project-card .project-meta, [data-theme="dark"] .project-more, [data-theme="dark"] .project-readmore,
+    [data-theme="dark"] .conf-loc, [data-theme="dark"] .conf-more { color: var(--brass-hi); }
+    [data-theme="dark"] .project-card .tag { background: rgba(212,181,125,0.12); color: var(--brass-hi); }
+    [data-theme="dark"] .project-card .tag:hover { background: var(--brass); color: var(--ink); }
+    [data-theme="dark"] .project-card .project-icon { background: rgba(212,181,125,0.1); color: var(--brass-hi); }
+    [data-theme="dark"] .conf-badge { background: rgba(212,181,125,0.12); color: var(--brass-hi); }
+    [data-theme="dark"] .conf-icon { background: rgba(212,181,125,0.1); box-shadow: inset 0 0 0 1px rgba(205,178,126,0.22); }
+    [data-theme="dark"] .filter-tab.active { background: var(--brass-hi); border-color: var(--brass-hi); color: var(--ink); }
     .theme-anim, .theme-anim *, .theme-anim *::before, .theme-anim *::after {
       transition: background-color 0.45s ease, color 0.45s ease, border-color 0.45s ease !important;
     }
@@ -1488,7 +1558,7 @@
     .content-zoom .exp-bullets li     { font-size: calc(13.5px / var(--content-scale)); }
     .content-zoom .project-card p:not(.project-meta),
     .content-zoom .edu-courses        { font-size: calc(13px / var(--content-scale)); }
-    .content-zoom .conf-body p,
+    .content-zoom .conf-body p:not(.conf-loc),
     .content-zoom .value-card p,
     .content-zoom .fit-evidence li    { font-size: calc(12.5px / var(--content-scale)); }
     .content-zoom .fact-card span,
@@ -1568,6 +1638,8 @@
       .conf-card { grid-column: span 1; }
       body { cursor: auto; }
       .hero-left { padding: 110px 24px 52px; }
+      .hero-id { flex-direction: column; align-items: flex-start; }
+      .hero-id li + li::before { display: none; }
       .header-inner { padding: 0 20px; }
       .container { padding: 0 24px; }
       .modal-inner { padding: 30px 22px 26px; }
@@ -1583,9 +1655,7 @@
       .logo-wrap { gap: 10px; }
       .recruiter-pill::before { display: none; }
       .hero-name { font-size: 63px; }
-      .hero-eyebrow { margin-bottom: 28px; }
       .hero-corner { display: none; }
-      .eyebrow-text { letter-spacing: 2px; }
       .contact-buttons { flex-direction: column; align-items: stretch; }
       .c-btn { justify-content: center; }
       .copy-email { flex-wrap: wrap; justify-content: center; }
@@ -1749,7 +1819,7 @@
       <div class="logo-mark"><span class="logo-ap">AP</span><svg class="logo-bird" aria-hidden="true"><use href="#bird"/></svg></div>
       <div>
         <div class="logo-name">Angelina Ponce</div>
-        <div class="logo-sub">Finance & Technology</div>
+        <div class="logo-sub">Finance & AI Building</div>
       </div>
     </a>
     <nav id="primary-nav" aria-label="Primary">
@@ -1782,22 +1852,21 @@
   <div class="hero-corner" aria-hidden="true">Angelina Ponce · 2026</div>
   <div class="hero-left">
     <div class="hero-content">
-      <div class="hero-eyebrow hero-enter hero-enter-1">
-        <div class="eyebrow-line"></div>
-        <span class="eyebrow-text">Finance × AI · Binghamton University</span>
-        <div class="eyebrow-dot"></div>
-      </div>
-      <h1 class="hero-name hero-enter hero-enter-2">Angelina<br><em>Ponce<span class="name-underline"></span></em></h1>
-      <div class="hero-role-wrap hero-enter hero-enter-3">
+      <h1 class="hero-name hero-enter hero-enter-1">Angelina<br><em>Ponce<span class="name-underline"></span></em></h1>
+      <div class="hero-role-wrap hero-enter hero-enter-2">
         <p class="hero-role">Finance &amp; AI Builder</p>
+        <ul class="hero-id" aria-label="School and city">
+          <li><svg class="i" aria-hidden="true"><use href="#i-graduation-cap"/></svg>Binghamton University</li>
+          <li><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg>New York, New York</li>
+        </ul>
       </div>
-      <div class="hero-divider hero-enter hero-enter-4"></div>
-      <ul class="hero-desc hero-enter hero-enter-5">
+      <div class="hero-divider hero-enter hero-enter-3"></div>
+      <ul class="hero-desc hero-enter hero-enter-4">
         <li>Private Equity Summer Analyst at Brightshore Capital (formerly GTIS Partners)</li>
         <li>Asset Management Summer Analyst at Community Preservation Corporation</li>
         <li>Builder of PolyHedge, Prosperity and PromptForward.</li>
       </ul>
-      <div class="hero-btns hero-enter hero-enter-6">
+      <div class="hero-btns hero-enter hero-enter-5">
         <a href="Angelina%20Ponce%20Resume.pdf" download="Angelina-Ponce-Resume.pdf" class="btn-mag btn-primary-mag">↓ Download Resume</a>
         <a href="#contact" class="btn-mag btn-ghost-mag">Let's Connect →</a>
       </div>
@@ -1878,7 +1947,7 @@
     <div class="about-grid">
       <div class="reveal reveal-delay-1">
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-graduation-cap"/></svg></span><div><strong>Binghamton University</strong><span>BA Economics · Data Analytics and Computer Science Minors</span></div></div>
-        <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div><strong>Based in</strong><span>New York, NY</span></div></div>
+        <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-map-pin"/></svg></span><div><strong>Based in</strong><span>New York, New York</span></div></div>
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-briefcase"/></svg></span><div><strong>Focus</strong><span>Strategy &amp; Operations · Asset &amp; Wealth Management · Product Management · AI &amp; Startups</span></div></div>
         <div class="fact-card"><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-activity"/></svg></span><div><strong>Currently</strong><span>Leading StackHacks · Seeking full-time roles in asset &amp; wealth management and AI</span></div></div>
         <div class="fact-card" id="exploringRow" hidden><span class="fact-emoji"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></span><div><strong>Currently exploring</strong><span></span></div></div>
@@ -1910,7 +1979,7 @@
           <div class="exp-header">
             <div class="exp-title">
               <h3>Asset Management Summer Analyst</h3>
-              <p class="exp-company">Community Preservation Corporation</p>
+              <p class="exp-company"><a href="https://communityp.com" target="_blank" rel="noopener" aria-label="Community Preservation Corporation website (opens in a new tab)">Community Preservation <span class="nowrap">Corporation <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></span></a></p>
               <p class="exp-location">New York, NY</p>
             </div>
             <div class="exp-date">Summer 2026</div>
@@ -1928,7 +1997,7 @@
           <div class="exp-header">
             <div class="exp-title">
               <h3>Private Equity Summer Analyst</h3>
-              <p class="exp-company">Brightshore Capital (formerly GTIS Partners)</p>
+              <p class="exp-company"><a href="https://brightshore.com" target="_blank" rel="noopener" aria-label="Brightshore Capital website (opens in a new tab)">Brightshore <span class="nowrap">Capital <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></span></a> (formerly GTIS Partners)</p>
               <p class="exp-location">New York, NY</p>
             </div>
             <div class="exp-date">Summer 2025</div>
@@ -1984,7 +2053,7 @@
     </div>
     <div class="projects-grid">
       <div class="project-card reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" data-github="https://github.com/angelinamponce/Prosperity" data-demo="https://angelinamponce.github.io/Prosperity/" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Prosperity: view project details">
-        <div class="project-shot"><img src="Assets/img/prosperity.jpg" width="1600" height="921" loading="lazy" decoding="async" alt="Screenshot of Prosperity"></div>
+        <div class="project-shot" data-shot-pos="top"><img src="Assets/img/prosperity.jpg" width="1600" height="921" loading="lazy" decoding="async" alt="Screenshot of Prosperity"><span class="project-chip">Built in 24 hours</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-sprout"/></svg></div>
         <h3>Prosperity</h3>
         <p class="project-meta">HackMIT 2025 · Financial Literacy Platform</p>
@@ -1993,7 +2062,7 @@
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
       <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-github="https://github.com/some-kim/PromptForward" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
-        <div class="project-shot"><img src="Assets/img/promptforward.png" width="1314" height="874" loading="lazy" decoding="async" alt="Screenshot of PromptForward"></div>
+        <div class="project-shot" data-shot-pos="top"><img src="Assets/img/promptforward.png" width="1314" height="874" loading="lazy" decoding="async" alt="Screenshot of PromptForward"><span class="project-chip">HackMIT 2026</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-book-open"/></svg></div>
         <h3>PromptForward</h3>
         <p class="project-meta">HackMIT 2026 · AI Literacy Platform</p>
@@ -2003,7 +2072,7 @@
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
       <div class="project-card reveal reveal-delay-2" data-cat="research tech" data-id="polyhedge" data-github="https://github.com/janesanjana4/PolyHedge" data-demo="https://devpost.com/software/polyhedge-alpha-engine-for-prediction-markets" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
-        <div class="project-shot"><img src="Assets/img/polyhedge.jpg" width="1600" height="1035" loading="lazy" decoding="async" alt="Screenshot of PolyHedge"></div>
+        <div class="project-shot" data-shot-pos="top"><img src="Assets/img/polyhedge.jpg" width="1600" height="1035" loading="lazy" decoding="async" alt="Screenshot of PolyHedge"><span class="project-chip">YHack finalist</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></div>
         <h3>PolyHedge</h3>
         <p class="project-meta">YHack 2026 · Prediction Markets & AI</p>
@@ -2018,7 +2087,7 @@
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
       <div class="project-card reveal reveal-delay-3" data-cat="finance research" data-id="equity" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
-        <div class="project-shot"><img src="Assets/img/equity-lnth.png" width="1600" height="898" loading="lazy" decoding="async" alt="Cover slide of the Lantheus (NASDAQ: LNTH) equity research report"></div>
+        <div class="project-shot" data-shot-pos="left-top"><img src="Assets/img/equity-lnth.png" width="1600" height="898" loading="lazy" decoding="async" alt="Cover slide of the Lantheus (NASDAQ: LNTH) equity research report"><span class="project-chip">BUY · $130 target</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
         <h3>Equity Research Analysis</h3>
         <p class="project-meta">Barclays Equity Research Case Competition · Vestal, NY · Jan–Apr 2026</p>
@@ -2027,7 +2096,7 @@
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
       <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Nike Digital Transformation: view project details">
-        <div class="project-shot"><img src="Assets/img/nike.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="Screenshot of Nike Digital Transformation"></div>
+        <div class="project-shot" data-shot-pos="center"><img src="Assets/img/nike.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="Screenshot of Nike Digital Transformation"><span class="project-chip">EY TechX</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-footprints"/></svg></div>
         <h3>Nike Digital Transformation</h3>
         <p class="project-meta">EY TechX Case Competition · Digital Strategy</p>
@@ -2036,7 +2105,7 @@
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
       <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Brand Partnership Campaign: view project details">
-        <div class="project-shot"><img src="Assets/img/edikted.png" width="773" height="786" loading="lazy" decoding="async" alt="Screenshot of Brand Partnership Campaign"></div>
+        <div class="project-shot" data-shot-pos="center"><img src="Assets/img/edikted.png" width="773" height="786" loading="lazy" decoding="async" alt="Screenshot of Brand Partnership Campaign"><span class="project-chip">15,500+ views</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-camera"/></svg></div>
         <h3>Brand Partnership Campaign</h3>
         <p class="project-meta">Edikted · Social Media & Design</p>
@@ -2156,6 +2225,7 @@
     <div class="reveal">
       <div class="section-label">Conferences &amp; Events</div>
       <h2 class="section-title">Engaging with the<br><em>tech &amp; finance community</em></h2>
+      <p class="section-sub conf-summary">6 events across HackMIT, YHack, ColorStack, ALPFA, Harvard WECode, and Women in Finance.</p>
     </div>
     <div class="conf-grid">
       <div class="conf-card reveal reveal-delay-1">
@@ -2191,7 +2261,7 @@
         </div>
       </div>
       <div class="conf-card reveal reveal-delay-2">
-        <button type="button" class="conf-img-wrap" aria-label="View larger: Photo from the Women in Finance Alumni Panel"><img src="Assets/img/WinFPanel-800.jpg" srcset="Assets/img/WinFPanel-800.jpg 800w, Assets/img/WinFPanel-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="508" loading="lazy" decoding="async" data-full="Assets/img/WinFPanel-1600.jpg" alt="Photo from the Women in Finance Alumni Panel" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
+        <button type="button" class="conf-img-wrap" data-shot-pos="right" aria-label="View larger: Photo from the Women in Finance Alumni Panel"><img src="Assets/img/WinFPanel-800.jpg" srcset="Assets/img/WinFPanel-800.jpg 800w, Assets/img/WinFPanel-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="508" loading="lazy" decoding="async" data-full="Assets/img/WinFPanel-1600.jpg" alt="Photo from the Women in Finance Alumni Panel" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
         <div class="conf-body">
           <div class="conf-icon-row"><div class="conf-icon"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg></div><div><h3>Women in Finance Alumni Panel</h3><p class="conf-loc">New York, New York</p></div></div>
           <p>Participated in Binghamton University's first-ever Women in Finance Alumni Panel, a milestone event bringing together 26+ professionals from top-tier firms including Goldman Sachs, Morgan Stanley, and Evercore, spanning front-office roles across investment banking, equity research, and private equity.</p>
@@ -2199,7 +2269,7 @@
         </div>
       </div>
       <div class="conf-card reveal reveal-delay-3">
-        <button type="button" class="conf-img-wrap" aria-label="View larger: Photo from Harvard WECode"><img src="Assets/img/wecode-photo-800.jpg" srcset="Assets/img/wecode-photo-800.jpg 800w, Assets/img/wecode-photo-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="406" loading="lazy" decoding="async" data-full="Assets/img/wecode-photo-1600.jpg" alt="Photo from Harvard WECode" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
+        <button type="button" class="conf-img-wrap" data-shot-fit="contain" aria-label="View larger: Photo from Harvard WECode"><img src="Assets/img/wecode-photo-800.jpg" srcset="Assets/img/wecode-photo-800.jpg 800w, Assets/img/wecode-photo-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="406" loading="lazy" decoding="async" data-full="Assets/img/wecode-photo-1600.jpg" alt="Photo from Harvard WECode" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
         <div class="conf-body">
           <div class="conf-icon-row"><div class="conf-icon"><svg class="i" aria-hidden="true"><use href="#i-graduation-cap"/></svg></div><div><h3>Harvard WECode</h3><p class="conf-loc">Boston, Massachusetts</p></div></div>
           <p>Attended Harvard's Women Engineers Code conference, the largest student-run tech conference for women in the US. Participated in diversity in engineering workshops and networked with global tech leaders.</p>
@@ -3011,6 +3081,32 @@ document.querySelectorAll('.fit-evidence a').forEach(a => a.addEventListener('cl
   if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
   target.focus({ preventScroll: true });
 }));
+
+// ── Clamped text: project descriptions (5 lines) get a "Read more" cue, the card itself opens the full story;
+// conference write-ups (4 lines) get a "Read more" button that opens them in place. Re-measured on every resize.
+const confMore = new Map();
+document.querySelectorAll('.conf-body p:not(.conf-loc)').forEach((p, i) => {
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'conf-more'; btn.textContent = 'Read more'; btn.hidden = true;
+  p.id = p.id || 'conf-text-' + (i + 1);
+  btn.setAttribute('aria-controls', p.id);
+  btn.setAttribute('aria-expanded', 'false');
+  btn.addEventListener('click', () => {
+    const open = p.classList.toggle('is-open');
+    btn.textContent = open ? 'Show less' : 'Read more';
+    btn.setAttribute('aria-expanded', String(open));
+  });
+  p.after(btn);
+  confMore.set(p, btn);
+});
+document.querySelectorAll('.project-card p:not(.project-meta)').forEach(p => p.insertAdjacentHTML('afterend', '<span class="project-readmore" aria-hidden="true">Read more</span>'));
+const clampObs = new ResizeObserver(entries => entries.forEach(({ target: p }) => {
+  if (p.classList.contains('is-open')) return;
+  const clamped = p.scrollHeight > p.clientHeight + 1;
+  p.classList.toggle('is-clamped', clamped);
+  if (confMore.has(p)) confMore.get(p).hidden = !clamped;
+}));
+document.querySelectorAll('.project-card p:not(.project-meta), .conf-body p:not(.conf-loc)').forEach(p => clampObs.observe(p));
 
 // ── Conference lightbox
 const lightbox = document.getElementById('lightbox');
