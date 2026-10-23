@@ -849,8 +849,8 @@
     .filter-tab:hover:not(.active) { border-color: var(--brass); color: var(--page-ink); background: var(--page-line); }
     .filter-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 
-    /* Projects: the lead project (.is-featured) is a large image-and-text block; the rest are slim ruled rows
-       (thumbnail, title, meta, one-line description, tags, arrow). Every one opens the project modal. */
+    /* Projects: slim ruled rows (thumbnail, title, meta, one-line description, tags, arrow). Clicking a row puts it in
+       the showcase above the list (see PROJECT SHOWCASE), which opens the project modal. */
     .projects-grid { border-bottom: 1px solid var(--rule); }
     .project-card {
       position: relative; cursor: pointer;
@@ -886,7 +886,7 @@
       color: var(--brass-hi); font: 600 10.5px/1.5 'Outfit', sans-serif; letter-spacing: 1px; text-transform: uppercase;
       backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     }
-    .project-card:not(.is-featured) .project-chip { display: none; }
+    .project-card .project-chip { display: none; }   /* shown on the showcase image */
     .project-card:hover .project-shot img, .project-card:focus-visible .project-shot img { transform: scale(1.04); }
     @media (prefers-reduced-motion: reduce) {
       .project-card:hover .project-shot img, .project-card:focus-visible .project-shot img { transform: none; }
@@ -915,15 +915,10 @@
       font-size: 13px; color: var(--ink-3); line-height: 1.75; font-weight: 300;
       display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden;
     }
-    .project-card.is-featured p.is-clamped {
-      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.85em), rgba(0,0,0,0.25));
-              mask-image: linear-gradient(to bottom, #000 calc(100% - 1.85em), rgba(0,0,0,0.25));
-    }
     .project-readmore { display: none; margin-top: 8px; font-size: 10.5px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass-ink); }
-    .project-card.is-featured p.is-clamped + .project-readmore { display: block; grid-area: more; }
     .project-tags { display: flex; flex-wrap: wrap; gap: 5px; }
     .project-card .project-tags { grid-area: tags; justify-content: flex-end; }
-    /* The arrow; the featured block also shows its "View details" label */
+    /* The arrow (its "View details" label is hidden in a row) */
     .project-more {
       grid-area: arrow; justify-self: end; display: inline-flex; align-items: center; gap: 8px;
       font-size: 0; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass-ink);
@@ -933,20 +928,97 @@
     .project-card:hover .project-more, .project-card:focus-visible .project-more { transform: translateX(4px); }
     .project-card.is-related .project-more { color: var(--page-accent); }
 
-    .project-card.is-featured {
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      grid-template-rows: 1fr repeat(6, auto) 1fr;
-      grid-template-areas: "shot ." "shot title" "shot meta" "shot desc" "shot more" "shot tags" "shot arrow" "shot .";
-      column-gap: 64px; align-items: start;
-      padding: 0 0 64px; border-top: 0;
+    /* The row in the showcase: a short brass bar in the gutter, a gold title (aria-current marks it for screen readers) */
+    .project-card.is-active::after {
+      content: ''; position: absolute; left: -22px; top: 24px; bottom: 24px; width: 2px; background: var(--brass);
     }
-    .project-card.is-featured .project-shot { aspect-ratio: 16 / 10; border-radius: 4px; }
-    .project-card.is-featured h3 { font-size: clamp(34px, 3vw, 44px); line-height: 1.08; }
-    .project-card.is-featured .project-meta { margin: 12px 0 20px; }
-    .project-card.is-featured p:not(.project-meta) { font-size: 15px; line-height: 1.85; color: var(--ink-2); -webkit-line-clamp: 6; line-clamp: 6; }
-    .project-card.is-featured .project-tags { justify-content: flex-start; margin-top: 24px; }
-    .project-card.is-featured .project-more { justify-self: start; margin-top: 26px; font-size: 10.5px; }
-    .project-card.is-featured:hover .project-more, .project-card.is-featured:focus-visible .project-more { gap: 12px; }
+    .project-card.is-active h3 { color: var(--page-accent); background-size: 100% 1px; }
+    .project-card.is-active .project-more { color: var(--page-accent); }
+
+    /* ─── PROJECT SHOWCASE ───
+       One project at a time, filled from its row: image on the left; title, meta, description, tags and
+       "View details" on the right. Arrows, a counter and dots step through the projects the filter shows. */
+    .project-showcase { position: relative; margin-bottom: 56px; }
+    .project-showcase[hidden] { display: none; }
+    .showcase-stage {
+      display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      column-gap: 64px; align-items: center;
+    }
+    .showcase-shot {
+      position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: pointer;
+      aspect-ratio: 16 / 10; overflow: hidden; border-radius: 4px; background: var(--green-800);
+    }
+    .showcase-shot img {
+      display: block; width: 100%; height: 100%; object-fit: cover; object-position: top;
+      transition: transform 0.6s cubic-bezier(.22,1,.36,1);
+    }
+    .showcase-shot[data-shot-pos="left-top"] img { object-position: left top; }
+    .showcase-shot[data-shot-pos="center"] img { object-position: center; }
+    .showcase-shot:hover img, .showcase-shot:focus-visible img { transform: scale(1.03); }
+    .showcase-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(34px, 3vw, 44px); line-height: 1.08; color: var(--ink); font-weight: 600; }
+    .project-showcase .project-meta { margin: 12px 0 20px; }
+    .showcase-desc {
+      font-size: 15px; line-height: 1.85; color: var(--ink-2); font-weight: 300;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; line-clamp: 6; overflow: hidden;
+    }
+    .project-showcase .project-tags { margin-top: 24px; }
+    .showcase-more {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 26px;
+      padding: 0; border: 0; background: none; cursor: pointer;
+      font: 600 10.5px 'Outfit', sans-serif; letter-spacing: 1.2px; text-transform: uppercase; color: var(--brass-ink);
+      transition: gap 0.25s ease, transform 0.25s ease;
+    }
+    .showcase-more .i { width: 16px; height: 16px; }
+    .showcase-more:hover, .showcase-more:focus-visible { gap: 12px; }
+    /* The arrows float just outside the frame's left and right edges, centred on the project. They sit outside the
+       stage, so the swap animation never fades them; centring uses top (not a transform) so the magnetic pull can
+       use transform freely. */
+    .showcase-frame { position: relative; }
+    .showcase-arrow {
+      --arrow: 44px;
+      position: absolute; top: calc(50% - var(--arrow) / 2); z-index: 2;
+      width: var(--arrow); height: var(--arrow); border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+      background: rgba(251,248,242,0.72); color: var(--ink); border: 1px solid rgba(14,31,22,0.16);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: background-color 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.3s, transform 0.25s ease;
+    }
+    .showcase-arrow:hover, .showcase-arrow:focus-visible {
+      border-color: var(--brass); color: var(--brass-ink);
+      box-shadow: 0 0 0 1px rgba(184,150,92,0.35), 0 0 22px rgba(184,150,92,0.28);
+    }
+    [data-theme="dark"] .showcase-arrow { background: rgba(14,31,22,0.55); color: var(--cream); border-color: rgba(205,178,126,0.32); }
+    [data-theme="dark"] .showcase-arrow:hover, [data-theme="dark"] .showcase-arrow:focus-visible {
+      background: rgba(255,255,255,0.1); border-color: var(--brass-hi); color: var(--brass-hi);
+      box-shadow: 0 0 0 1px rgba(212,181,125,0.35), 0 0 24px rgba(212,181,125,0.3);
+    }
+    .showcase-arrow[hidden] { display: none; }
+    .showcase-prev { left: calc(-1 * var(--arrow) - 28px); }
+    .showcase-next { right: calc(-1 * var(--arrow) - 28px); }
+    .showcase-arrow .i { width: 18px; height: 18px; }
+    .showcase-nav {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--rule);
+    }
+    .showcase-count { font: 500 11px 'JetBrains Mono', monospace; letter-spacing: 1px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+    .showcase-count strong { color: var(--ink); font-weight: 500; }
+    .showcase-dots { display: flex; align-items: center; margin-left: auto; }
+    .showcase-dot { width: 30px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; }
+    .showcase-dot::before { content: ''; width: 18px; height: 2px; border-radius: 1px; background: var(--page-line-strong); transition: width 0.3s ease, background 0.3s ease; }
+    .showcase-dot:hover::before { background: var(--brass); }
+    .showcase-dot[aria-pressed="true"]::before { width: 26px; background: var(--brass); }
+
+    /* Cursor spotlight on the project rows, the showcase, conference cards and the project modal: a soft brass glow that
+       follows the pointer (the script sets --gx/--gy; with reduced motion or touch it just sits centred on hover) */
+    .project-card::before, .project-showcase::before, .conf-card::before, .modal-inner::before {
+      content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(280px circle at var(--gx, 50%) var(--gy, 50%), rgba(184,150,92,0.10), transparent 70%);
+      opacity: 0; transition: opacity 0.4s ease;
+    }
+    .project-showcase::before { inset: -24px; background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 50%), rgba(184,150,92,0.09), transparent 70%); }
+    .project-card:hover::before, .project-showcase:hover::before, .conf-card:hover::before, .modal-inner:hover::before { opacity: 1; }
+    /* content sits above the glow (the modal's close button and the live region keep their own positioning) */
+    .modal-inner > :not(.modal-close), .conf-card > *, .project-showcase > :not(.sr-only) { position: relative; z-index: 1; }
 
     .filter-note {
       display: flex; align-items: center; gap: 14px; margin: -32px 0 24px;
@@ -1031,9 +1103,7 @@
     .conf-card {
       position: relative; display: flex; flex-direction: column;
       border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); border-radius: 0;
-      transition: background-color 0.35s ease;
     }
-    .conf-card:hover { background: rgba(184,150,92,0.05); }
     .conf-img-wrap {
       aspect-ratio: 16 / 10; flex-shrink: 0; overflow: hidden; position: relative;
       display: block; width: 100%; padding: 0; border: 0; border-radius: 0; background: var(--green-800);
@@ -1258,9 +1328,72 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.25);
       transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
       transition: transform 0.35s cubic-bezier(.34,1.3,.64,1), opacity 0.25s ease;
+      top: auto; right: auto; overflow: visible;   /* over an open dialog the toast is a popover; undo its default box */
     }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
     .toast .i { width: 16px; height: 16px; color: var(--brass-hi); }
+
+    /* Tech badges: in dark mode a brushed-brass border (two gradients: page colour inside, metal on the edge);
+       every badge gets a tooltip listing the projects that use it (data-tip, set by the script) */
+    [data-theme="dark"] .section .tag {
+      box-shadow: none; border: 1px solid transparent; padding: 2px 9px; color: var(--on-dark-2);
+      background:
+        linear-gradient(var(--page), var(--page)) padding-box,
+        linear-gradient(135deg, rgba(232,206,150,0.62), rgba(245,239,227,0.12) 45%, rgba(184,150,92,0.5)) border-box;
+      transition: color 0.2s, transform 0.2s, background 0.2s;
+    }
+    [data-theme="dark"] .section .tag:hover {
+      color: var(--brass-hi); transform: translateY(-1px);
+      background:
+        linear-gradient(rgba(212,181,125,0.08), rgba(212,181,125,0.08)) padding-box,
+        linear-gradient(var(--page), var(--page)) padding-box,
+        linear-gradient(135deg, #f0d9a6, rgba(245,239,227,0.35) 45%, var(--brass-hi)) border-box;
+    }
+    .tag[data-tip] { position: relative; }
+    .tag[data-tip]::after {
+      content: attr(data-tip); position: absolute; left: 0; bottom: calc(100% + 8px); z-index: 5;
+      padding: 6px 10px; border-radius: 4px; white-space: nowrap;
+      background: var(--green-800); color: var(--cream); box-shadow: inset 0 0 0 1px rgba(205,178,126,0.32), 0 8px 24px rgba(0,0,0,0.25);
+      font: 500 11px/1.3 'Outfit', sans-serif; letter-spacing: 0.2px; text-transform: none;
+      opacity: 0; transform: translateY(4px); pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    .project-card .tag[data-tip]::after { left: auto; right: 0; }   /* row tags sit at the right edge */
+    .tag[data-tip]:hover::after { opacity: 1; transform: none; }
+
+    /* ─── COMMAND PALETTE (⌘K / Ctrl+K, or the search button in the header): dark in both themes ─── */
+    .cmdk-trigger:hover { transform: none; }
+    .cmdk {
+      width: min(600px, calc(100vw - 32px)); margin: 12vh auto auto; padding: 0;
+      border: 1px solid rgba(205,178,126,0.24); border-radius: 14px;
+      background: var(--green-800); color: var(--cream); box-shadow: 0 40px 120px rgba(0,0,0,0.5);
+      --focus: var(--brass-hi);
+    }
+    .cmdk::backdrop { background: rgba(7,16,11,0.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .cmdk[open] { animation: modalIn 0.3s cubic-bezier(.22,1,.36,1); }
+    .cmdk[open]::backdrop { animation: fadeBackdrop 0.2s ease; }
+    .cmdk-field { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--line-dark); }
+    .cmdk-field .i { width: 18px; height: 18px; color: var(--brass-hi); }
+    .cmdk-field input {
+      flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--cream);
+      font: 400 16px 'Outfit', sans-serif;
+    }
+    .cmdk-field input::placeholder { color: var(--on-dark-3); }
+    .cmdk kbd {
+      font: 500 10.5px 'JetBrains Mono', monospace; color: var(--on-dark-2);
+      padding: 2px 6px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line-dark-strong);
+    }
+    .cmdk-list { list-style: none; max-height: min(52vh, 420px); overflow-y: auto; padding: 8px; overscroll-behavior: contain; }
+    .cmdk-group { padding: 12px 12px 6px; font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--brass-hi); }
+    .cmdk-option {
+      display: flex; align-items: baseline; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; color: var(--on-dark);
+    }
+    .cmdk-option span { margin-left: auto; font-size: 11.5px; color: var(--on-dark-3); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cmdk-option[aria-selected="true"] { background: rgba(212,181,125,0.12); box-shadow: inset 2px 0 0 var(--brass-hi); }
+    .cmdk-empty { padding: 28px 20px; text-align: center; font-size: 13.5px; color: var(--on-dark-3); }
+    .cmdk-empty[hidden] { display: none; }
+    .cmdk-foot { display: flex; gap: 18px; padding: 10px 18px; border-top: 1px solid var(--line-dark); font-size: 11.5px; color: var(--on-dark-3); }
+    .cmdk-foot kbd { margin-right: 3px; }
 
     #scroll-top {
       position: fixed; bottom: 36px; right: 36px;
@@ -1435,7 +1568,7 @@
     .content-zoom .about-text p       { font-size: max(15px, calc(14px / var(--content-scale))); }
     .content-zoom .section-sub        { font-size: max(16px, calc(15px / var(--content-scale))); }
     .content-zoom .exp-bullets li     { font-size: calc(13.5px / var(--content-scale)); }
-    .content-zoom .project-card.is-featured p:not(.project-meta) { font-size: calc(15px / var(--content-scale)); }
+    .content-zoom .showcase-desc { font-size: calc(15px / var(--content-scale)); }
     .content-zoom .conf-body p:not(.conf-loc) { font-size: calc(13.5px / var(--content-scale)); }
     .content-zoom .project-card p:not(.project-meta),
     .content-zoom .fact-card span,
@@ -1472,6 +1605,11 @@
       nav#primary-nav a.active-nav { background: none; color: var(--brass-hi); box-shadow: inset 2px 0 0 var(--brass); border-radius: 0 8px 8px 0; }
     }
     @keyframes menuIn { from { opacity: 0; transform: translateY(-6px); } }
+    @media (max-width: 1240px) {
+      .showcase-arrow { --arrow: 36px; }
+      .showcase-prev { left: -42px; }
+      .showcase-next { right: -42px; }
+    }
     @media (max-width: 1024px) {
       .hero { grid-template-columns: 1fr; }
       .hero-left { min-height: auto; padding: 130px 40px 64px; }
@@ -1481,7 +1619,7 @@
       .hero-motif { inset: auto 0 6% 0; height: 42%; opacity: 0.8; }
       .hero-right { padding: 60px 40px 80px; }
       .project-card { grid-template-columns: 80px minmax(0, 1fr) minmax(0, 210px) 20px; column-gap: 22px; }
-      .project-card.is-featured { column-gap: 40px; }
+      .showcase-stage { column-gap: 40px; }
       .skills-grid { grid-template-columns: 1fr; }
       .about-grid { grid-template-columns: 1fr; gap: 52px; }
       .edu-card { grid-template-columns: 1fr; }
@@ -1515,13 +1653,15 @@
       }
       .project-card p:not(.project-meta) { margin-top: 12px; }
       .project-card .project-tags { justify-content: flex-start; margin-top: 12px; }
-      .project-card.is-featured {
-        grid-template-columns: minmax(0, 1fr); grid-template-rows: none;
-        grid-template-areas: "shot" "title" "meta" "desc" "more" "tags" "arrow";
-        padding-bottom: 44px;
-      }
-      .project-card.is-featured .project-shot { margin-bottom: 24px; }
-      .project-card.is-featured p:not(.project-meta) { margin-top: 0; }
+      .project-card.is-active::after { left: -14px; top: 20px; bottom: 20px; }
+      .project-showcase { margin-bottom: 44px; }
+      .showcase-stage { grid-template-columns: minmax(0, 1fr); row-gap: 24px; }
+      .showcase-arrow { --arrow: 36px; top: calc((100vw - 48px) * 0.3125 - var(--arrow) / 2); }
+      .showcase-prev { left: 8px; }
+      .showcase-next { right: 8px; }
+      .showcase-dot { width: 22px; }
+      .showcase-dot::before { width: 12px; }
+      .showcase-dot[aria-pressed="true"]::before { width: 18px; }
       .conf-grid { grid-template-columns: minmax(0, 1fr); }
       .conf-body { padding: 22px 22px 24px; }
       .skill-group { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
@@ -1544,6 +1684,7 @@
       .modal { margin: 16px auto 90px; max-height: calc(100vh - 106px); max-height: calc(100dvh - 106px); }
     }
     @media (max-width: 480px) {
+      .cmdk-trigger { display: none; }   /* phones: no keyboard shortcut, and the header has no room */
       .logo-sub { display: none; }
       .logo-name { font-size: 16px; }
       .logo-wrap { gap: 10px; }
@@ -1729,6 +1870,7 @@
     </nav>
     <div class="header-actions">
       <button type="button" class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+      <button type="button" class="theme-toggle cmdk-trigger" id="cmdkOpen" aria-label="Search the site" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" title="Search (⌘K / Ctrl+K)"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg></button>
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to dark mode" aria-pressed="false">
         <span class="theme-icon-moon"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg></span><span class="theme-icon-sun"><svg class="i" aria-hidden="true"><use href="#i-sun"/></svg></span>
       </button>
@@ -1945,8 +2087,30 @@
       <span>Projects using <strong id="filterNoteSkill"></strong></span>
       <button type="button" class="filter-note-clear" id="filterNoteClear">Clear <svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
+    <!-- Showcase: filled by the script from the project rows below (hidden without JavaScript, when only the rows show) -->
+    <div class="project-showcase reveal reveal-delay-1" id="projectShowcase" aria-roledescription="carousel" aria-label="Featured project" hidden>
+      <div class="showcase-frame">
+        <button type="button" class="showcase-arrow showcase-prev" id="showcasePrev" aria-label="Previous project"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+        <div class="showcase-stage" id="showcaseStage">
+          <button type="button" class="showcase-shot" id="showcaseShot" aria-haspopup="dialog"><img id="showcaseImg" alt="" decoding="async"><span class="project-chip" id="showcaseChip"></span></button>
+          <div class="showcase-body">
+            <h3 class="showcase-title" id="showcaseTitle"></h3>
+            <p class="project-meta" id="showcaseMeta"></p>
+            <p class="showcase-desc" id="showcaseDesc"></p>
+            <div class="project-tags" id="showcaseTags"></div>
+            <button type="button" class="showcase-more" id="showcaseMore" aria-haspopup="dialog">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+          </div>
+        </div>
+        <button type="button" class="showcase-arrow showcase-next" id="showcaseNext" aria-label="Next project"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+      </div>
+      <div class="showcase-nav">
+        <span class="showcase-count" id="showcaseCount" aria-hidden="true"></span>
+        <div class="showcase-dots" id="showcaseDots" role="group" aria-label="Choose a project"></div>
+      </div>
+      <p class="sr-only" id="showcaseLive" aria-live="polite"></p>
+    </div>
     <div class="projects-grid">
-      <div class="project-card is-featured reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" data-github="https://github.com/angelinamponce/Prosperity" data-demo="https://angelinamponce.github.io/Prosperity/" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Prosperity: view project details">
+      <div class="project-card reveal reveal-delay-1" data-cat="tech finance" data-id="prosperity" data-github="https://github.com/angelinamponce/Prosperity" data-demo="https://angelinamponce.github.io/Prosperity/" tabindex="0" role="button" aria-label="Prosperity: show in the featured showcase">
         <div class="project-shot" data-shot-pos="top"><img src="Assets/img/prosperity.jpg" width="1600" height="921" loading="lazy" decoding="async" alt="Screenshot of Prosperity"><span class="project-chip">Built in 24 hours</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-sprout"/></svg></div>
         <h3>Prosperity</h3>
@@ -1955,7 +2119,7 @@
         <div class="project-tags"><span class="tag">Python</span><span class="tag">JavaScript</span><span class="tag">React</span><span class="tag">Financial APIs</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-github="https://github.com/some-kim/PromptForward" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PromptForward: view project details">
+      <div class="project-card reveal reveal-delay-5" data-cat="tech research" data-id="promptforward" data-github="https://github.com/some-kim/PromptForward" tabindex="0" role="button" aria-label="PromptForward: show in the featured showcase">
         <div class="project-shot" data-shot-pos="top"><img src="Assets/img/promptforward.png" width="1314" height="874" loading="lazy" decoding="async" alt="Screenshot of PromptForward"><span class="project-chip">HackMIT 2026</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-book-open"/></svg></div>
         <h3>PromptForward</h3>
@@ -1965,7 +2129,7 @@
         <div class="project-tags"><span class="tag">AI Literacy</span><span class="tag">Prompt Engineering</span><span class="tag">Gamification</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-2" data-cat="research tech" data-id="polyhedge" data-github="https://github.com/janesanjana4/PolyHedge" data-demo="https://devpost.com/software/polyhedge-alpha-engine-for-prediction-markets" tabindex="0" role="button" aria-haspopup="dialog" aria-label="PolyHedge: view project details">
+      <div class="project-card reveal reveal-delay-2" data-cat="research tech" data-id="polyhedge" data-github="https://github.com/janesanjana4/PolyHedge" data-demo="https://devpost.com/software/polyhedge-alpha-engine-for-prediction-markets" tabindex="0" role="button" aria-label="PolyHedge: show in the featured showcase">
         <div class="project-shot" data-shot-pos="top"><img src="Assets/img/polyhedge.jpg" width="1600" height="1035" loading="lazy" decoding="async" alt="Screenshot of PolyHedge"><span class="project-chip">YHack finalist</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-target"/></svg></div>
         <h3>PolyHedge</h3>
@@ -1980,7 +2144,7 @@
         </div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-3" data-cat="finance research" data-id="equity" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Equity Research Analysis: view project details">
+      <div class="project-card reveal reveal-delay-3" data-cat="finance research" data-id="equity" tabindex="0" role="button" aria-label="Equity Research Analysis: show in the featured showcase">
         <div class="project-shot" data-shot-pos="left-top"><img src="Assets/img/equity-lnth.png" width="1600" height="898" loading="lazy" decoding="async" alt="Cover slide of the Lantheus (NASDAQ: LNTH) equity research report"><span class="project-chip">BUY · $130 target</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-trending-up"/></svg></div>
         <h3>Equity Research Analysis</h3>
@@ -1989,7 +2153,7 @@
         <div class="project-tags"><span class="tag">Excel Modeling</span><span class="tag">DCF</span><span class="tag">WACC</span><span class="tag">Equity Research</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Nike Digital Transformation: view project details">
+      <div class="project-card reveal reveal-delay-4" data-cat="strategy" data-id="nike" tabindex="0" role="button" aria-label="Nike Digital Transformation: show in the featured showcase">
         <div class="project-shot" data-shot-pos="center"><img src="Assets/img/nike.jpg" width="1600" height="900" loading="lazy" decoding="async" alt="Screenshot of Nike Digital Transformation"><span class="project-chip">EY TechX</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-footprints"/></svg></div>
         <h3>Nike Digital Transformation</h3>
@@ -1998,7 +2162,7 @@
         <div class="project-tags"><span class="tag">Tech Consulting</span><span class="tag">Digital Strategy</span><span class="tag">Competitive Analysis</span><span class="tag">AI Strategy</span></div>
         <span class="project-more" aria-hidden="true">View details <svg class="i" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
       </div>
-      <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Brand Partnership Campaign: view project details">
+      <div class="project-card reveal reveal-delay-1" data-cat="strategy" data-id="brand" tabindex="0" role="button" aria-label="Brand Partnership Campaign: show in the featured showcase">
         <div class="project-shot" data-shot-pos="center"><img src="Assets/img/edikted.png" width="773" height="786" loading="lazy" decoding="async" alt="Screenshot of Brand Partnership Campaign"><span class="project-chip">15,500+ views</span></div>
         <div class="project-icon"><svg class="i" aria-hidden="true"><use href="#i-camera"/></svg></div>
         <h3>Brand Partnership Campaign</h3>
@@ -2276,6 +2440,17 @@
   <button type="button" class="lightbox-btn lightbox-prev" id="lightboxPrev" aria-label="Previous photo"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
   <button type="button" class="lightbox-btn lightbox-next" id="lightboxNext" aria-label="Next photo"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
   <button type="button" class="lightbox-btn lightbox-close" data-close aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+</dialog>
+
+<dialog class="cmdk" id="cmdk" aria-label="Search the site">
+  <div class="cmdk-field">
+    <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+    <input id="cmdkInput" type="text" role="combobox" aria-expanded="true" aria-controls="cmdkList" aria-autocomplete="list" aria-label="Search sections, projects, events and actions" placeholder="Search sections, projects, events…" autocomplete="off" spellcheck="false">
+    <kbd>Esc</kbd>
+  </div>
+  <ul class="cmdk-list" id="cmdkList" role="listbox" aria-label="Results"></ul>
+  <p class="cmdk-empty" id="cmdkEmpty" hidden>No matches</p>
+  <div class="cmdk-foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>Esc</kbd> close</span></div>
 </dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2785,6 +2960,7 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
     tab.classList.add('active');
     clearSkillHighlight();
     applyFilter(tab.dataset.filter);
+    syncShowcase();
   });
 });
 
@@ -2805,6 +2981,7 @@ function highlightSkill(chip) {
   const ids = chip.dataset.projects.split(' ');
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
   projectCards.forEach(c => { c.classList.remove('hidden'); finishReveal(c); });
+  syncShowcase();
   projectCards.forEach(c => {
     const hit = ids.includes(c.dataset.id);
     c.classList.toggle('is-related', hit);
@@ -2863,7 +3040,9 @@ function renderProject(card) {
     : '';
   const { github, demo, report } = card.dataset;
   const demoLabel = /devpost\.com/i.test(demo || '') ? 'Devpost' : 'Live site';
-  document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel) + link(report, 'external-link', 'Report');
+  const main = demo || github || report;
+  const copy = main ? `<button type="button" class="modal-link modal-copy" data-copy="${main}" title="${main}"><svg class="i" aria-hidden="true"><use href="#i-copy"/></svg>Copy link</button>` : '';
+  document.getElementById('modalLinks').innerHTML = link(github, 'github', 'GitHub') + link(demo, 'external-link', demoLabel) + link(report, 'external-link', 'Report') + copy;
   renderBuildLog(id, github);
   // Position among the cards the current filter shows; with only one, there is nothing to step to
   const shown = visibleProjects();
@@ -2933,6 +3112,7 @@ function stepProject(dir) {
   const shown = visibleProjects();
   if (shown.length < 2) return;
   renderProject(shown[(shown.indexOf(modal.lastCard) + dir + shown.length) % shown.length]);
+  featureProject(modal.lastCard, { dir, announce: false });   // the showcase behind follows along
   // the focused element can vanish with the old project (e.g. its "How I built it" or a link); keep focus in the modal
   if (!modal.contains(document.activeElement) || document.activeElement.closest('[hidden]')) modal.querySelector('.modal-close').focus({ preventScroll: true });
   modal.scrollTop = 0;
@@ -2949,10 +3129,6 @@ modal.addEventListener('close', () => {
   modal.returnTo = null;
   if (back) back.focus({ preventScroll: true });
 });
-projectCards.forEach(card => {
-  card.addEventListener('click', () => openProject(card));
-  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProject(card); } });
-});
 // "Where I fit" evidence links: a project link opens that project's modal (clearing any filter that hides it);
 // a section link scrolls under the fixed header and moves keyboard focus there
 document.querySelectorAll('.fit-evidence a').forEach(a => a.addEventListener('click', e => {
@@ -2963,6 +3139,7 @@ document.querySelectorAll('.fit-evidence a').forEach(a => a.addEventListener('cl
       document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
       clearSkillHighlight();
       projectCards.forEach(c => { c.classList.remove('hidden'); finishReveal(c); });
+      syncShowcase();
     }
     openProject(card);
     modal.returnTo = a;
@@ -2975,6 +3152,125 @@ document.querySelectorAll('.fit-evidence a').forEach(a => a.addEventListener('cl
   if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
   target.focus({ preventScroll: true });
 }));
+
+// ── Tech badges: each one's tooltip lists the projects that use it
+(function tagTips() {
+  const key = t => t.textContent.trim().toLowerCase(), byTag = new Map();
+  projectCards.forEach(c => c.querySelectorAll('.tag').forEach(t => {
+    if (!byTag.has(key(t))) byTag.set(key(t), []);
+    byTag.get(key(t)).push(c.querySelector('h3').textContent);
+  }));
+  projectCards.forEach(c => c.querySelectorAll('.tag').forEach(t => { t.dataset.tip = 'Used in ' + byTag.get(key(t)).join(' · '); }));
+})();
+
+// ── Project showcase: the block above the list features one project at a time, filled from its row. The arrows, the
+// dots and ←/→ (on the controls) step through the projects the filter shows, wrapping at both ends; clicking a row
+// features it; the image and "View details" open the modal, and stepping inside the modal keeps the showcase in step.
+const showcase = document.getElementById('projectShowcase'), showcaseStage = document.getElementById('showcaseStage');
+const scEl = name => document.getElementById('showcase' + name);
+const activeFilter = () => { const t = document.querySelector('.filter-tab.active'); return t ? t.dataset.filter : 'all'; };
+const inFilter = c => activeFilter() === 'all' || (c.dataset.cat || '').split(' ').includes(activeFilter());
+const showcaseList = () => projectCards.filter(inFilter);   // by the active tab, so it is right before the filter's fade ends
+let featured = null, showcaseRun = 0, dotsKey = '';
+function fillShowcase(card) {
+  const title = card.querySelector('h3').textContent, shot = card.querySelector('.project-shot'), img = shot.querySelector('img');
+  const big = scEl('Img'), chip = card.querySelector('.project-chip');
+  scEl('Shot').dataset.shotPos = shot.dataset.shotPos || 'top';
+  big.src = img.getAttribute('src'); big.alt = img.alt;
+  big.width = img.getAttribute('width'); big.height = img.getAttribute('height');
+  scEl('Chip').textContent = chip ? chip.textContent : '';
+  scEl('Chip').hidden = !chip;
+  scEl('Title').textContent = title;
+  scEl('Meta').textContent = card.querySelector('.project-meta').textContent;
+  scEl('Desc').textContent = card.querySelector('p:not(.project-meta)').textContent;
+  scEl('Tags').innerHTML = card.querySelector('.project-tags').innerHTML;
+  scEl('Shot').setAttribute('aria-label', `View details: ${title}`);
+  scEl('More').setAttribute('aria-label', `View details: ${title}`);
+}
+function updateShowcaseNav() {
+  const list = showcaseList(), pad = n => String(n).padStart(2, '0');
+  scEl('Count').innerHTML = `<strong>${pad(list.indexOf(featured) + 1)}</strong> / ${pad(list.length)}`;
+  scEl('Prev').hidden = scEl('Next').hidden = list.length < 2;
+  // the dots are rebuilt only when the set changes, so a focused dot keeps focus while it is pressed
+  const k = list.map(c => c.dataset.id).join(' ');
+  if (k !== dotsKey) {
+    dotsKey = k;
+    scEl('Dots').replaceChildren(...list.map(c => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'showcase-dot'; b.dataset.id = c.dataset.id;
+      b.setAttribute('aria-label', c.querySelector('h3').textContent);
+      b.addEventListener('click', () => { const l = showcaseList(); featureProject(c, { dir: Math.sign(l.indexOf(c) - l.indexOf(featured)) }); });
+      return b;
+    }));
+  }
+  scEl('Dots').querySelectorAll('.showcase-dot').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === (featured && featured.dataset.id))));
+}
+// Scroll the showcase into view when its top is off screen (or always, with force)
+function bringShowcaseIntoView(force) {
+  const top = showcase.getBoundingClientRect().top, navH = document.getElementById('header').offsetHeight;
+  if (force || top < navH || top > window.innerHeight * 0.6) scrollToSection(showcase, 24);
+}
+// dir: 1 slides the new project in from the right, -1 from the left
+function featureProject(card, { dir = 1, announce = true, scroll = false } = {}) {
+  if (!card) return;
+  if (scroll) bringShowcaseIntoView();
+  if (card === featured) { updateShowcaseNav(); return; }
+  const first = !featured;
+  featured = card;
+  projectCards.forEach(c => {
+    c.classList.toggle('is-active', c === card);
+    if (c === card) c.setAttribute('aria-current', 'true'); else c.removeAttribute('aria-current');
+  });
+  updateShowcaseNav();
+  if (announce) {
+    const list = showcaseList();
+    scEl('Live').textContent = `Featured project ${list.indexOf(card) + 1} of ${list.length}: ${card.querySelector('h3').textContent}`;
+  }
+  const run = ++showcaseRun, parts = [scEl('Shot'), showcaseStage.querySelector('.showcase-body')];
+  if (first || reduceMotion) { fillShowcase(card); return; }
+  // out: the stage slides away; in: image, then text, slide in from the other side (once the new image can paint)
+  const dx = (dir || 1) * 28;
+  [showcaseStage, ...parts].forEach(el => el.getAnimations().forEach(a => a.cancel()));
+  showcaseStage.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-dx}px)` }],
+    { duration: 170, easing: 'ease-in', fill: 'forwards' }).finished
+    .then(() => {
+      if (run !== showcaseRun) return;
+      fillShowcase(card);
+      return Promise.race([scEl('Img').decode().catch(() => {}), new Promise(r => setTimeout(r, 350))]);
+    })
+    .then(() => {
+      if (run !== showcaseRun) return;
+      showcaseStage.getAnimations().forEach(a => a.cancel());
+      parts.forEach((el, i) => el.animate([{ opacity: 0, transform: `translateX(${dx}px)` }, { opacity: 1, transform: 'none' }],
+        { duration: 460, delay: i * 70, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' }));
+    })
+    .catch(() => {});   // a newer swap cancelled this one
+}
+function stepShowcase(dir) {
+  const list = showcaseList();
+  if (list.length < 2) return;
+  featureProject(list[(list.indexOf(featured) + dir + list.length) % list.length], { dir });
+}
+// After a filter or skill highlight changes the set: keep the featured project if it is still in it
+function syncShowcase() {
+  if (featured && inFilter(featured)) updateShowcaseNav();
+  else featureProject(showcaseList()[0], { dir: 1 });
+}
+scEl('Prev').addEventListener('click', () => stepShowcase(-1));
+scEl('Next').addEventListener('click', () => stepShowcase(1));
+showcase.addEventListener('keydown', e => {
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && e.target.closest('.showcase-arrow, .showcase-dot')) {
+    e.preventDefault(); stepShowcase(e.key === 'ArrowLeft' ? -1 : 1);
+  }
+});
+[scEl('Shot'), scEl('More')].forEach(btn => btn.addEventListener('click', () => { openProject(featured); modal.returnTo = btn; }));
+projectCards.forEach(card => {
+  const pick = () => { const list = showcaseList(); featureProject(card, { dir: Math.sign(list.indexOf(card) - list.indexOf(featured)) || 1, scroll: true }); };
+  card.addEventListener('click', pick);
+  card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+});
+showcase.hidden = false;
+featureProject(projectCards[0], { announce: false });
 
 // ── Clamped text: project descriptions (5 lines) get a "Read more" cue, the card itself opens the full story;
 // conference write-ups (4 lines) get a "Read more" button that opens them in place. Re-measured on every resize.
@@ -3076,27 +3372,47 @@ menuBtn.addEventListener('click', () => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && header.classList.contains('menu-open')) { closeMenu(); menuBtn.focus(); } });
 document.addEventListener('click', e => { if (!header.contains(e.target)) closeMenu(); });
 
-// ── Copy email + toast
+// ── Copy (email, project links) + toast
 const toast = document.getElementById('toast');
+const COPIED = '<svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Copied to clipboard';
 let toastTimer = null;
+// Over an open dialog the toast becomes a popover, so it sits in the top layer above the dialog; otherwise it is a
+// plain fixed element, as before
+const toastRaised = () => !!toast.showPopover && toast.matches(':popover-open');
 function showToast(html) {
+  if (toast.showPopover && document.querySelector('dialog[open]')) {
+    if (toastRaised()) toast.hidePopover();
+    toast.popover = 'manual'; toast.showPopover();
+    toast.classList.remove('show'); void toast.offsetWidth;   // restart the slide-up from the hidden state
+  }
   toast.innerHTML = html;
   toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+    if (toastRaised()) toastTimer = setTimeout(() => { toast.hidePopover(); toast.removeAttribute('popover'); }, 350);
+  }, 2200);
+}
+// Copies text, falling back to a hidden textarea where the async clipboard is blocked; resolves true when it worked.
+// The textarea goes inside an open dialog, since everything outside one is inert.
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (err) {
+    const ta = Object.assign(document.createElement('textarea'), { value: text });
+    ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    (document.querySelector('dialog[open]') || document.body).appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (err2) {}
+    ta.remove();
+    return ok;
+  }
 }
 document.getElementById('copyEmail').addEventListener('click', async e => {
   const email = e.currentTarget.dataset.email;
-  let ok = false;
-  try { await navigator.clipboard.writeText(email); ok = true; } catch (err) {
-    const ta = Object.assign(document.createElement('textarea'), { value: email });
-    ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    try { ok = document.execCommand('copy'); } catch (err2) {}
-    ta.remove();
-  }
-  showToast(ok ? '<svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Copied!'
-               : `Copy failed. Email: ${email}`);
+  showToast(await copyText(email) ? COPIED : `Copy failed. Email: ${email}`);
+});
+document.getElementById('modalLinks').addEventListener('click', async e => {
+  const btn = e.target.closest('.modal-copy');
+  if (btn) showToast(await copyText(btn.dataset.copy) ? COPIED : `Copy failed. Link: ${btn.dataset.copy}`);
 });
 
 // ── Theme toggle (remembered in localStorage)
@@ -3140,16 +3456,21 @@ window.addEventListener('scroll', () => {
   });
 }, { passive: true });
 
-document.querySelectorAll('.btn-mag').forEach(btn => {
+// Magnetic buttons: they lean toward the pointer by a share (k) of its distance from their centre
+function magnetize(btn, k) {
   btn.addEventListener('mousemove', e => {
     const rect = btn.getBoundingClientRect();
-    btn.style.transform = `translate(${(e.clientX - rect.left - rect.width/2) * 0.18}px, ${(e.clientY - rect.top - rect.height/2) * 0.18}px)`;
+    btn.style.transform = `translate(${(e.clientX - rect.left - rect.width/2) * k}px, ${(e.clientY - rect.top - rect.height/2) * k}px)`;
   });
   btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
-});
+}
+document.querySelectorAll('.btn-mag').forEach(btn => magnetize(btn, 0.18));
 
 if (!reduceMotion && finePointer) {
-  document.querySelectorAll('.exp-card, .project-card, .conf-card').forEach(card => {
+  document.querySelectorAll('.c-btn, .showcase-more').forEach(btn => magnetize(btn, 0.14));
+  document.querySelectorAll('.showcase-arrow').forEach(btn => magnetize(btn, 0.3));
+  // the spotlight glow (see "Cursor spotlight" in the CSS) follows the pointer
+  document.querySelectorAll('.project-card, .project-showcase, .conf-card, .modal-inner').forEach(card => {
     card.addEventListener('mousemove', e => {
       const r = card.getBoundingClientRect();
       card.style.setProperty('--gx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
@@ -3157,6 +3478,91 @@ if (!reduceMotion && finePointer) {
     });
   });
 }
+// ── Command palette (⌘K / Ctrl+K, or the header's search button): jump to a section, feature a project, find an
+// event, or run an action. Typing filters by every word; ↑/↓ move, Enter runs, Esc closes.
+const cmdk = document.getElementById('cmdk'), cmdkInput = document.getElementById('cmdkInput');
+const cmdkList = document.getElementById('cmdkList'), cmdkEmpty = document.getElementById('cmdkEmpty');
+const siteEmail = document.getElementById('copyEmail').dataset.email;
+const CMDK_ITEMS = [
+  ...[...document.querySelectorAll('#primary-nav a')].map(a => ({ group: 'Sections', label: a.textContent.trim(), run: () => a.click() })),
+  ...projectCards.map(c => ({
+    group: 'Projects', label: c.querySelector('h3').textContent, hint: c.querySelector('.project-meta').textContent,
+    run: () => {
+      if (!inFilter(c)) document.querySelector('.filter-tab[data-filter="all"]').click();
+      featureProject(c);
+      bringShowcaseIntoView(true);
+      scEl('More').focus({ preventScroll: true });
+    },
+  })),
+  ...[...document.querySelectorAll('.conf-card')].map(c => ({
+    group: 'Events', label: c.querySelector('h3').textContent, hint: c.querySelector('.conf-loc').textContent,
+    run: () => { scrollToSection(c, 24); c.querySelector('.conf-img-wrap').focus({ preventScroll: true }); },
+  })),
+  { group: 'Actions', label: 'Copy email address', hint: siteEmail, run: async () => showToast(await copyText(siteEmail) ? COPIED : `Copy failed. Email: ${siteEmail}`) },
+  { group: 'Actions', label: 'Download resume', run: () => document.querySelector('.hero-btns a[download]').click() },
+  { group: 'Actions', label: 'Switch between light and dark mode', run: () => themeBtn.click() },
+];
+let cmdkMatches = [], cmdkActive = 0;
+function renderCmdk() {
+  const words = cmdkInput.value.toLowerCase().split(/\s+/).filter(Boolean);
+  cmdkMatches = CMDK_ITEMS.filter(it => { const hay = `${it.label} ${it.hint || ''} ${it.group}`.toLowerCase(); return words.every(w => hay.includes(w)); });
+  const rows = [];
+  let group = null;
+  cmdkMatches.forEach((it, i) => {
+    if (it.group !== group) {
+      group = it.group;
+      const h = document.createElement('li');
+      h.className = 'cmdk-group'; h.textContent = group; h.setAttribute('role', 'none'); h.setAttribute('aria-hidden', 'true');
+      rows.push(h);
+    }
+    const li = document.createElement('li');
+    li.className = 'cmdk-option'; li.id = 'cmdk-opt-' + i; li.setAttribute('role', 'option');
+    li.textContent = it.label;
+    if (it.hint) { const s = document.createElement('span'); s.textContent = it.hint; li.appendChild(s); }
+    li.addEventListener('mousemove', () => { if (cmdkActive !== i) setCmdkActive(i); });
+    li.addEventListener('click', () => runCmdk(i));
+    rows.push(li);
+  });
+  cmdkList.replaceChildren(...rows);
+  cmdkEmpty.hidden = cmdkMatches.length > 0;
+  setCmdkActive(0, true);
+}
+function setCmdkActive(i, reveal) {
+  cmdkActive = i;
+  cmdkList.querySelectorAll('.cmdk-option').forEach((o, n) => o.setAttribute('aria-selected', String(n === i)));
+  const opt = document.getElementById('cmdk-opt-' + i);
+  if (opt) cmdkInput.setAttribute('aria-activedescendant', opt.id); else cmdkInput.removeAttribute('aria-activedescendant');
+  if (opt && reveal) opt.scrollIntoView({ block: 'nearest' });
+}
+function runCmdk(i) {
+  const it = cmdkMatches[i];
+  if (!it) return;
+  cmdk.close();
+  document.documentElement.style.overflow = '';   // unlock now, so the action's scroll is not swallowed
+  it.run();
+}
+function openCmdk() {
+  if (document.querySelector('dialog[open]')) return;
+  closeMenu();
+  cmdkInput.value = '';
+  renderCmdk();
+  openDialog(cmdk);
+  cmdkInput.focus();
+}
+cmdkInput.addEventListener('input', renderCmdk);
+cmdkInput.addEventListener('keydown', e => {
+  const n = cmdkMatches.length;
+  if (e.key === 'ArrowDown' && n) { e.preventDefault(); setCmdkActive((cmdkActive + 1) % n, true); }
+  else if (e.key === 'ArrowUp' && n) { e.preventDefault(); setCmdkActive((cmdkActive - 1 + n) % n, true); }
+  else if (e.key === 'Enter') { e.preventDefault(); runCmdk(cmdkActive); }
+});
+document.getElementById('cmdkOpen').addEventListener('click', openCmdk);
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if (cmdk.open) cmdk.close(); else openCmdk();
+  }
+});
 </script>
 </body>
 </html>
