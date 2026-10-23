@@ -635,25 +635,32 @@
       margin-bottom: 8px;
     }
 
-    /* Stats: a large numeral and a small label on a thin brass rule; the back face is the same rule with the detail */
+    /* Stats: a large numeral and a small label under a thin brass line. On hover (or keyboard focus) the line sweeps
+       down to the card's bottom edge like a scan line, and the faces are clipped at its position: above the line the
+       back detail, below it the front stat, so the reveal follows the line exactly. Leaving runs it back up. */
     .stats-row { display: flex; gap: 28px; width: 100%; }
-    .stat-flip { flex: 1; perspective: 900px; height: 92px; }
-    .stat-flip-inner {
-      position: relative; width: 100%; height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.65s cubic-bezier(.34,1.2,.64,1);
+    .stat-flip { --scan: 0.3s ease-in-out; flex: 1; height: 92px; }
+    .stat-flip-inner { position: relative; width: 100%; height: 100%; }
+    .stat-flip-inner::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px; z-index: 1; pointer-events: none;
+      background: rgba(205,178,126,0.45);
+      transition: top var(--scan), background-color var(--scan), box-shadow var(--scan);
     }
-    .stat-flip:hover .stat-flip-inner, .stat-flip:focus-visible .stat-flip-inner { transform: rotateY(180deg); }
+    .stat-flip:hover .stat-flip-inner::before, .stat-flip:focus-visible .stat-flip-inner::before {
+      top: calc(100% - 1px); background: var(--brass-hi); box-shadow: 0 0 10px rgba(212,181,125,0.55);
+    }
     .stat-flip:focus-visible { outline-offset: 4px; border-radius: 2px; }
     .stat-face {
       position: absolute; inset: 0;
-      backface-visibility: hidden;
-      border-top: 1px solid rgba(205,178,126,0.45);
       display: flex; flex-direction: column;
       align-items: flex-start; justify-content: flex-start;
       padding: 14px 0 0;
+      clip-path: inset(0 0 0 0);
+      transition: clip-path var(--scan), opacity var(--scan), transform var(--scan);
     }
-    .stat-back { transform: rotateY(180deg); }
+    .stat-back { clip-path: inset(0 0 100% 0); opacity: 0; transform: translateY(-6px); }
+    .stat-flip:hover .stat-face:not(.stat-back), .stat-flip:focus-visible .stat-face:not(.stat-back) { clip-path: inset(100% 0 0 0); opacity: 0.2; transform: translateY(6px); }
+    .stat-flip:hover .stat-back, .stat-flip:focus-visible .stat-back { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
     .stat-num-big {
       font-family: 'Cormorant Garamond', serif;
       font-size: 42px; font-weight: 600;
@@ -818,7 +825,7 @@
     .timeline-progress, .timeline-dot { display: none; }
     .timeline-item { border-top: 1px solid var(--rule); }
     .exp-card {
-      display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: auto auto 1fr;
+      display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: auto auto auto 1fr;
       column-gap: 64px; padding: 44px 0 48px;
     }
     .exp-header, .exp-title { display: contents; }
@@ -826,7 +833,27 @@
     .exp-company { grid-column: 1; grid-row: 2; }
     .exp-location { grid-column: 1; grid-row: 3; }
     .exp-title h3 { grid-column: 2; grid-row: 1; }
-    .exp-bullets { grid-column: 2; grid-row: 2 / span 2; }
+    .exp-photo { grid-column: 1; grid-row: 4; }
+    .exp-bullets { grid-column: 2; grid-row: 2 / span 3; }
+    /* Photo under the place in the left column, in a framed mat: a 2px muted border (thinner snaps to 1px on screen),
+       4px of darkened mat, then the
+       full-colour photo in its own clipping box (so its 2% hover zoom never spills onto the mat). The whole frame is a
+       fixed 128px tall and never moves the bullets. On hover the border warms to soft gold. --pos (inline) sets each
+       crop's vertical focal point. */
+    .exp-photo {
+      --frame: rgba(14,31,22,0.18); --frame-hover: rgba(184,150,92,0.6); --mat: rgba(14,31,22,0.06);
+      margin-top: 16px; height: 128px; padding: 4px; border-radius: 2px;
+      border: calc(2px / var(--content-scale)) solid var(--frame); background: var(--mat);   /* 2px on screen at any content zoom */
+      transition: border-color 0.3s ease;
+    }
+    [data-theme="dark"] .exp-photo { --frame: rgba(255,255,255,0.15); --frame-hover: rgba(212,181,125,0.6); --mat: rgba(0,0,0,0.4); }
+    .exp-photo-clip { display: block; height: 100%; overflow: hidden; border-radius: 1px; background: var(--green-800); }
+    .exp-photo img {
+      display: block; width: 100%; height: 100%; object-fit: cover; object-position: center var(--pos, 40%);
+      transition: transform 0.3s ease;
+    }
+    .exp-photo:hover { border-color: var(--frame-hover); }
+    .exp-photo:hover img { transform: scale(1.02); }
     .exp-title h3 { font-family: 'Cormorant Garamond', serif; font-size: var(--fs-h3-lg); color: var(--ink); margin-bottom: 18px; font-weight: 600; line-height: 1.15; }
     .exp-company { font-size: 13.5px; color: var(--ink); font-weight: 500; margin-bottom: 4px; letter-spacing: 0.2px; line-height: 1.5; }
     .exp-company a {
@@ -1673,7 +1700,8 @@
       .exp-title h3 { grid-column: 1; grid-row: 2; margin-bottom: 6px; }
       .exp-company { grid-row: 3; }
       .exp-location { grid-row: 4; }
-      .exp-bullets { grid-column: 1; grid-row: 5; margin-top: 18px; }
+      .exp-photo { grid-row: 5; height: 144px; }
+      .exp-bullets { grid-column: 1; grid-row: 6; margin-top: 18px; }
       /* Project rows: thumbnail, title and meta on top; the line and tags full width below */
       .project-card {
         grid-template-columns: 64px minmax(0, 1fr) 16px;
@@ -2048,6 +2076,7 @@
               <h3>Asset Management Summer Analyst</h3>
               <p class="exp-company"><a href="https://communityp.com" target="_blank" rel="noopener" aria-label="Community Preservation Corporation website (opens in a new tab)">Community Preservation <span class="nowrap">Corporation <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></span></a></p>
               <p class="exp-location">New York, NY</p>
+              <div class="exp-photo" style="--pos: 35%"><span class="exp-photo-clip"><img src="Assets/img/cpc-internship-640.jpg" width="640" height="526" loading="lazy" decoding="async" alt="Angelina Ponce in front of the illuminated CPC logo at Community Preservation Corporation"></span></div>
             </div>
             <div class="exp-date">Summer 2026</div>
           </div>
@@ -2066,6 +2095,7 @@
               <h3>Private Equity Summer Analyst</h3>
               <p class="exp-company"><a href="https://brightshore.com" target="_blank" rel="noopener" aria-label="Brightshore Capital website (opens in a new tab)">Brightshore <span class="nowrap">Capital <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></span></a> (formerly GTIS Partners)</p>
               <p class="exp-location">New York, NY</p>
+              <div class="exp-photo" style="--pos: 28%"><span class="exp-photo-clip"><img src="Assets/img/gtis-internship-640.jpg" width="640" height="562" loading="lazy" decoding="async" alt="Angelina Ponce beside the GTIS Partners sign at the firm's office"></span></div>
             </div>
             <div class="exp-date">Summer 2025</div>
           </div>
@@ -2085,6 +2115,7 @@
               <h3>Co-Founder &amp; President</h3>
               <p class="exp-company"><a href="https://stackhacksbu.com/" target="_blank" rel="noopener noreferrer" aria-label="StackHacks (opens in a new tab)">StackHacks <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></a></p>
               <p class="exp-location">Binghamton University</p>
+              <div class="exp-photo" style="--pos: 42%"><span class="exp-photo-clip"><img src="Assets/img/stackhacks-leadership-640.jpg" width="640" height="448" loading="lazy" decoding="async" alt="Angelina Ponce with the StackHacks executive board at the end-of-year banquet"></span></div>
             </div>
             <div class="exp-date">2024 – Present</div>
           </div>
@@ -2522,13 +2553,13 @@ const LOGOS = {
 // Each evidence bullet links to its proof: href is an anchor on the page, project is a project card's data-id (opens its modal).
 const FIT_ROLES = [
   {
-    title: 'Strategy & Operations',
-    icon: 'layers',
-    pitch: 'Portfolio monitoring, cost analysis and pipeline organization, plus building and running a student organization.',
+    title: 'Asset & Wealth Management',
+    icon: 'trending-up',
+    pitch: 'Asset management experience backed by equity research and finance training.',
     evidence: [
-      { text: 'Monitored a $353M, 10,000+ unit portfolio with monthly DSCR analysis and watchlist tracking (CPC)', href: '#exp-cpc' },
-      { text: 'Organized and categorized a deal pipeline and ran a Microsoft licensing analysis projecting ~15% cost savings (Brightshore Capital)', href: '#exp-brightshore' },
-      { text: 'Manage a 10-member executive board and built an internship program from scratch (StackHacks)', href: '#exp-stackhacks' },
+      { text: 'Asset Management Summer Analyst at Community Preservation Corporation', href: '#exp-cpc' },
+      { text: 'Lantheus (LNTH) equity research: WACC 9.8%, $130.00 price target', project: 'equity' },
+      { text: 'SEO Careers Alternative Investment Banking track and the BofA M&A Competition', href: '#skills' },
     ],
   },
   {
@@ -2542,13 +2573,13 @@ const FIT_ROLES = [
     ],
   },
   {
-    title: 'Asset & Wealth Management',
-    icon: 'trending-up',
-    pitch: 'Asset management experience backed by equity research and finance training.',
+    title: 'Strategy & Operations',
+    icon: 'layers',
+    pitch: 'Portfolio monitoring, cost analysis and pipeline organization, plus building and running a student organization.',
     evidence: [
-      { text: 'Asset Management Summer Analyst at Community Preservation Corporation', href: '#exp-cpc' },
-      { text: 'Lantheus (LNTH) equity research: WACC 9.8%, $130.00 price target', project: 'equity' },
-      { text: 'SEO Careers Alternative Investment Banking track and the BofA M&A Competition', href: '#skills' },
+      { text: 'Monitored a $353M, 10,000+ unit portfolio with monthly DSCR analysis and watchlist tracking (CPC)', href: '#exp-cpc' },
+      { text: 'Organized and categorized a deal pipeline and ran a Microsoft licensing analysis projecting ~15% cost savings (Brightshore Capital)', href: '#exp-brightshore' },
+      { text: 'Manage a 10-member executive board and built an internship program from scratch (StackHacks)', href: '#exp-stackhacks' },
     ],
   },
 ];
