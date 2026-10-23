@@ -825,7 +825,7 @@
     .timeline-progress, .timeline-dot { display: none; }
     .timeline-item { border-top: 1px solid var(--rule); }
     .exp-card {
-      display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: auto auto auto 1fr;
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); grid-template-rows: auto auto auto 1fr;
       column-gap: 64px; padding: 44px 0 48px;
     }
     .exp-header, .exp-title { display: contents; }
@@ -836,18 +836,27 @@
     .exp-photo { grid-column: 1; grid-row: 4; }
     .exp-bullets { grid-column: 2; grid-row: 2 / span 3; }
     /* Photo under the place in the left column, in a framed mat: a 2px muted border (thinner snaps to 1px on screen),
-       4px of darkened mat, then the
-       full-colour photo in its own clipping box (so its 2% hover zoom never spills onto the mat). The whole frame is a
-       fixed 128px tall and never moves the bullets. On hover the border warms to soft gold. --pos (inline) sets each
-       crop's vertical focal point. */
+       4px of darkened mat, then the full-colour photo in its own clipping box (so its 2% hover zoom never spills onto
+       the mat). The frame is 128px tall and at most 220px wide (full width on phones), so it never outweighs the bullets. It is a button that opens
+       the photo in the lightbox; on hover or focus the border warms to soft gold and an "Enlarge" cue fades in.
+       --pos (inline) sets each crop's vertical focal point. */
     .exp-photo {
       --frame: rgba(14,31,22,0.18); --frame-hover: rgba(184,150,92,0.6); --mat: rgba(14,31,22,0.06);
-      margin-top: 16px; height: 128px; padding: 4px; border-radius: 2px;
+      display: block; width: 100%; max-width: 220px; margin-top: 16px; height: 128px; padding: 4px; border-radius: 2px;
+      font: inherit; color: inherit; text-align: inherit; cursor: zoom-in;
       border: calc(2px / var(--content-scale)) solid var(--frame); background: var(--mat);   /* 2px on screen at any content zoom */
       transition: border-color 0.3s ease;
     }
     [data-theme="dark"] .exp-photo { --frame: rgba(255,255,255,0.15); --frame-hover: rgba(212,181,125,0.6); --mat: rgba(0,0,0,0.4); }
-    .exp-photo-clip { display: block; height: 100%; overflow: hidden; border-radius: 1px; background: var(--green-800); }
+    .exp-photo-clip { position: relative; display: block; height: 100%; overflow: hidden; border-radius: 1px; background: var(--green-800); }
+    .exp-photo-zoom {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: rgba(7,16,11,0.45); color: var(--cream);
+      font: 600 10.5px 'Outfit', sans-serif; letter-spacing: 1.4px; text-transform: uppercase;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .exp-photo-zoom .i { width: 16px; height: 16px; }
+    .exp-photo:hover .exp-photo-zoom, .exp-photo:focus-visible .exp-photo-zoom { opacity: 1; }
     .exp-photo img {
       display: block; width: 100%; height: 100%; object-fit: cover; object-position: center var(--pos, 40%);
       transition: transform 0.3s ease;
@@ -873,7 +882,7 @@
       font-size: 11px; font-weight: 500; white-space: nowrap;
       font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; text-transform: uppercase;
     }
-    .exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; max-width: 680px; }
+    .exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }
     .exp-bullets li {
       font-size: 13.5px; line-height: 1.85;
       color: var(--ink-2);
@@ -1483,7 +1492,8 @@
       box-shadow: 0 40px 120px rgba(0,0,0,0.35);
       overflow: auto; overscroll-behavior: contain;
     }
-    .modal::backdrop, .lightbox::backdrop { background: rgba(7,16,11,0.76); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .modal::backdrop { background: rgba(7,16,11,0.76); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .lightbox::backdrop { background: rgba(0,0,0,0.9); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
     .modal[open] { animation: modalIn 0.42s cubic-bezier(.22,1,.36,1); }
     .modal[open]::backdrop, .lightbox[open]::backdrop { animation: fadeBackdrop 0.3s ease; }
     @keyframes modalIn { from { opacity: 0; transform: translateY(18px) scale(0.98); } to { opacity: 1; transform: none; } }
@@ -1596,6 +1606,7 @@
     .lightbox-prev { left: 24px; top: 50%; transform: translateY(-50%); }
     .lightbox-next { right: 24px; top: 50%; transform: translateY(-50%); }
     .lightbox-close { right: 24px; top: 24px; }
+    .lightbox-btn[hidden] { display: none; }
 
     /* ─── DARK THEME (the default) ─── the page and its bands turn deep green; cards, the modal and tags stay cream */
     [data-theme="dark"] {
@@ -1700,7 +1711,8 @@
       .exp-title h3 { grid-column: 1; grid-row: 2; margin-bottom: 6px; }
       .exp-company { grid-row: 3; }
       .exp-location { grid-row: 4; }
-      .exp-photo { grid-row: 5; height: 144px; }
+      .exp-photo { grid-row: 5; max-width: none; }   /* phones: the column's full width, same 128px height */
+      .exp-photo-zoom { display: none; }   /* touch: no hover; tapping the photo opens it */
       .exp-bullets { grid-column: 1; grid-row: 6; margin-top: 18px; }
       /* Project rows: thumbnail, title and meta on top; the line and tags full width below */
       .project-card {
@@ -2076,7 +2088,7 @@
               <h3>Asset Management Summer Analyst</h3>
               <p class="exp-company"><a href="https://communityp.com" target="_blank" rel="noopener" aria-label="Community Preservation Corporation website (opens in a new tab)">Community Preservation <span class="nowrap">Corporation <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></span></a></p>
               <p class="exp-location">New York, NY</p>
-              <div class="exp-photo" style="--pos: 35%"><span class="exp-photo-clip"><img src="Assets/img/cpc-internship-640.jpg" width="640" height="526" loading="lazy" decoding="async" alt="Angelina Ponce in front of the illuminated CPC logo at Community Preservation Corporation"></span></div>
+              <button type="button" class="exp-photo" style="--pos: 35%" aria-label="View larger: Angelina Ponce in front of the illuminated CPC logo at Community Preservation Corporation"><span class="exp-photo-clip"><img src="Assets/img/cpc-internship-640.jpg" width="640" height="526" loading="lazy" decoding="async" data-full="Assets/img/cpc-internship-1600.jpg" alt="Angelina Ponce in front of the illuminated CPC logo at Community Preservation Corporation"><span class="exp-photo-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg>Enlarge</span></span></button>
             </div>
             <div class="exp-date">Summer 2026</div>
           </div>
@@ -2095,7 +2107,7 @@
               <h3>Private Equity Summer Analyst</h3>
               <p class="exp-company"><a href="https://brightshore.com" target="_blank" rel="noopener" aria-label="Brightshore Capital website (opens in a new tab)">Brightshore <span class="nowrap">Capital <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></span></a> (formerly GTIS Partners)</p>
               <p class="exp-location">New York, NY</p>
-              <div class="exp-photo" style="--pos: 28%"><span class="exp-photo-clip"><img src="Assets/img/gtis-internship-640.jpg" width="640" height="562" loading="lazy" decoding="async" alt="Angelina Ponce beside the GTIS Partners sign at the firm's office"></span></div>
+              <button type="button" class="exp-photo" style="--pos: 28%" aria-label="View larger: Angelina Ponce beside the GTIS Partners sign at the firm's office"><span class="exp-photo-clip"><img src="Assets/img/gtis-internship-640.jpg" width="640" height="562" loading="lazy" decoding="async" data-full="Assets/img/gtis-internship-1150.jpg" alt="Angelina Ponce beside the GTIS Partners sign at the firm's office"><span class="exp-photo-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg>Enlarge</span></span></button>
             </div>
             <div class="exp-date">Summer 2025</div>
           </div>
@@ -2115,7 +2127,7 @@
               <h3>Co-Founder &amp; President</h3>
               <p class="exp-company"><a href="https://stackhacksbu.com/" target="_blank" rel="noopener noreferrer" aria-label="StackHacks (opens in a new tab)">StackHacks <svg class="i" aria-hidden="true"><use href="#i-external-link"/></svg></a></p>
               <p class="exp-location">Binghamton University</p>
-              <div class="exp-photo" style="--pos: 42%"><span class="exp-photo-clip"><img src="Assets/img/stackhacks-leadership-640.jpg" width="640" height="448" loading="lazy" decoding="async" alt="Angelina Ponce with the StackHacks executive board at the end-of-year banquet"></span></div>
+              <button type="button" class="exp-photo" style="--pos: 42%" aria-label="View larger: Angelina Ponce with the StackHacks executive board at the end-of-year banquet"><span class="exp-photo-clip"><img src="Assets/img/stackhacks-leadership-640.jpg" width="640" height="448" loading="lazy" decoding="async" data-full="Assets/img/stackhacks-leadership-1241.jpg" alt="Angelina Ponce with the StackHacks executive board at the end-of-year banquet"><span class="exp-photo-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg>Enlarge</span></span></button>
             </div>
             <div class="exp-date">2024 – Present</div>
           </div>
@@ -3366,6 +3378,7 @@ document.querySelectorAll('.project-card p:not(.project-meta), .conf-body p:not(
 
 // ── Conference lightbox
 const lightbox = document.getElementById('lightbox');
+const confShots = [...document.querySelectorAll('.conf-img-wrap')];
 // A photo that fails to load becomes a quiet placeholder and drops out of the lightbox
 document.querySelectorAll('.conf-img-wrap img').forEach(img => {
   const missing = () => {
@@ -3377,20 +3390,30 @@ document.querySelectorAll('.conf-img-wrap img').forEach(img => {
   };
   if (img.complete && img.naturalWidth === 0) setTimeout(missing); else img.addEventListener('error', missing);
 });
-const confShots = [...document.querySelectorAll('.conf-img-wrap')];
-let shotIdx = 0;
+// The lightbox serves two galleries, each its own set (the arrows and the count stay within the one that was opened):
+// conference photos, captioned with the event and place, and Experience photos, with the company and the role
+const tidy = el => el.textContent.replace(/\s+/g, ' ').trim();
+const galleries = [
+  { shots: confShots, caption: btn => { const c = btn.closest('.conf-card'); return [tidy(c.querySelector('h3')), tidy(c.querySelector('.conf-loc'))]; } },
+  { shots: [...document.querySelectorAll('.exp-photo')], caption: btn => { const c = btn.closest('.exp-card'); return [tidy(c.querySelector('.exp-company')), tidy(c.querySelector('h3'))]; } },
+];
+let gallery = galleries[0], shotIdx = 0;
 function showShot(i) {
-  shotIdx = (i + confShots.length) % confShots.length;
-  const btn = confShots[shotIdx], img = btn.querySelector('img'), card = btn.closest('.conf-card');
+  const shots = gallery.shots;
+  shotIdx = (i + shots.length) % shots.length;
+  const btn = shots[shotIdx], img = btn.querySelector('img'), [title, loc] = gallery.caption(btn);
   const big = document.getElementById('lightboxImg');
   big.src = img.dataset.full || img.currentSrc || img.src;
   big.alt = img.alt;
   big.classList.remove('swap'); void big.offsetWidth; big.classList.add('swap');
-  document.getElementById('lightboxTitle').textContent = card.querySelector('h3').textContent;
-  document.getElementById('lightboxLoc').textContent = card.querySelector('.conf-loc').textContent;
-  document.getElementById('lightboxCount').textContent = `${shotIdx + 1} / ${confShots.length}`;
+  document.getElementById('lightboxTitle').textContent = title;
+  document.getElementById('lightboxLoc').textContent = loc;
+  document.getElementById('lightboxCount').textContent = `${shotIdx + 1} / ${shots.length}`;
+  document.getElementById('lightboxPrev').hidden = document.getElementById('lightboxNext').hidden = shots.length < 2;
 }
-confShots.forEach((btn, i) => btn.addEventListener('click', () => { showShot(i); openDialog(lightbox); lightbox.lastBtn = btn; }));
+galleries.forEach(g => g.shots.forEach(btn => btn.addEventListener('click', () => {
+  gallery = g; showShot(g.shots.indexOf(btn)); openDialog(lightbox); lightbox.lastBtn = btn;
+})));
 document.getElementById('lightboxPrev').addEventListener('click', () => showShot(shotIdx - 1));
 document.getElementById('lightboxNext').addEventListener('click', () => showShot(shotIdx + 1));
 lightbox.addEventListener('keydown', e => {
