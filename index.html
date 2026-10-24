@@ -1242,15 +1242,17 @@
       letter-spacing: 1px; color: var(--brass-ink);
     }
     .conf-summary { max-width: none; }
-    /* Featured event: the grid's first item, spanning all its columns: a media panel on the left (45%), the usual card
-       body on the right (55%); stacked under 768px. The panel holds a logo now (.is-logo: centred on deep green, no
-       lightbox); to show an event photo instead, swap the div for the <button class="conf-img-wrap"> markup the other
-       cards use, and the frame keeps its size. */
+    /* Featured event: the grid's first item, spanning all its columns: the image on the left (45%), the usual card
+       body on the right (55%); stacked under 768px. The frame takes the card's height, so the image is laid over it
+       rather than setting it. */
     .conf-feature { grid-column: 1 / -1; display: grid; grid-template-columns: 45fr 55fr; }
     .conf-feature .conf-img-wrap { aspect-ratio: auto; height: 100%; min-height: 300px; }
-    .conf-img-wrap.is-logo { cursor: default; display: flex; align-items: center; justify-content: center; }
-    .conf-img-wrap.is-logo::before, .conf-img-wrap.is-logo::after { display: none; }
-    .conf-logo { width: min(240px, 62%); height: auto; }
+    .conf-feature .conf-img { position: absolute; inset: 0; }
+    /* Flat artwork rather than a photo: shown whole (contain) on its own background colour (--shot-bg), without the
+       photo filter, wash and gradient, which would tint the artwork apart from the frame around it */
+    .conf-img-wrap[data-shot-art] { background-color: var(--shot-bg); }
+    .conf-img-wrap[data-shot-art] .conf-img { object-fit: contain; filter: none; }
+    .conf-img-wrap[data-shot-art]::before, .conf-img-wrap[data-shot-art]::after { display: none; }
     .conf-feature .conf-body { padding: 34px 40px 32px; }
     .conf-feature .conf-body h3 { font-size: 26px; }
     .conf-upcoming {
@@ -2381,7 +2383,7 @@
     </div>
     <div class="conf-grid">
       <div class="conf-card conf-feature reveal">
-        <div class="conf-img-wrap is-logo"><img src="public/logos/anthropic-ivory.svg" width="590" height="68" decoding="async" alt="Anthropic" class="conf-logo"></div>
+        <button type="button" class="conf-img-wrap" data-shot-art style="--shot-bg: #d77657" aria-label="View larger: Code with Claude: Women in AI Hackathon by Anthropic"><img src="Assets/img/Anthropic.webp" width="1200" height="800" loading="lazy" decoding="async" data-full="Assets/img/Anthropic.webp" alt="Code with Claude: Women in AI Hackathon by Anthropic" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
         <div class="conf-body">
           <span class="conf-upcoming">Upcoming · Nov 2026</span>
           <div class="conf-icon-row"><div class="conf-icon"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg></div><div><h3>Code with Claude: Women in AI Hackathon</h3><p class="conf-loc">San Francisco, California</p></div></div>
@@ -3410,7 +3412,7 @@ document.querySelectorAll('.project-card p:not(.project-meta), .conf-body p:not(
 
 // ── Conference lightbox
 const lightbox = document.getElementById('lightbox');
-const confShots = [...document.querySelectorAll('.conf-img-wrap:not(.is-logo)')];
+const confShots = [...document.querySelectorAll('.conf-img-wrap')];
 // A photo that fails to load becomes a quiet placeholder and drops out of the lightbox
 document.querySelectorAll('.conf-img-wrap img').forEach(img => {
   const missing = () => {
@@ -3418,7 +3420,7 @@ document.querySelectorAll('.conf-img-wrap img').forEach(img => {
     btn.classList.add('is-missing');
     btn.disabled = true;
     btn.setAttribute('aria-hidden', 'true');
-    if (confShots.includes(btn)) confShots.splice(confShots.indexOf(btn), 1);
+    confShots.splice(confShots.indexOf(btn), 1);
   };
   if (img.complete && img.naturalWidth === 0) setTimeout(missing); else img.addEventListener('error', missing);
 });
@@ -3616,7 +3618,7 @@ const CMDK_ITEMS = [
   })),
   ...[...document.querySelectorAll('.conf-card')].map(c => ({
     group: 'Events', label: c.querySelector('h3').textContent, hint: c.querySelector('.conf-loc').textContent,
-    run: () => { scrollToSection(c, 24); c.querySelector('button.conf-img-wrap, .conf-more:not([hidden])')?.focus({ preventScroll: true }); },
+    run: () => { scrollToSection(c, 24); c.querySelector('.conf-img-wrap').focus({ preventScroll: true }); },
   })),
   { group: 'Actions', label: 'Copy email address', hint: siteEmail, run: async () => showToast(await copyText(siteEmail) ? COPIED : `Copy failed. Email: ${siteEmail}`) },
   { group: 'Actions', label: 'Download resume', run: () => document.querySelector('.hero-btns a[download]').click() },
