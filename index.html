@@ -693,7 +693,7 @@
       -webkit-mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
               mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
     }
-    .logo-strip.is-marquee .logo-track { display: flex; width: max-content; animation: logoDrift 50s linear infinite; will-change: transform; }
+    .logo-strip.is-marquee .logo-track { display: flex; width: max-content; animation: logoDrift 35s linear infinite; will-change: transform; }
     .logo-strip.is-marquee .logo-row { display: flex; flex-wrap: nowrap; flex-shrink: 0; padding-right: var(--logo-gap); }
     .logo-strip.is-marquee .logo-marquee:hover .logo-track,
     .logo-strip.is-marquee .logo-marquee:focus-within .logo-track { animation-play-state: paused; }
@@ -2903,18 +2903,19 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
   const track = marquee.querySelector('.logo-track'), set = track.querySelector('.logo-row');
   strip.classList.add('is-marquee');
   marquee.tabIndex = 0;   // so keyboard users can pause it by focusing it
-  const LOGO_SPEED = 18;   // on-screen px per second
+  const LOGO_SPEED = 26;   // on-screen px per second
   let lastW = 0;
   const fill = () => {
     // The set gets a touch of extra end padding so its width on screen (after the page's content zoom) is a whole
-    // number of pixels: the loop then wraps exactly onto a copy, with no sub-pixel shimmer at the seam.
+    // number of pixels: the loop then wraps exactly onto a copy, with no sub-pixel shimmer at the seam. The width is
+    // measured unrounded (offsetWidth rounds, which left the copies up to a fraction of a pixel off the loop point).
     set.style.paddingRight = '';
-    const natural = set.offsetWidth, boxW = marquee.offsetWidth;   // layout px
-    if (!natural) return;
     const zoom = set.currentCSSZoom || 1;
-    let setW = natural;
+    const natural = set.getBoundingClientRect().width / zoom, boxW = marquee.offsetWidth;   // layout px
+    if (!natural) return;
+    let setW = Math.ceil(natural - 0.001);
     while (setW < natural + 40 && Math.abs(setW * zoom - Math.round(setW * zoom)) > 0.001) setW++;
-    if (setW !== natural) set.style.paddingRight = `calc(var(--logo-gap) + ${setW - natural}px)`;
+    if (setW - natural > 0.001) set.style.paddingRight = `calc(var(--logo-gap) + ${(setW - natural).toFixed(4)}px)`;
     if (setW === lastW) return;
     lastW = setW;
     track.querySelectorAll('.logo-row.is-copy').forEach(n => n.remove());
