@@ -1242,6 +1242,21 @@
       letter-spacing: 1px; color: var(--brass-ink);
     }
     .conf-summary { max-width: none; }
+    /* Featured event: the grid's first item, spanning all its columns: a media panel on the left (45%), the usual card
+       body on the right (55%); stacked under 768px. The panel holds a logo now (.is-logo: centred on deep green, no
+       lightbox); to show an event photo instead, swap the div for the <button class="conf-img-wrap"> markup the other
+       cards use, and the frame keeps its size. */
+    .conf-feature { grid-column: 1 / -1; display: grid; grid-template-columns: 45fr 55fr; }
+    .conf-feature .conf-img-wrap { aspect-ratio: auto; height: 100%; min-height: 300px; }
+    .conf-img-wrap.is-logo { cursor: default; display: flex; align-items: center; justify-content: center; }
+    .conf-img-wrap.is-logo::before, .conf-img-wrap.is-logo::after { display: none; }
+    .conf-logo { width: min(240px, 62%); height: auto; }
+    .conf-feature .conf-body { padding: 34px 40px 32px; }
+    .conf-feature .conf-body h3 { font-size: 26px; }
+    .conf-upcoming {
+      margin-bottom: 18px;
+      font: 600 10.5px 'Outfit', sans-serif; letter-spacing: 2px; text-transform: uppercase; color: var(--brass-ink);
+    }
 
 
     /* Education: an open panel on the page itself, edged by one hairline with sharp corners; in dark mode the text
@@ -1733,6 +1748,10 @@
       .showcase-dot[aria-pressed="true"]::before { width: 18px; }
       .conf-grid { grid-template-columns: minmax(0, 1fr); }
       .conf-body { padding: 22px 22px 24px; }
+      .conf-feature { grid-template-columns: minmax(0, 1fr); }
+      .conf-feature .conf-img-wrap { aspect-ratio: 16 / 10; height: auto; min-height: 0; }
+      .conf-feature .conf-body { padding: 22px 22px 24px; }
+      .conf-feature .conf-body h3 { font-size: 23px; }
       .skill-group { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
       .edu-card { padding: 34px 26px; gap: 36px; margin-top: 44px; }
       .hero-right { padding: 48px 24px 64px; }
@@ -2358,9 +2377,18 @@
     <div class="reveal">
       <div class="section-label">Conferences &amp; Events</div>
       <h2 class="section-title">Engaging with the<br><em>tech &amp; finance community</em></h2>
-      <p class="section-sub conf-summary">6 events across HackMIT, YHack, ColorStack, ALPFA, Harvard WECode, and Women in Finance.</p>
+      <p class="section-sub conf-summary">7 events across Anthropic, HackMIT, YHack, ColorStack, ALPFA, Harvard WECode, and Women in Finance.</p>
     </div>
     <div class="conf-grid">
+      <div class="conf-card conf-feature reveal">
+        <div class="conf-img-wrap is-logo"><img src="public/logos/anthropic-ivory.svg" width="590" height="68" decoding="async" alt="Anthropic" class="conf-logo"></div>
+        <div class="conf-body">
+          <span class="conf-upcoming">Upcoming · Nov 2026</span>
+          <div class="conf-icon-row"><div class="conf-icon"><svg class="i" aria-hidden="true"><use href="#i-code"/></svg></div><div><h3>Code with Claude: Women in AI Hackathon</h3><p class="conf-loc">San Francisco, California</p></div></div>
+          <p>Selected by Anthropic for Code with Claude, a one-day build event for women in tech hosted by Anthropic. Building with Claude Code alongside Anthropic mentors on challenge tracks addressing real-world issues affecting women, with lightning talks from Anthropic teams and a final team pitch to Anthropic judges.</p>
+          <span class="conf-badge">2026</span>
+        </div>
+      </div>
       <div class="conf-card reveal reveal-delay-1">
         <button type="button" class="conf-img-wrap" aria-label="View larger: Photo from HackMIT"><img src="Assets/img/hackmit-photo-800.jpg" srcset="Assets/img/hackmit-photo-800.jpg 800w, Assets/img/hackmit-photo-1600.jpg 1600w" sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 420px" width="800" height="449" loading="lazy" decoding="async" data-full="Assets/img/hackmit-photo-1600.jpg" alt="Photo from HackMIT" class="conf-img"><span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span></button>
         <div class="conf-body">
@@ -2876,7 +2904,7 @@ sideDots.forEach(d => {
 // Scroll reveal: grid items stagger by column; once an item has finished entering, its reveal
 // classes are removed so its own hover transitions run without the entrance delay.
 document.querySelectorAll('.projects-grid, .conf-grid, .value-grid').forEach(grid => {
-  [...grid.children].forEach((el, i) => {
+  [...grid.children].filter(el => !el.classList.contains('conf-feature')).forEach((el, i) => {   // the full-width feature enters on its own
     el.classList.add('reveal');
     el.classList.remove('reveal-delay-1', 'reveal-delay-2', 'reveal-delay-3', 'reveal-delay-4', 'reveal-delay-5');
     el.style.setProperty('--d', (i % 3) * 90 + 'ms');
@@ -3381,7 +3409,7 @@ document.querySelectorAll('.project-card p:not(.project-meta), .conf-body p:not(
 
 // ── Conference lightbox
 const lightbox = document.getElementById('lightbox');
-const confShots = [...document.querySelectorAll('.conf-img-wrap')];
+const confShots = [...document.querySelectorAll('.conf-img-wrap:not(.is-logo)')];
 // A photo that fails to load becomes a quiet placeholder and drops out of the lightbox
 document.querySelectorAll('.conf-img-wrap img').forEach(img => {
   const missing = () => {
@@ -3389,7 +3417,7 @@ document.querySelectorAll('.conf-img-wrap img').forEach(img => {
     btn.classList.add('is-missing');
     btn.disabled = true;
     btn.setAttribute('aria-hidden', 'true');
-    confShots.splice(confShots.indexOf(btn), 1);
+    if (confShots.includes(btn)) confShots.splice(confShots.indexOf(btn), 1);
   };
   if (img.complete && img.naturalWidth === 0) setTimeout(missing); else img.addEventListener('error', missing);
 });
@@ -3587,7 +3615,7 @@ const CMDK_ITEMS = [
   })),
   ...[...document.querySelectorAll('.conf-card')].map(c => ({
     group: 'Events', label: c.querySelector('h3').textContent, hint: c.querySelector('.conf-loc').textContent,
-    run: () => { scrollToSection(c, 24); c.querySelector('.conf-img-wrap').focus({ preventScroll: true }); },
+    run: () => { scrollToSection(c, 24); c.querySelector('button.conf-img-wrap, .conf-more:not([hidden])')?.focus({ preventScroll: true }); },
   })),
   { group: 'Actions', label: 'Copy email address', hint: siteEmail, run: async () => showToast(await copyText(siteEmail) ? COPIED : `Copy failed. Email: ${siteEmail}`) },
   { group: 'Actions', label: 'Download resume', run: () => document.querySelector('.hero-btns a[download]').click() },

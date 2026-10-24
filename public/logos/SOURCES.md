@@ -44,3 +44,4 @@ Downloaded 2026-10-24 from Anthropic's official press kit, byte-for-byte as serv
 | File | Source | Notes |
 |---|---|---|
 | anthropic.svg | https://www.anthropic.com/press-kit (redirects to https://www-cdn.anthropic.com/ae59ca4ca194dac9c9dc3bc78c5829468cb0e8af.zip), file `Anthropic media resources/Anthropic logos/Anthropic logos/1 Anthropic logo/SVG/Anthropic logo - Slate.svg` | The Anthropic wordmark, 590×68 SVG with a viewBox, one path filled #141413 and no background (transparent). The strip tints it with CSS like the others. |
+| anthropic-ivory.svg | Same press kit zip, file `Anthropic media resources/Anthropic logos/Anthropic logos/1 Anthropic logo/SVG/Anthropic logo - Ivory.svg` | The same wordmark in Anthropic's light Ivory (#FAF9F5), 590×68 SVG, transparent. Shown untinted on the deep-green panel of the featured Conferences card. |
