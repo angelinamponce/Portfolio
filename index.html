@@ -2932,7 +2932,7 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
   strip.classList.add('is-marquee');
   marquee.tabIndex = 0;   // so keyboard users can pause it by focusing it
   const LOGO_SPEED = 26;   // on-screen px per second
-  let lastW = 0;
+  let lastKey = '';   // the set as last copied (its markup and padding): copies are rebuilt whenever it changes
   const fill = () => {
     // The set gets a touch of extra end padding so its width on screen (after the page's content zoom) is a whole
     // number of pixels: the loop then wraps exactly onto a copy, with no sub-pixel shimmer at the seam. The width is
@@ -2944,8 +2944,9 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
     let setW = Math.ceil(natural - 0.001);
     while (setW < natural + 40 && Math.abs(setW * zoom - Math.round(setW * zoom)) > 0.001) setW++;
     if (setW - natural > 0.001) set.style.paddingRight = `calc(var(--logo-gap) + ${(setW - natural).toFixed(4)}px)`;
-    if (setW === lastW) return;
-    lastW = setW;
+    const key = set.outerHTML;
+    if (key === lastKey) return;
+    lastKey = key;
     track.querySelectorAll('.logo-row.is-copy').forEach(n => n.remove());
     for (let i = 0, n = Math.max(1, Math.ceil(boxW / setW)); i < n; i++) {
       const copy = set.cloneNode(true);
@@ -2956,7 +2957,7 @@ document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
     track.style.animationDuration = (setW * zoom / LOGO_SPEED).toFixed(2) + 's';   // same speed however many logos there are
   };
   new ResizeObserver(fill).observe(set);
-  new ResizeObserver(() => { lastW = 0; fill(); }).observe(marquee);
+  new ResizeObserver(() => { lastKey = ''; fill(); }).observe(marquee);
   fill();
 })();
 
