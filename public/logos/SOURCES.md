@@ -36,3 +36,11 @@ others. alpfa.png (above) is shared with the Leadership list.
 | seo-career.png | https://career.seo-usa.org/wp-content/uploads/2022/04/SEO-career-red-black-website-logo.png | "SEO Career" header wordmark of career.seo-usa.org, 257×40 PNG, transparent. |
 | shpe-wordmark.png | https://shpe.org/wp-content/uploads/2022/06/shpe-logo.png | Header logo of shpe.org (mark, wordmark and "Leading Hispanics in STEM" tagline), 681×211 PNG, transparent. |
 | wecode.png | https://cdn.evbuc.com/images/1160380883/78859621087/1/original.20251023-045816 | Harvard WECode's organizer image on its official Eventbrite page (eventbrite.com/o/harvard-wecode-7699224935); harvardwecode.com sits behind a Cloudflare check that blocks downloads. 225×225 indexed PNG on a flat dark-grey square. The only change is an added tRNS chunk that marks the 57 near-black palette entries (background and the letters' dark drop shadow) transparent, so the strip's silhouette tint doesn't fill the square; no pixels were altered. |
+
+## Anthropic
+
+Downloaded 2026-10-24 from Anthropic's official press kit, byte-for-byte as served.
+
+| File | Source | Notes |
+|---|---|---|
+| anthropic.svg | https://www.anthropic.com/press-kit (redirects to https://www-cdn.anthropic.com/ae59ca4ca194dac9c9dc3bc78c5829468cb0e8af.zip), file `Anthropic media resources/Anthropic logos/Anthropic logos/1 Anthropic logo/SVG/Anthropic logo - Slate.svg` | The Anthropic wordmark, 590×68 SVG with a viewBox, one path filled #141413 and no background (transparent). The strip tints it with CSS like the others. |
