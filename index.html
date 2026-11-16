@@ -786,12 +786,13 @@
 
     /* Photo on the left, story and fact sheet on the right; both columns start at the same top edge */
     .about-grid {
-      display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+      display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
       gap: 72px; align-items: start; margin-top: 56px;
     }
+    .about-picture { display: block; }
     .about-photo {
-      display: block; width: 100%; max-width: 380px; height: auto; aspect-ratio: 4 / 5;
-      object-fit: cover; object-position: 75% 40%;
+      display: block; width: 100%; max-width: 480px; height: auto; aspect-ratio: 4 / 3;
+      object-fit: cover; object-position: center;
       border-radius: 12px; border: 1px solid var(--brass);
     }
     .about-text p { font-size: var(--fs-body); line-height: 1.7; color: var(--page-ink-2); margin-bottom: 20px; font-weight: 300; max-width: 34rem; }
@@ -1723,7 +1724,7 @@
       .section { padding: 96px 0; }
       .value-grid { grid-template-columns: 1fr; gap: 32px; }
       .about-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; margin-top: 44px; }
-      .about-photo { max-width: none; max-height: 420px; }
+      .about-photo { max-width: none; }
       .skills-grid, .conf-grid { margin-top: 44px; }
       /* Experience: one column, the date above the role */
       .timeline { margin-top: 48px; }
@@ -2078,7 +2079,10 @@
     </div>
     <div class="about-grid">
       <div class="reveal reveal-delay-1">
-        <img class="about-photo" src="Headshot.jpg" alt="Angelina Ponce" width="1080" height="1080" loading="lazy" decoding="async">
+        <picture class="about-picture">
+          <source srcset="Assets/about-me.webp" type="image/webp">
+          <img class="about-photo" src="Assets/about-me.jpg" alt="Angelina Ponce giving a thumbs up in front of a video camera setup at an event" width="1200" height="900" loading="lazy" decoding="async">
+        </picture>
       </div>
       <div class="reveal reveal-delay-2">
         <div class="about-text">
