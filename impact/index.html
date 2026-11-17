@@ -35,7 +35,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Assets/css/site.css?v=13">
+  <link rel="stylesheet" href="/Assets/css/site.css?v=25">
 </head>
 <body>
 
@@ -62,7 +62,7 @@
 
 <button id="scroll-top" type="button" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
-<header id="header">
+<header id="header" class="header--plain">
   <div class="header-inner">
     <a href="/" class="logo-wrap" aria-label="Angelina Ponce, home" data-logo="bird">
       <div class="logo-mark"><span class="logo-ap">AP</span><svg class="logo-bird" aria-hidden="true"><use href="#bird"/></svg></div>
@@ -98,15 +98,16 @@
 <!-- Drawn at --content-scale like the homepage after its hero, so the page hero lines up with the cards below it -->
 <div class="content-zoom">
 <section class="hero hero--page" aria-labelledby="pageTitle">
-  <div class="hero-mesh"></div>
-  <div class="hero-grid"></div>
-  <div class="hero-glow"></div>
   <div class="hero-left">
-    <div class="container">
-      <p class="section-label hero-enter hero-enter-1" data-impact="label">Impact</p>
-      <h1 class="page-hero-title hero-enter hero-enter-2" id="pageTitle" data-impact="title">Getting resources to the people markets underserve</h1>
-      <div class="hero-divider hero-enter hero-enter-3"></div>
-      <p class="page-hero-sub hero-enter hero-enter-4" data-impact="sub">I use finance and AI to strengthen the organizations that serve communities the market reaches last.</p>
+    <div class="container page-hero-grid">
+      <div class="page-hero-text">
+        <h1 class="page-hero-title hero-enter hero-enter-1" id="pageTitle" data-impact="title">Impact</h1>
+        <p class="page-hero-subtitle hero-enter hero-enter-2" data-impact="subtitle">Getting resources to the people markets underserve</p>
+        <div class="hero-divider hero-enter hero-enter-3"></div>
+        <p class="page-hero-sub hero-enter hero-enter-4" data-impact="sub">I use finance and AI to strengthen the organizations that serve communities the market reaches last.</p>
+      </div>
+      <!-- one dot per Impact entry (renderImpactConstellation in Assets/js/impact.js) -->
+      <div class="page-hero-art hero-enter hero-enter-3" id="impactConstellation"></div>
     </div>
   </div>
 </section>
@@ -151,13 +152,14 @@
   </div>
 </footer>
 
-<script src="/Assets/js/impact.js?v=16"></script>
-<script src="/Assets/js/site.js?v=4"></script>
+<script src="/Assets/js/impact.js?v=24"></script>
+<script src="/Assets/js/site.js?v=7"></script>
 <script>
 renderImpactHero();
 renderImpactCases(document.getElementById('impactGrid'));
 renderImpactCommitments(document.querySelector('#case-studies .container'));
-impactLightbox();   // photos open in the site's lightbox, as on the homepage
+impactLightbox();
+renderImpactConstellation(document.getElementById('impactConstellation'));   // photos open in the site's lightbox, as on the homepage
 // Search: every case study and commitment, scrolled to in place
 Site.search.push(() => impactSearchItems(id => {
   const el = document.getElementById(id);

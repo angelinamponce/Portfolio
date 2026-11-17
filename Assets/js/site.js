@@ -82,8 +82,10 @@ document.querySelectorAll('dialog').forEach(d => {
 });
 
 // ── Photo lightbox (the <dialog id="lightbox"> on each page that has photos). A page registers each set of photo
-// buttons as a gallery with addLightboxGallery(buttons, caption): caption(button) returns [title, subtitle]. The arrows,
-// the ← / → keys and the count stay within the gallery that was opened; the full-size file comes from the image's
+// buttons as a gallery with addLightboxGallery(buttons, caption): caption(button) returns [title, description], and the
+// description is optional (an empty one isn't shown). Without a caption function, each button's data-lb-title and
+// data-lb-desc are used. The arrows, the ← / → keys and the count stay within the gallery that was opened, and a
+// gallery of one photo shows neither; the full-size file comes from the image's
 // data-full (else the image as shown). Esc and a click outside close it (see openDialog above), and focus returns to
 // the photo that opened it.
 const lightbox = document.getElementById('lightbox');
@@ -91,18 +93,20 @@ let gallery = null, shotIdx = 0;
 function showShot(i) {
   const shots = gallery.shots;
   shotIdx = (i + shots.length) % shots.length;
-  const btn = shots[shotIdx], img = btn.querySelector('img'), [title, loc] = gallery.caption(btn);
+  const btn = shots[shotIdx], img = btn.querySelector('img'), [title, loc = ''] = gallery.caption(btn);
   const big = document.getElementById('lightboxImg');
   big.src = img.dataset.full || img.currentSrc || img.src;
   big.alt = img.alt;
   big.classList.remove('swap'); void big.offsetWidth; big.classList.add('swap');
   document.getElementById('lightboxTitle').textContent = title;
   document.getElementById('lightboxLoc').textContent = loc;
-  document.getElementById('lightboxCount').textContent = `${shotIdx + 1} / ${shots.length}`;
+  document.getElementById('lightboxCount').textContent = shots.length < 2 ? '' : `${shotIdx + 1} / ${shots.length}`;
   document.getElementById('lightboxPrev').hidden = document.getElementById('lightboxNext').hidden = shots.length < 2;
 }
-function addLightboxGallery(shots, caption) {
+const captionFromData = btn => [btn.dataset.lbTitle || '', btn.dataset.lbDesc || ''];
+function addLightboxGallery(shots, caption = captionFromData) {
   if (!lightbox) return;
+  shots = shots.filter(Boolean);
   const g = { shots, caption };
   shots.forEach(btn => btn.addEventListener('click', () => {
     if (!g.shots.includes(btn)) return;   // dropped from the gallery (its photo failed to load)
@@ -221,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
-  document.querySelectorAll('.btn-mag').forEach(btn => magnetize(btn, 0.18));
+  document.querySelectorAll('.btn-mag:not([data-magnetic="off"])').forEach(btn => magnetize(btn, 0.18));   // data-magnetic="off": stays put
   if (!reduceMotion && finePointer) {
     document.querySelectorAll('.c-btn, .showcase-more').forEach(btn => magnetize(btn, 0.14));
     // the spotlight glow (see "Cursor spotlight" in the CSS) follows the pointer
@@ -234,6 +238,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ── Count-up numbers: an element with data-target counts up from 0 to it (ease-out) once it scrolls into view. Numbers
+// are drawn with thousands separators; data-duration (ms) overrides the default 1.4s. Reduced motion shows the number.
+// Counters inside #hero are started by the homepage's own hero entrance instead.
+function countUp(el) {
+  const target = +el.dataset.target, fmt = n => n.toLocaleString('en-US');
+  el.dataset.counted = '1';
+  if (reduceMotion) { el.textContent = fmt(target); return; }
+  const t0 = performance.now(), dur = +el.dataset.duration || 1400;
+  const tick = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    el.textContent = fmt(Math.round(target * (1 - Math.pow(1 - p, 3))));
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+const counterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    countUp(e.target);
+    counterObs.unobserve(e.target);
+  });
+}, { threshold: 0.5 });
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-target]').forEach(c => {
+    if (c.closest('#hero')) return;
+    if (!reduceMotion && !c.dataset.counted) c.textContent = '0';   // start from 0, so the final number never flashes first
+    counterObs.observe(c);
+  });
+});
+
+// ── Photo parallax: a photo drifts up to 8px against the scroll inside its frame (it is drawn slightly scaled up so the
+// drift never shows an edge). Conference photos and the Impact case-study photos; reduced motion keeps them still.
+const PARALLAX = [['.conf-img', '.conf-card'], ['.impact-shot.has-parallax img', '.impact-shot']];
+if (!reduceMotion) window.addEventListener('scroll', () => {
+  PARALLAX.forEach(([sel, box]) => document.querySelectorAll(sel).forEach(img => {
+    const rect = img.closest(box).getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      const p = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+      img.style.setProperty('--py', ((p - 0.5) * 16).toFixed(1) + 'px');
+    }
+  }));
+}, { passive: true });
+
+// ── Timeline: the line draws with scroll (--tp, 0–1) and each node (.timeline-item) gets .reached as the line passes its
+// .timeline-dot. initTimeline(element) for each timeline on a page (Experience on the homepage, commitments on /impact).
+function initTimeline(tl) {
+  if (!tl) return;
+  const items = [...tl.querySelectorAll('.timeline-item')];
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const r = tl.getBoundingClientRect();
+    const reach = window.innerHeight * 0.65;
+    const p = reduceMotion ? 1 : Math.max(0, Math.min(1, (reach - r.top) / r.height));
+    tl.style.setProperty('--tp', p.toFixed(4));
+    const tip = r.top + p * r.height;
+    items.forEach(item => {
+      const dot = item.querySelector('.timeline-dot').getBoundingClientRect();
+      item.classList.toggle('reached', dot.top + dot.height / 2 <= tip + 1);
+    });
+  };
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+}
 
 // ── Command palette (⌘K / Ctrl+K, or the header's search button): jump to a section, feature a project, find an
 // event or an Impact case study, or run an action. Typing filters by every word; ↑/↓ move, Enter runs, Esc closes.

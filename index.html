@@ -49,7 +49,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="Assets/css/site.css?v=13">
+  <link rel="stylesheet" href="Assets/css/site.css?v=25">
   <style>
     /* fragment URLs resolve against the stylesheet's location, so this one stays with the SVG filter it points at */
     .gpa-dot { filter: url(#glow); }
@@ -75,6 +75,7 @@
   <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
   <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></symbol>
   <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
   <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
@@ -282,10 +283,15 @@
     </div>
     <div class="about-grid">
       <div class="reveal reveal-delay-1">
-        <picture class="about-picture">
-          <source srcset="Assets/about-me.webp?v=5" type="image/webp">
-          <img class="about-photo" src="Assets/about-me.jpg?v=5" alt="Angelina Ponce in a grey blazer, smiling and giving a thumbs up beside a camera monitor during a filmed interview" width="1200" height="900" loading="lazy" decoding="async">
-        </picture>
+        <!-- opens in the site lightbox; the caption comes from data-lb-title / data-lb-desc -->
+        <button type="button" class="about-shot" aria-haspopup="dialog" aria-label="View larger: Angelina Ponce in a grey blazer, smiling and giving a thumbs up beside a camera monitor during a filmed interview"
+                data-lb-title="ColorStack StackedUp Summit" data-lb-desc="Selected to be interviewed during the summit">
+          <picture class="about-picture">
+            <source srcset="Assets/about-me.webp?v=5" type="image/webp">
+            <img class="about-photo" src="Assets/about-me.jpg?v=5" data-full="Assets/about-me.jpg?v=5" alt="Angelina Ponce in a grey blazer, smiling and giving a thumbs up beside a camera monitor during a filmed interview" width="1200" height="900" loading="lazy" decoding="async">
+          </picture>
+          <span class="conf-zoom" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-expand"/></svg></span>
+        </button>
       </div>
       <div class="reveal reveal-delay-2">
         <div class="about-text">
@@ -398,11 +404,11 @@
 <!-- Impact teaser: the full section lives at /impact (impact/index.html) -->
 <section class="impact-teaser" id="impact" aria-labelledby="impactTeaserTitle">
   <div class="container impact-teaser-inner reveal">
-    <div class="impact-teaser-text">
-      <h2 class="section-label impact-teaser-label" id="impactTeaserTitle">Impact</h2>
+    <h2 class="section-label impact-teaser-label" id="impactTeaserTitle">Impact</h2>
+    <div class="impact-teaser-row">
       <p class="impact-teaser-line">Affordable housing, access to tech, health, and responsible AI. Plus 12+ years of community commitments.</p>
+      <a href="/impact/" class="btn-mag btn-ghost-mag impact-teaser-btn" data-magnetic="off">See my impact →</a>
     </div>
-    <a href="/impact/" class="btn-mag btn-ghost-mag impact-teaser-btn">See my impact →</a>
   </div>
 </section>
 
@@ -807,8 +813,8 @@
   </div>
 </footer>
 
-<script src="Assets/js/impact.js?v=16"></script>
-<script src="Assets/js/site.js?v=4"></script>
+<script src="Assets/js/impact.js?v=24"></script>
+<script src="Assets/js/site.js?v=7"></script>
 <script>
 // ── Site settings. Each optional piece stays hidden until its value is filled in.
 const SITE = {
@@ -867,6 +873,17 @@ const FIT_ROLES = [
       { text: 'Manage a 10-member executive board and built an internship program from scratch (StackHacks)', href: '#exp-stackhacks' },
     ],
   },
+  {
+    title: 'Mission-Driven AI & Impact',
+    icon: 'heart',
+    pitch: 'Bringing finance and AI to organizations that serve communities the market reaches last.',
+    evidence: [   // each links to its row on /impact
+      { text: 'Affordable housing asset management across 35,000+ rent-regulated units (CPC)', href: '/impact/#impact-cpc' },
+      { text: 'Built a deepfake-safety tool on the Safety & Rights track (Anthropic Code with Claude: Women in AI Hackathon)', href: '/impact/#impact-code-with-claude' },
+      { text: 'Co-founded StackHacks to open software engineering to underrepresented students', href: '/impact/#impact-stackhacks' },
+      { text: '12+ years of community commitments, from Operation Smile to meal packing', href: '/impact/' },
+    ],
+  },
 ];
 // ── "How I built it" in the project modals, keyed by project id. Every field is optional and an empty one renders
 // nothing; a project with no entry gets no section at all. Text fields take a string or a list of strings;
@@ -915,7 +932,7 @@ const introOn = document.documentElement.classList.contains('intro-on');
     const sec = document.createElement('section');
     sec.className = 'section fit-section'; sec.id = 'fit'; sec.setAttribute('aria-labelledby', 'fitTitle');
     sec.innerHTML = '<div class="container"><div class="reveal"><div class="section-label">Roles</div><h2 class="section-title" id="fitTitle">Where I <span class="accent--underline">fit</span></h2>'
-      + '<p class="section-sub">Three lanes where my experience lines up, each linked to the work behind it.</p></div><div class="fit-grid"></div></div>';
+      + '<p class="section-sub">Four lanes where my experience lines up, each linked to the work behind it.</p></div><div class="fit-grid"></div></div>';
     const grid = sec.querySelector('.fit-grid');
     FIT_ROLES.forEach(({ title, icon, pitch, evidence = [] }, i) => {
       const card = document.createElement('article'), ic = document.createElement('div'), h = document.createElement('strong'), p = document.createElement('p'), ul = document.createElement('ul');
@@ -1204,29 +1221,10 @@ sideDots.forEach(d => {
   draw(0); run();
 })();
 
-function countUp(el) {
-  const target = +el.dataset.target;
-  el.dataset.counted = '1';
-  if (reduceMotion) { el.textContent = target; return; }
-  const t0 = performance.now(), dur = 1400;
-  const tick = now => {
-    const p = Math.min(1, (now - t0) / dur);
-    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
-    if (p < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
+// countUp() and the scroll-triggered counters live in Assets/js/site.js
 // Hero counters wait for the hero entrance (see startHero); start them from 0 so nothing flashes
 // (the intro starts the hero early but holds the count-up back until it lifts, so check the counter, not the hero)
 if (!reduceMotion) document.querySelectorAll('#hero [data-target]').forEach(el => { if (!el.dataset.counted) el.textContent = '0'; });
-const counterObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    countUp(e.target);
-    counterObs.unobserve(e.target);
-  });
-}, { threshold: 0.5 });
-document.querySelectorAll('[data-target]').forEach(c => { if (!c.closest('#hero')) counterObs.observe(c); });
 
 const gpaCircle = document.getElementById('gpaCircle');
 const gpaDot    = document.getElementById('gpaDot');
@@ -1443,6 +1441,7 @@ modal.addEventListener('close', () => {
 // "Where I fit" evidence links: a project link opens that project's modal (clearing any filter that hides it);
 // a section link scrolls under the fixed header and moves keyboard focus there
 document.querySelectorAll('.fit-evidence a').forEach(a => a.addEventListener('click', e => {
+  if (!a.dataset.project && !a.getAttribute('href').startsWith('#')) return;   // another page (e.g. /impact/): a normal link
   e.preventDefault();
   const card = a.dataset.project && projectCards.find(c => c.dataset.id === a.dataset.project);
   if (card) {
@@ -1622,31 +1621,15 @@ document.querySelectorAll('.conf-img-wrap img').forEach(img => {
   };
   if (img.complete && img.naturalWidth === 0) setTimeout(missing); else img.addEventListener('error', missing);
 });
-// Two galleries, each its own set (the arrows and the count stay within the one that was opened): conference photos,
-// captioned with the event and place, and Experience photos, with the company and the role
+// Three galleries, each its own set (the arrows and the count stay within the one that was opened): conference photos,
+// captioned with the event and place, the About photo, and Experience photos, with the company and the role
 const tidy = el => el.textContent.replace(/\s+/g, ' ').trim();
 addLightboxGallery(confShots, btn => { const c = btn.closest('.conf-card'); return [tidy(c.querySelector('h3')), tidy(c.querySelector('.conf-loc'))]; });
+addLightboxGallery([document.querySelector('.about-shot')]);   // a single photo: caption from its data-lb-title / data-lb-desc
 addLightboxGallery([...document.querySelectorAll('.exp-photo')], btn => { const c = btn.closest('.exp-card'); return [tidy(c.querySelector('.exp-company')), tidy(c.querySelector('h3'))]; });
 
-// ── Experience timeline: the line draws with scroll and each node lights up as the line reaches it
-const timeline = document.querySelector('.timeline');
-const timelineItems = [...document.querySelectorAll('.timeline-item')];
-let timelineTicking = false;
-function updateTimeline() {
-  timelineTicking = false;
-  const r = timeline.getBoundingClientRect();
-  const reach = window.innerHeight * 0.65;
-  const p = reduceMotion ? 1 : Math.max(0, Math.min(1, (reach - r.top) / r.height));
-  timeline.style.setProperty('--tp', p.toFixed(4));
-  const tip = r.top + p * r.height;
-  timelineItems.forEach(item => {
-    const dot = item.querySelector('.timeline-dot').getBoundingClientRect();
-    item.classList.toggle('reached', dot.top + dot.height / 2 <= tip + 1);
-  });
-}
-window.addEventListener('scroll', () => { if (!timelineTicking) { timelineTicking = true; requestAnimationFrame(updateTimeline); } }, { passive: true });
-window.addEventListener('resize', updateTimeline);
-updateTimeline();
+// ── Experience timeline (the scroll-drawn line and node script is initTimeline in Assets/js/site.js)
+initTimeline(document.querySelector('#experience .timeline'));
 
 
 document.getElementById('copyEmail').addEventListener('click', async e => {
@@ -1659,15 +1642,7 @@ document.getElementById('modalLinks').addEventListener('click', async e => {
 });
 
 
-window.addEventListener('scroll', () => {
-  document.querySelectorAll('.conf-img').forEach(img => {
-    const rect = img.closest('.conf-card').getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      const p = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-      img.style.setProperty('--py', ((p - 0.5) * 16).toFixed(1) + 'px');
-    }
-  });
-}, { passive: true });
+// (the conference photos' scroll parallax lives in Assets/js/site.js)
 
 // ── Search entries for this page (the palette itself lives in Assets/js/site.js): Impact case studies open /impact,
 // projects are featured in the showcase, events scroll to their card
