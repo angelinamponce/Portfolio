@@ -10,3 +10,7 @@ nike.png
 # Original/working image files kept locally, not deployed
 source-assets/
 public/headshot-cutout.png
+
+# Original HEIC photos (source files only; the site uses the exported JPG/WebP in Assets/)
+*.heic
+*.HEIC
