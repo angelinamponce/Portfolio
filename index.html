@@ -895,6 +895,29 @@
       padding-left: 20px; position: relative; font-weight: 300;
     }
     .exp-bullets li::before { content: '→'; position: absolute; left: 0; color: var(--brass-ink); font-size: 11px; top: 3px; }
+    /* Earlier experience: a compact, secondary block under the main roles, on the same two-column grid
+       (year left, role and one line right). Not a .timeline-item, so the timeline script leaves it alone. */
+    .exp-earlier { border-top: 1px solid var(--rule); padding: 36px 0 40px; }
+    .exp-earlier-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); column-gap: 64px;
+    }
+    .exp-earlier-row + .exp-earlier-row { margin-top: 22px; }
+    .exp-earlier-label, .exp-earlier-year {
+      color: var(--brass-ink); font: 500 11px var(--font-body); font-variant-numeric: tabular-nums;
+      letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;
+    }
+    .exp-earlier-label { margin-bottom: 22px; }
+    .exp-earlier-year { margin-top: 3px; }
+    /* Logo tile to the left of the role, inside the right-hand column; text top-aligned beside it */
+    .exp-earlier-body { display: flex; align-items: flex-start; gap: 14px; min-width: 0; }
+    .exp-earlier-text { min-width: 0; }
+    .exp-earlier-logo {
+      flex: 0 0 auto; width: 44px; height: 44px; padding: 4px; box-sizing: border-box;
+      border: 1px solid var(--rule); border-radius: 8px; background: #fffdf8;
+    }
+    .exp-earlier-logo img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    .exp-earlier-role { font-size: 14px; font-weight: 500; color: var(--ink-2); line-height: 1.5; }
+    .exp-earlier-desc { font-size: 13px; font-weight: 300; color: var(--ink-3); line-height: 1.7; margin-top: 2px; max-width: 60ch; }
 
     .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 40px; margin-bottom: 56px; }
     .filter-tab {
@@ -1736,6 +1759,9 @@
       .exp-photo { grid-row: 5; max-width: none; }   /* phones: the column's full width, same 128px height */
       .exp-photo-zoom { display: none; }   /* touch: no hover; tapping the photo opens it */
       .exp-bullets { grid-column: 1; grid-row: 6; margin-top: 18px; }
+      .exp-earlier { padding: 28px 0 32px; }
+      .exp-earlier-row { grid-template-columns: minmax(0, 1fr); }
+      .exp-earlier-year { margin: 0 0 4px; }
       /* Project rows: thumbnail, title and meta on top; the line and tags full width below */
       .project-card {
         grid-template-columns: 64px minmax(0, 1fr) 16px;
@@ -2161,6 +2187,30 @@
             <li>Partner with COO, CIO, and CTO to manage Spring 2026 internship program including structured mentorship, technical interviews, and cross-functional team placements</li>
             <li>Coordinate technical workshops, networking events, and faculty/alumni partnerships to expand campus presence and professional development opportunities</li>
           </ul>
+        </div>
+      </div>
+
+      <div class="exp-earlier reveal" role="group" aria-labelledby="earlierTitle">
+        <h3 class="exp-earlier-label" id="earlierTitle">Earlier Experience</h3>
+        <div class="exp-earlier-row">
+          <p class="exp-earlier-year">2024</p>
+          <div class="exp-earlier-body">
+            <span class="exp-earlier-logo"><img src="Assets/pathways-logo.png" width="160" height="81" loading="lazy" decoding="async" alt="Pathways logo"></span>
+            <div class="exp-earlier-text">
+              <p class="exp-earlier-role">Summer Intern, Pathways of Greenwich, CT</p>
+              <p class="exp-earlier-desc">Applied behavioral research and psychological principles to improve client engagement and support client independence.</p>
+            </div>
+          </div>
+        </div>
+        <div class="exp-earlier-row">
+          <p class="exp-earlier-year">2023</p>
+          <div class="exp-earlier-body">
+            <span class="exp-earlier-logo"><img src="Assets/greenwich-seal.png" width="160" height="156" loading="lazy" decoding="async" alt="Seal of the Town of Greenwich, Connecticut"></span>
+            <div class="exp-earlier-text">
+              <p class="exp-earlier-role">Intern, Office of the First Selectman, Town of Greenwich, CT</p>
+              <p class="exp-earlier-desc">Assisted the First Selectman and drove Latino community outreach for a municipal re-election campaign, strengthening voter engagement and turnout.</p>
+            </div>
+          </div>
         </div>
       </div>
 
