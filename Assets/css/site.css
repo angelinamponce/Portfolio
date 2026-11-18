@@ -34,6 +34,7 @@
   --card:        var(--cream-hi);
   --rule:        rgba(14,31,22,0.12);   /* the hairline between items in a section */
   --hero-bg:     var(--forest);      /* hero, logo strip and intro: green in both themes */
+  --dove-gold:   var(--brass-hi);    /* the homepage ASCII dove (and the intro's): light brass, since it always sits on the green hero */
   /* Type: Playfair Display for headings, Inter for text */
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -163,6 +164,17 @@ img { max-width: 100%; display: block; }
   border-color: var(--page-accent);
   transform: scale(1.5);
 }
+/* the side-nav constellation (sideConstellation on the homepage): lines between the dots, lit up to where you are,
+   and a small gold dove standing in for the current dot. The dot under the dove clears (it stays a button). */
+.side-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: -1; }
+.side-lines polyline { fill: none; stroke: var(--page-accent); stroke-width: 1; stroke-linejoin: round; }
+.side-lines .sl-faint { stroke-opacity: 0.2; }
+.side-lines .sl-lit { stroke-opacity: 0.85; }
+.side-dove { position: absolute; left: 0; top: 0; width: 14px; height: 13px; color: var(--page-accent); pointer-events: none; will-change: transform; }
+.side-dove .dove { display: block; width: 100%; height: 100%; overflow: visible; }
+#side-nav.has-dove .side-dot.active { background: transparent; border-color: var(--page-line-strong); transform: none; }   /* the dove marks where you are */
+#side-nav.has-dove .side-dot.is-passed { background: var(--page-accent); border-color: var(--page-accent); }
+#side-nav.has-dove .side-dot.is-dove { background: transparent; border-color: transparent; transform: none; }
 
 header {
   position: fixed; top: 0; left: 0; right: 0;
@@ -358,19 +370,25 @@ header:not(.scrolled):not(.header--plain) .recruiter-pill:hover { background: tr
   writing-mode: vertical-rl;
 }
 
-/* The hero dove above the name (initAsciiBird in Assets/js/site.js): cream ASCII on the green hero, hovering with a
+/* The hero dove above the name (initAsciiBird in Assets/js/site.js): gold ASCII on the green hero (dense glyphs full
+   strength, light ones dimmer; see DOVE_TONE), hovering with a
    slow upward bob (never toward the name), blinking and folding its wings now and then. The <pre> is the same dove as
    plain text, shown only until the canvas draws (so it is there even without scripts). During the intro the slot is
    hidden and still, and the intro's dove lands in it. */
 .hero-bird { --bird-h: 196px; --bob: -3.5px; position: relative; height: var(--bird-h); margin: 0 0 18px -4px; animation: heroBirdBob 4s ease-in-out infinite; }
 @keyframes heroBirdBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--bob)); } }
-.hero-dove { display: block; height: var(--bird-h); color: var(--cream); }
+.hero-dove { display: block; height: var(--bird-h); color: var(--dove-gold); }
 .hero-bird-static {
-  position: absolute; left: 0; top: 0; margin: 0; color: var(--cream); white-space: pre;
+  position: absolute; left: 0; top: 0; margin: 0; color: var(--dove-gold); white-space: pre;
   font: calc(var(--bird-h) / 30) / calc(var(--bird-h) / 30) ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 .hero-bird.is-live .hero-bird-static { display: none; }
-.intro-on .hero-bird { visibility: hidden; animation: introBirdFailsafe 0s linear 4s forwards; }
+/* its button (heroDoveLife): over the perched dove, the only interactive part; and the full-screen layer its flights
+   are drawn on (never takes clicks; under the header) */
+.hero-dove-btn { position: absolute; left: 0; top: 0; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 6px; }
+.hero-dove-btn:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 6px; }
+.hero-dove-fly { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 90; }
+.intro-on .hero-bird { visibility: hidden; animation: introBirdFailsafe 0s linear 6s forwards; }
 @keyframes introBirdFailsafe { to { visibility: visible; } }
 @media (max-width: 768px) { .hero-bird { --bird-h: 128px; --bob: -2px; margin-bottom: 12px; } }
 @media (prefers-reduced-motion: reduce) { .hero-bird { animation: none; } }
@@ -706,6 +724,21 @@ header {
 }
 
 .contact-content .section-label::after { transform: scaleX(-1); }
+/* the constellation mark that replaces it (constellationMark in Assets/js/site.js): gold dots that pop in left to right,
+   with the lines drawing between them, once the label scrolls into view */
+.section-label.has-mark::before, .contact-content .section-label.has-mark::after { display: none; }
+.c-mark { flex-shrink: 0; overflow: visible; color: var(--brass); }
+.c-mark path {
+  fill: none; stroke: currentColor; stroke-width: 1; stroke-opacity: 0.75; stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 0.2s ease calc(var(--i) * 105ms + 95ms);
+}
+.c-mark circle {
+  fill: currentColor; transform: scale(0); transform-box: fill-box; transform-origin: center;
+  transition: transform 0.3s cubic-bezier(.34,1.56,.64,1) calc(var(--i) * 105ms);
+}
+.c-mark.is-drawn path { stroke-dashoffset: 0; }
+.c-mark.is-drawn circle { transform: scale(1); }
+@media (prefers-reduced-motion: reduce) { .c-mark path, .c-mark circle { transition: none; } }
 
 .section-title {
   font-family: var(--font-display);
@@ -782,12 +815,41 @@ header {
 /* "Where I fit" (FIT_ROLES at the top of the script): role lanes on the value-card style, each bullet links to its proof */
 .section.fit-section { padding: 40px 0 88px; }
 .fit-section .section-sub { max-width: 640px; }
-.fit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 48px; margin-top: 44px; }   /* four lanes: 2 × 2 */
-.fit-evidence { list-style: none; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
-.fit-evidence li { font-size: 12.5px; line-height: 1.7; padding-left: 16px; position: relative; }
-.fit-evidence li::before { content: '→'; position: absolute; left: 0; color: var(--brass-ink); }
-.fit-evidence a { color: var(--ink-2); text-decoration: underline; text-decoration-color: rgba(184,150,92,0.55); text-underline-offset: 3px; transition: color 0.2s, text-decoration-color 0.2s; }
-.fit-evidence a:hover { color: var(--ink); text-decoration-color: var(--brass-ink); }
+.fit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; margin-top: 48px; }   /* four lanes: 2 × 2 */
+/* a lane's card: a hairline border (its top edge is the constellation rule), generous padding; on hover a faint gold
+   glow and a 2px lift (a transform, so nothing around it moves) */
+.fit-lane { display: flex; }
+.fit-card {
+  position: relative; flex: 1; padding: 40px; border: 1px solid var(--page-line); border-top-color: transparent; border-radius: 4px;
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.fit-card:hover { transform: translateY(-2px); border-color: rgba(184,150,92,0.32); border-top-color: transparent; box-shadow: 0 18px 44px -24px rgba(212,181,125,0.35), 0 0 0 1px rgba(212,181,125,0.06); }
+.c-rule { position: absolute; left: -1px; right: -1px; top: -6px; height: 12px; pointer-events: none; color: var(--brass); }
+.c-rule svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; clip-path: inset(0 100% 0 0); transition: clip-path 0.7s cubic-bezier(.65,0,.35,1) calc(var(--i, 0) * 150ms); }
+.c-rule path { fill: none; stroke: currentColor; stroke-width: 1; stroke-opacity: 0.6; vector-effect: non-scaling-stroke; }
+.c-rule i {
+  position: absolute; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: currentColor;
+  transform: scale(0); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1) calc(var(--i, 0) * 150ms + var(--at) * 650ms);
+}
+.c-rule i.is-big { width: 6px; height: 6px; margin: -3px 0 0 -3px; }
+.c-rule.is-drawn svg { clip-path: inset(0 0 0 0); }
+.c-rule.is-drawn i { transform: scale(1); }
+@media (prefers-reduced-motion: reduce) { .c-rule svg, .c-rule i { transition: none; } .fit-card { transition: none; } .fit-card:hover { transform: none; } }
+.fit-icon { margin-bottom: 18px; color: var(--page-accent); }
+.fit-glyph { display: block; width: 28px; height: 28px; overflow: visible; }
+.fit-glyph path { fill: none; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; stroke-opacity: 0.85; }
+.fit-glyph circle { fill: currentColor; }
+.fit-title { font-family: var(--font-display); font-size: clamp(21px, 1.7vw, 24px); font-weight: 600; line-height: 1.2; color: var(--page-ink); margin-bottom: 10px; letter-spacing: -0.2px; }
+.fit-pitch { font-size: 13.5px; line-height: 1.65; color: var(--page-ink-3); font-weight: 300; text-wrap: pretty; }
+.fit-evidence { list-style: none; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--page-line); display: grid; gap: 12px; }
+.fit-evidence li { font-size: 13px; line-height: 1.6; }
+/* evidence links: plain text with a gold arrow; on hover the text brightens, a gold underline appears and the arrow
+   steps right */
+.fit-evidence a { position: relative; display: inline-block; padding-left: 20px; color: var(--page-ink-2); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; text-decoration-thickness: 1px; transition: color 0.2s ease, text-decoration-color 0.2s ease; }
+.fit-evidence a::before { content: '→'; position: absolute; left: 0; top: 0; color: var(--page-accent); transition: transform 0.2s ease; }
+.fit-evidence a:hover { color: var(--page-ink); text-decoration-color: var(--page-accent); }
+.fit-evidence a:hover::before { transform: translateX(4px); }
+.fit-evidence a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; color: var(--page-ink); }
 .fit-open { margin-top: 26px; font-size: 13.5px; color: var(--page-ink-2); }
 .fit-open strong { font-size: 10px; font-weight: 700; letter-spacing: 2.2px; text-transform: uppercase; color: var(--page-accent); margin-right: 10px; }
 .highlight-box {
@@ -815,20 +877,18 @@ header {
 .exp-title h3 { grid-column: 2; grid-row: 1; }
 .exp-photo { grid-column: 1; grid-row: 4; }
 .exp-bullets { grid-column: 2; grid-row: 2 / span 3; }
-/* Photo under the place in the left column, in a framed mat: a 2px muted border (thinner snaps to 1px on screen),
-   4px of darkened mat, then the full-colour photo in its own clipping box (so its 2% hover zoom never spills onto
-   the mat). The frame is 128px tall and at most 220px wide (full width on phones), so it never outweighs the bullets. It is a button that opens
-   the photo in the lightbox; on hover or focus the border warms to soft gold and an "Enlarge" cue fades in.
+/* Photo under the place in the left column: the full-colour photo in its own clipping box (so its 2% hover zoom stays
+   inside) with a 1px gold outline on its edge. 128px tall and at most 220px wide (full width on phones), so it never
+   outweighs the bullets. It is a button that opens the photo in the lightbox; on hover or focus the outline goes to
+   full strength and an "Enlarge" cue fades in.
    --pos (inline) sets each crop's vertical focal point. */
 .exp-photo {
-  --frame: rgba(14,31,22,0.18); --frame-hover: rgba(184,150,92,0.6); --mat: rgba(14,31,22,0.06);
-  display: block; width: 100%; max-width: 220px; margin-top: 16px; height: 128px; padding: 4px; border-radius: 2px;
+  display: block; width: 100%; max-width: 220px; margin-top: 16px; height: 128px; padding: 0; border: 0; border-radius: 0; background: none;
   font: inherit; color: inherit; text-align: inherit; cursor: zoom-in;
-  border: calc(2px / var(--content-scale)) solid var(--frame); background: var(--mat);   /* 2px on screen at any content zoom */
-  transition: border-color 0.3s ease;
 }
-[data-theme="dark"] .exp-photo { --frame: rgba(255,255,255,0.15); --frame-hover: rgba(212,181,125,0.6); --mat: rgba(0,0,0,0.4); }
-.exp-photo-clip { position: relative; display: block; height: 100%; overflow: hidden; border-radius: 1px; background: var(--green-800); }
+/* the photo's 1px gold outline (see "Photo outlines") */
+.exp-photo-clip { position: relative; display: block; height: 100%; overflow: hidden; background: var(--green-800); border: calc(1px / var(--content-scale)) solid var(--img-line); transition: border-color 0.2s ease; }
+.exp-photo:hover .exp-photo-clip, .exp-photo:focus-visible .exp-photo-clip { border-color: var(--img-line-hover); }
 .exp-photo-zoom {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px;
   background: rgba(7,16,11,0.45); color: var(--cream);
@@ -841,7 +901,6 @@ header {
   display: block; width: 100%; height: 100%; object-fit: cover; object-position: center var(--pos, 40%);
   transition: transform 0.3s ease;
 }
-.exp-photo:hover { border-color: var(--frame-hover); }
 .exp-photo:hover img { transform: scale(1.02); }
 .exp-title h3 { font-family: var(--font-display); font-size: var(--fs-h3-lg); color: var(--ink); margin-bottom: 18px; font-weight: 600; line-height: 1.15; }
 .exp-company { font-size: 13.5px; color: var(--ink); font-weight: 500; margin-bottom: 4px; letter-spacing: 0.2px; line-height: 1.5; }
@@ -1171,13 +1230,15 @@ header {
   column-gap: 72px; row-gap: 32px; padding: 56px 0;
 }
 .impact-card.no-stat { padding: 40px 0; }   /* a case study without a stat is a lighter, shorter row */
-.impact-row + .impact-row { border-top: 1px solid var(--rule); }
+/* the case studies: no rules between them, just space (~160px on desktop) */
+.impact-grid > .impact-card { padding: 80px 0; }
+.impact-grid > .impact-card:first-child { padding-top: 0; }
+.impact-grid > .impact-card:last-child { padding-bottom: 0; }
+@media (max-width: 900px) { .impact-grid > .impact-card { padding: 56px 0; } .impact-grid > .impact-card:first-child { padding-top: 0; } .impact-grid > .impact-card:last-child { padding-bottom: 0; } }
 .impact-row:first-child { padding-top: 0; }
 .impact-row:last-child { padding-bottom: 0; }
 .impact-card.has-shot { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }              /* 40 / 60 */
 .impact-card.has-shot.is-flipped { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
-.impact-commit-row.has-shot { grid-template-columns: minmax(0, 7fr) minmax(0, 13fr); }       /* 35 / 65 */
-.impact-commit-row.has-shot.is-flipped { grid-template-columns: minmax(0, 13fr) minmax(0, 7fr); }
 .impact-card.has-shot.no-stat { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }     /* 33 / 67: shorter image */
 .impact-card.has-shot.no-stat.is-flipped { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
 .impact-row.has-shot.is-flipped .impact-media { order: 2; }
@@ -1190,20 +1251,17 @@ header {
   .impact-row.has-shot.is-flipped .impact-media { order: 0; }
   .impact-row { padding: 44px 0; row-gap: 28px; }
 }
-.impact-focus {   /* the row's heading: the focus area, after a short gold rule like the hero's divider */
+.impact-focus {   /* the row's heading: the focus area, under its constellation mark */
   font-family: var(--font-display); font-weight: 600; color: var(--page-ink);
   font-size: clamp(34px, 3.4vw, 50px); line-height: 1.08; letter-spacing: -0.4px; text-wrap: balance;
 }
-.impact-focus::before {
-  content: ''; display: block; width: 48px; height: calc(1px / var(--content-scale)); margin-bottom: 20px;   /* exactly 1px on screen */
-  background: linear-gradient(90deg, var(--brass) 0%, var(--brass) 45%, transparent 100%);
-}
+.impact-mark { line-height: 0; margin-bottom: 18px; }   /* the constellation mark above each heading (IMPACT_MARKS) */
 .impact-org { font-family: var(--font-display); font-size: 21px; font-weight: 500; line-height: 1.3; color: var(--page-accent); margin-top: 14px; }
 .impact-org-note { font-size: 13px; line-height: 1.5; color: var(--page-ink-3); margin-top: 6px; }
 .impact-story { margin-top: 20px; font-size: 14px; line-height: 1.75; color: var(--page-ink-2); font-weight: 300; max-width: 40rem; }
-.impact-stat { display: flex; flex-direction: column; padding-top: 18px; border-top: 1px solid var(--rule); }
+.impact-stat { display: flex; flex-direction: column; margin-top: 4px; }   /* no rule: a large number, its label beneath, 32px under the paragraph (with the column's 28px gap) */
 .impact-num {
-  font-family: var(--font-display); font-size: 42px; font-weight: 600; line-height: 42px;
+  font-family: var(--font-display); font-size: 56px; font-weight: 600; line-height: 56px;
   color: var(--page-ink); white-space: nowrap; font-variant-numeric: lining-nums tabular-nums;
 }
 .impact-unit { font-size: 0.6em; color: var(--page-accent); margin-left: 1px; }
@@ -1218,7 +1276,6 @@ header {
   text-transform: uppercase; color: var(--page-accent); margin: 0;
 }
 .impact-commit-row .impact-focus { font-size: clamp(28px, 2.6vw, 38px); }   /* one step below the case studies */
-.impact-commit-row .impact-focus::before { margin-bottom: 16px; }
 .impact-commit-row .impact-org { font-size: 18px; margin-top: 10px; }
 .impact-commit-row .impact-content { gap: 22px; }
 .impact-since .impact-stat-label { margin: 0 0 8px; }
@@ -1232,12 +1289,12 @@ header {
    .is-native  the image at its own aspect ratio, no crop, no overlay
    .is-empty   4:3, no image yet: a small brass image icon (SHOW_IMAGE_PLACEHOLDERS) */
 .impact-shot {
-  position: relative; aspect-ratio: 4 / 3; overflow: hidden; margin: 0;
-  border: 1px solid rgba(184,150,92,0.55);
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden; margin: 0; border-radius: 0;
+  border: calc(1px / var(--content-scale)) solid var(--img-line);   /* exactly 1px on screen */
   background: radial-gradient(circle at 50% 38%, rgba(212,181,125,0.14) 0%, transparent 62%), var(--hero-bg);
-  transition: border-color 0.4s ease;
+  transition: border-color 0.2s ease;
 }
-.impact-row:hover .impact-shot { border-color: rgba(184,150,92,0.85); }
+.impact-shot:hover, .impact-shot:focus-visible { border-color: var(--img-line-hover); }
 .impact-shot img { display: block; width: 100%; height: 100%; }
 .impact-shot.is-cover img { object-fit: cover; filter: contrast(1.05) saturate(0.88); }
 .impact-shot.is-cover::before, .impact-shot.is-cover::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
@@ -1348,15 +1405,14 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 }
 .constellation-tip.is-on { opacity: 1; }
 
-/* ── Case-study photos: an offset gold frame behind each image (logos and artwork too) ── */
+/* ── Photo outlines: every Impact photo (case studies and commitments, logos too) and every Experience thumbnail has a
+   single 1px gold outline right on the image's edge, square corners: the light gold at 70% on the dark page, the darker
+   brass on cream. On hover it goes to full strength (200ms); nothing moves. ── */
+:root { --img-line: rgba(122,92,42,0.7); --img-line-hover: rgb(122,92,42); }
+[data-theme="dark"] { --img-line: rgba(212,181,125,0.7); --img-line-hover: rgb(212,181,125); }
 .impact-frame { position: relative; }
-.impact-frame::before {
-  content: ''; position: absolute; inset: 14px -14px -14px 14px; z-index: 0; pointer-events: none;
-  border: 1px solid rgba(184,150,92,0.5); transition: transform 0.5s cubic-bezier(.22,1,.36,1);
-}
-.impact-row:hover .impact-frame::before { transform: translate(-4px, -4px); }
 .impact-frame > .impact-shot { z-index: 1; }
-.impact-frame + .impact-caption { margin-top: 26px; }
+.impact-frame + .impact-caption { margin-top: 14px; }
 
 /* ── Long-term commitments: a vertical timeline (the Experience timeline's original line and nodes, restored here; the
    Experience section itself is drawn as ruled rows). initTimeline sets --tp and .reached as you scroll. ── */
@@ -1393,10 +1449,12 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 .impact-timeline .timeline-item:hover .timeline-dot { background: var(--brass); transform: scale(1.4); box-shadow: 0 0 0 8px rgba(184,150,92,0.14); }
 .impact-tl-year { font-family: var(--font-display); font-size: 20px; font-weight: 600; line-height: 1; color: var(--page-accent); margin-bottom: 12px; font-variant-numeric: lining-nums tabular-nums; }
 .impact-tl-item .impact-focus { font-size: clamp(26px, 2.3vw, 34px); }
-.impact-tl-item .impact-focus::before { display: none; }   /* the year leads each node instead of the rule */
+.impact-tl-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }   /* the year, then the heading's mark */
+.impact-tl-head .impact-tl-year { margin-bottom: 0; }
+.impact-tl-head .impact-mark { margin-bottom: 0; }
 .impact-tl-item .impact-org { font-size: 17px; margin-top: 8px; }
 .impact-tl-item .impact-commit-line { margin-top: 12px; max-width: 40rem; }
-.impact-tl-thumb .impact-shot { width: 100%; border-color: rgba(184,150,92,0.55); }
+.impact-tl-thumb .impact-shot { width: 100%; }
 @media (min-width: 901px) and (max-width: 1200px) {
   .impact-timeline .timeline-item.has-thumb { grid-template-columns: minmax(0, 1fr) calc(280px / var(--content-scale)); column-gap: 48px; }   /* 280px on screen */
 }
@@ -1405,17 +1463,42 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
   .impact-tl-thumb { order: -1; }
 }
 
-/* Homepage teaser band (after Experience): green in both themes like the logo strip, so the hero's outline button
-   carries over as is */
-.impact-teaser { background: var(--hero-bg); border-top: 1px solid var(--line-dark); border-bottom: 1px solid var(--line-dark); padding: 64px 0; --focus: var(--brass-hi); }
-.impact-teaser-label { color: var(--brass-hi); margin-bottom: 14px; }
-/* the summary and the button share a row, centred on each other; the button drops below the line on narrow screens */
-.impact-teaser-row { display: flex; align-items: center; justify-content: space-between; gap: 24px 48px; flex-wrap: wrap; }
-.impact-teaser-line { flex: 1 1 0; min-width: min(100%, 280px); font-family: var(--font-display); font-size: clamp(20px, 1.6vw, 23px); line-height: 1.45; color: var(--on-dark); }
-/* the button never moves on hover: no magnetic pull (data-magnetic="off"), no shadow; only its border and text colour
-   change (the 1px border is there at rest, so its size never changes) */
-.impact-teaser-btn { flex-shrink: 0; transform: none !important; transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease; }
-.impact-teaser-btn:hover { box-shadow: none; }
+/* Homepage "Mission-Driven!" band (after Experience): its own slightly lighter green in both themes with a soft gold
+   glow behind the drawing; the text and button on the left, a still copy of the /impact hands-and-globe on the right.
+   Most of a screen tall on desktop (the band sits in .content-zoom, so screen units are divided by the scale). */
+.impact-teaser {
+  --band: #13291d; --page: var(--band); --page-accent: var(--brass-hi); --focus: var(--brass-hi);
+  position: relative; display: flex; align-items: center; padding: 88px 0;
+  min-height: calc(64vh / var(--content-scale)); min-height: calc(64svh / var(--content-scale));
+  background: radial-gradient(ellipse 42% 62% at 74% 50%, rgba(212,181,125,0.16) 0%, rgba(212,181,125,0.05) 45%, transparent 72%), var(--band);
+  border-top: 1px solid var(--line-dark); border-bottom: 1px solid var(--line-dark); color: var(--on-dark);
+}
+.impact-teaser-inner {
+  width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "text art" "cta art";
+  column-gap: 72px; align-items: center;
+}
+.impact-teaser-text { grid-area: text; align-self: end; }
+.impact-teaser-cta { grid-area: cta; align-self: start; margin-top: 34px; }
+.impact-teaser-art { grid-area: art; position: relative; height: 440px; aspect-ratio: 400 / 440; }
+.impact-teaser .section-title { color: var(--on-dark); margin-bottom: 20px; }
+.impact-teaser-line { font-family: var(--font-display); font-size: clamp(26px, 2.25vw, 32px); line-height: 1.4; color: var(--on-dark-2); max-width: 22em; }
+/* the band's call to action: solid gold with dark text. It never moves on hover (no magnetic pull, no shadow, a fixed
+   border); only its fill brightens */
+.impact-teaser-btn {
+  background: var(--brass-hi); border-color: var(--brass-hi); color: var(--forest); font-size: 13px; padding: 16px 32px;
+  transform: none !important; transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+.impact-teaser-btn:hover { background: #e3c891; border-color: #e3c891; box-shadow: none; }
+.impact-teaser-btn:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+.impact-constellation.is-teaser .c-seed, .impact-constellation.is-teaser .c-seed-ring { display: none; }
+.const-bird.is-teaser { transition: opacity 0.5s ease; }
+@media (max-width: 900px) {
+  .impact-teaser { min-height: 0; padding: 64px 0; background: radial-gradient(ellipse 80% 40% at 50% 58%, rgba(212,181,125,0.14) 0%, transparent 70%), var(--band); }
+  .impact-teaser-inner { grid-template-columns: minmax(0, 1fr); grid-template-areas: "text" "art" "cta"; }
+  .impact-teaser-text { align-self: auto; }
+  .impact-teaser-art { height: 240px; justify-self: center; margin-top: 28px; }
+  .impact-teaser-cta { margin-top: 28px; }
+}
 
 /* /impact page hero: the homepage hero's ground (green, mesh, grid, glow, grain) at content height, one column,
    lined up with the content container */
@@ -1451,6 +1534,7 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
   letter-spacing: -0.5px; color: var(--page-ink); max-width: 15em; margin-bottom: 28px;
 }
 .hero--page .hero-divider { margin-bottom: 24px; }
+.hero-divider.hero-divider--mark { width: auto; height: auto; background: none; line-height: 0; }
 .hero--page .page-hero-title { margin-bottom: 14px; }
 /* the subtitle under the heading: upright serif at ~46% of the heading */
 .page-hero-subtitle {
@@ -1550,6 +1634,37 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 }
 .conf-icon .i { width: 17px; height: 17px; }
 .conf-body h3 { font-family: var(--font-display); font-size: 21px; line-height: 1.3; color: var(--ink); font-weight: 600; margin-bottom: 3px; }
+/* the route map above the cards (routeMap on the homepage): the US in dots and faint lines, the cities as gold anchors,
+   the route's arcs drawn on behind a flying dove */
+.route-map { position: relative; width: min(100%, calc(300px * var(--ar, 1.6))); margin: 0; }
+/* the section's header: label, heading and summary on the left (~45%), the map on the right (~55%), right-aligned and
+   centred on the text; then the cards */
+.conf-head { display: grid; grid-template-columns: minmax(0, 45fr) minmax(0, 55fr); column-gap: 48px; align-items: center; margin-bottom: 56px; }
+.conf-head .route-map { justify-self: end; }
+.conf-head + .conf-grid { margin-top: 0; }
+.conf-head .section-sub { margin-bottom: 0; }
+@media (max-width: 1024px) {
+  .conf-head { grid-template-columns: minmax(0, 1fr); row-gap: 32px; margin-bottom: 48px; }
+  .conf-head .route-map { justify-self: center; width: min(100%, 480px); }
+}
+.route-map > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.route-map .rm-outline { fill: none; stroke: var(--page-accent); stroke-width: 0.9; stroke-opacity: 0.3; stroke-linejoin: round; }
+.route-map .rm-dot { fill: var(--page-accent); fill-opacity: 0.55; }
+.route-map .rm-arc { fill: none; stroke: var(--page-accent); stroke-width: 1.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.route-map .rm-city { cursor: pointer; outline: none; }
+.route-map .rm-hit { fill: transparent; }
+.route-map .rm-pin { fill: var(--page-accent); }
+.route-map .rm-leader { stroke: var(--page-accent); stroke-width: 0.9; stroke-opacity: 0.7; }
+.route-map .rm-node { fill: var(--page-accent); transform-box: fill-box; transform-origin: center; transition: transform 0.25s ease; }
+.route-map .rm-city:hover .rm-node, .route-map .rm-city:focus-visible .rm-node { transform: scale(1.35); }
+.route-map .rm-city:focus-visible .rm-hit { stroke: var(--focus); stroke-width: 1.5; }
+.route-map .rm-city.is-hit .rm-node { animation: rmHit 0.6s cubic-bezier(.34,1.56,.64,1); }
+@keyframes rmHit { 40% { transform: scale(1.7); } }
+.route-map .rm-dove { color: var(--page-accent); transition: opacity 0.3s ease; }
+.route-map .rm-dove .dove { overflow: visible; }
+.conf-card.is-flash { animation: confFlash 1.4s ease; }
+@keyframes confFlash { 0%, 100% { box-shadow: none; } 25% { box-shadow: 0 0 0 2px var(--brass); } }
+@media (prefers-reduced-motion: reduce) { .route-map .rm-city.is-hit .rm-node, .conf-card.is-flash { animation: none; } }
 .conf-loc { font-size: 11.5px; color: var(--brass-ink); font-weight: 500; font-style: italic; letter-spacing: 0.4px; }
 /* Four lines, then "Read more" opens the rest in place */
 .conf-body p:not(.conf-loc) {
@@ -1994,7 +2109,7 @@ dialog { color: inherit; }
 .content-zoom .edu-courses        { font-size: calc(13px / var(--content-scale)); }
 .content-zoom .value-card p,
 .content-zoom .org-item span,
-.content-zoom .fit-evidence li    { font-size: calc(12.5px / var(--content-scale)); }
+.content-zoom .fit-evidence li    { font-size: max(13px, calc(12.5px / var(--content-scale))); }
 @media (max-width: 899px) { :root { --content-scale: 1; } }
 
 /* ─── RESPONSIVE ─── */
@@ -2049,6 +2164,7 @@ dialog { color: inherit; }
   .edu-card { grid-template-columns: 1fr; }
   .value-grid { grid-template-columns: repeat(2, 1fr); }
   .fit-grid { grid-template-columns: 1fr; }
+  .fit-card { padding: 32px 26px; }
   #side-nav, #quick-view { display: none; }
   .hero-right { padding: 56px 32px 72px; }
   .conf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2096,7 +2212,6 @@ dialog { color: inherit; }
   .impact-row { padding: 36px 0; row-gap: 24px; }
   .impact-commit { margin-top: 72px; }
   .impact-commit-grid { margin-top: 40px; }
-  .impact-teaser { padding: 48px 0; }
   .hero.hero--page { --art-h: 320px; }   /* phones: a ~320px drawing below the text */
   .hero--page .hero-left { padding: calc(var(--nav-h) + 48px) 0 0; }
   .constellation-tip { display: none; }   /* no hover on touch: a tap jumps to the row */
@@ -2106,7 +2221,6 @@ dialog { color: inherit; }
   .impact-timeline::before, .impact-timeline .timeline-progress { left: 9px; }
   .impact-timeline .timeline-dot { left: -30.5px; }
   .impact-timeline .timeline-item { padding-bottom: 56px; }
-  .impact-frame::before { inset: 10px -10px -10px 10px; }
   .conf-body { padding: 22px 22px 24px; }
   .conf-feature { grid-template-columns: minmax(0, 1fr); }
   .conf-feature .conf-img-wrap { aspect-ratio: 16 / 10; height: auto; min-height: 0; }
@@ -2167,7 +2281,7 @@ dialog { color: inherit; }
 #intro { display: none; }
 .intro-on #intro {
   display: block; position: fixed; inset: 0; z-index: 9980; overflow: hidden;
-  animation: introFailsafe 0.4s ease 4s forwards;
+  animation: introFailsafe 0.4s ease 6s forwards;
 }
 @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
 .intro-bg { position: absolute; inset: 0; background: var(--hero-bg); }
@@ -2182,24 +2296,26 @@ dialog { color: inherit; }
   background-image: linear-gradient(rgba(245,239,227,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(245,239,227,0.035) 1px, transparent 1px);
   background-size: 60px 60px;
 }
-.intro-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.intro-canvas { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; }   /* above the name: the dove flies out toward the viewer, in front of it */
+/* while the hero waits off to the right for the camera pan, its overflow must not widen the page (phones would zoom out) */
+.intro-on main { overflow-x: clip; }
 #intro .intro-name {
   position: absolute; left: 0; top: 0; margin: 0; width: max-content; white-space: nowrap;
-  transform-origin: 0 0; opacity: 0; will-change: transform;
+  transform-origin: 0 0; opacity: 0; will-change: transform; z-index: 1;
 }
 .intro-role {
   position: absolute; left: 0; top: 0; margin: 0; opacity: 0; white-space: nowrap;
   font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--on-dark-2);
 }
 .intro-skip-btn {
-  position: absolute;   /* (not .intro-skip: that class is set on <html> when the intro is skipped) */ right: 24px; bottom: 24px; padding: 8px 16px; border-radius: 100px; opacity: 0;
+  position: absolute;   /* (not .intro-skip: that class is set on <html> when the intro is skipped) */ right: 24px; bottom: 24px; z-index: 3; padding: 8px 16px; border-radius: 100px; opacity: 0;
   border: 1px solid var(--line-dark-strong); background: transparent; color: var(--on-dark-2);
   font: 600 11px var(--font-body); letter-spacing: 1.4px; text-transform: uppercase; cursor: pointer;
 }
 .intro-skip-btn:hover { color: var(--cream); border-color: var(--brass-hi); }
 /* while the intro runs, the hero name waits in place (no entrance) for the intro's copy to land on it; the header
    rests where it ends up, so the dove flies to the right spot */
-.intro-on #hero .hero-name { opacity: 0; transform: none; transition: none; animation: introNameFailsafe 0.3s ease 4s forwards; }
+.intro-on #hero .hero-name { opacity: 0; transform: none; transition: none; animation: introNameFailsafe 0.3s ease 6s forwards; }
 @keyframes introNameFailsafe { to { opacity: 1; } }
 .intro-done #hero .hero-name { opacity: 1; transform: none; transition: none; }
 .intro-on header, .intro-done header { transform: none; }
@@ -2219,5 +2335,5 @@ dialog { color: inherit; }
 @media (prefers-reduced-motion: reduce) { .dove .dove-eye, .dove .dove-wings { animation: none !important; } }
 
 /* the footer's sign-off: the ASCII dove, ~120px */
-.footer-dove { display: block; height: 120px; margin: 0 auto 18px; color: var(--cream); opacity: 0.85; }
+.footer-dove { display: block; height: 120px; margin: 0 auto 18px; color: var(--dove-gold); }   /* the sign-off: gold on the footer's green (both themes) */
 @media (max-width: 768px) { .footer-dove { height: 96px; } }

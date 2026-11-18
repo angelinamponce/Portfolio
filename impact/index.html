@@ -38,7 +38,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Assets/css/site.css?v=38">
+  <link rel="stylesheet" href="/Assets/css/site.css?v=47">
 </head>
 <body>
 
@@ -106,7 +106,7 @@
       <div class="page-hero-text">
         <h1 class="page-hero-title hero-enter hero-enter-1" id="pageTitle" data-impact="title">Impact</h1>
         <p class="page-hero-subtitle hero-enter hero-enter-2" data-impact="subtitle">Getting resources to the people markets underserve</p>
-        <div class="hero-divider hero-enter hero-enter-3"></div>
+        <div class="hero-divider hero-divider--mark hero-enter hero-enter-3" id="impactHeroMark" aria-hidden="true"></div>
         <p class="page-hero-sub hero-enter hero-enter-4" data-impact="sub">I use finance and AI to strengthen the organizations that serve communities the market reaches last.</p>
       </div>
       <!-- one dot per Impact entry (renderImpactConstellation in Assets/js/impact.js) -->
@@ -158,8 +158,8 @@
   </div>
 </footer>
 
-<script src="/Assets/js/impact.js?v=31"></script>
-<script src="/Assets/js/site.js?v=22"></script>
+<script src="/Assets/js/impact.js?v=37"></script>
+<script src="/Assets/js/site.js?v=34"></script>
 <script>
 renderImpactHero();
 renderImpactCases(document.getElementById('impactGrid'));
@@ -180,6 +180,14 @@ Site.search.push(() => impactSearchItems(id => {
   const sync = () => cue.classList.toggle('is-gone', window.scrollY > 40);
   window.addEventListener('scroll', sync, { passive: true }); sync();
   cue.addEventListener('click', e => { e.preventDefault(); scrollToSection(document.getElementById('case-studies'), 0); });
+})();
+// The divider under the subtitle: a constellation line that draws in once the title has risen in
+(() => {
+  const el = document.getElementById('impactHeroMark'); if (!el || typeof constellationMark !== 'function') return;
+  el.innerHTML = constellationMark('impact-hero', { width: 112, height: 18, dots: [4, 5] });
+  const mark = el.firstElementChild;
+  if (reduceMotion) mark.classList.add('is-drawn');
+  else window.addEventListener('load', () => setTimeout(() => mark.classList.add('is-drawn'), 700));
 })();
 // The header settles and the hero text rises in once the page is ready (see .hero-enter)
 document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => { document.documentElement.classList.remove('hero-pending'); document.body.classList.add('page-loaded'); }));

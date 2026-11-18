@@ -41,7 +41,7 @@
       try { if (/[?&]intro=1\b/.test(location.search) && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) seen = false; } catch (e) {}   // ?intro=1 replays it
       root.classList.add(seen ? 'intro-skip' : 'intro-on', 'js');
       // The hero waits hidden (html.hero-pending) until the page reveals it. Whatever happens to the other scripts, it is
-      // revealed after 4s: this runs on its own, so a failure anywhere else can never leave the hero (or the intro) stuck.
+      // revealed after 6s (the intro runs ~4s): this runs on its own, so a failure anywhere else can never leave the hero (or the intro) stuck.
       root.classList.add('hero-pending');
       setTimeout(function () {
         if (!root.classList.contains('hero-pending') && !root.classList.contains('intro-on')) return;
@@ -49,7 +49,7 @@
         if (root.classList.contains('intro-on')) { root.classList.remove('intro-on'); root.classList.add('intro-done'); }
         var ov = document.getElementById('intro'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
         if (document.body) document.body.classList.add('page-loaded');
-      }, 4000);
+      }, 6000);
       // dark by default; light only when the visitor has picked it with the toggle
       var theme = 'dark';
       try { theme = localStorage.getItem('apTheme') === 'light' ? 'light' : 'dark'; } catch (e) {}
@@ -60,7 +60,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="Assets/css/site.css?v=38">
+  <link rel="stylesheet" href="Assets/css/site.css?v=47">
   <style>
     /* fragment URLs resolve against the stylesheet's location, so this one stays with the SVG filter it points at */
     .gpa-dot { filter: url(#glow); }
@@ -195,9 +195,9 @@
     <div class="hero-content">
       <!-- The dove above the name (decorative). The canvas is drawn by site.js (initAsciiBird); the text copy below is
            the same ASCII dove, shown only if the canvas never draws (no script). The intro's dove lands here. -->
-      <div class="hero-bird" aria-hidden="true">
-        <canvas class="hero-dove" data-src="/Assets/img/abuelas-blessing.png"></canvas>
-        <pre class="hero-bird-static">
+      <div class="hero-bird">
+        <canvas class="hero-dove" data-src="/Assets/img/abuelas-blessing.png" aria-hidden="true"></canvas>
+        <pre class="hero-bird-static" aria-hidden="true">
                        :
                       =#
                      .@@.
@@ -445,11 +445,16 @@
 
 <!-- Impact teaser: the full section lives at /impact (impact/index.html) -->
 <section class="impact-teaser" id="impact" aria-labelledby="impactTeaserTitle">
-  <div class="container impact-teaser-inner reveal">
-    <h2 class="section-label impact-teaser-label" id="impactTeaserTitle">Impact</h2>
-    <div class="impact-teaser-row">
+  <div class="container impact-teaser-inner">
+    <div class="impact-teaser-text reveal">
+      <div class="section-label" aria-hidden="true"></div>
+      <h2 class="section-title impact-teaser-title" id="impactTeaserTitle">Mission-Driven!</h2>
       <p class="impact-teaser-line">Affordable housing, access to tech, health, and responsible AI. Plus 12+ years of community commitments.</p>
-      <a href="/impact/" class="btn-mag btn-ghost-mag impact-teaser-btn" data-magnetic="off">See my impact →</a>
+    </div>
+    <!-- a still, decorative copy of the /impact hands-and-globe (renderImpactConstellation, teaser mode) -->
+    <div class="impact-teaser-art" id="teaserConstellation" aria-hidden="true"></div>
+    <div class="impact-teaser-cta reveal">
+      <a href="/impact/" class="btn-mag impact-teaser-btn" data-magnetic="off">See my impact →</a>
     </div>
   </div>
 </section>
@@ -856,8 +861,8 @@
   </div>
 </footer>
 
-<script src="Assets/js/impact.js?v=31"></script>
-<script src="Assets/js/site.js?v=22"></script>
+<script src="Assets/js/impact.js?v=37"></script>
+<script src="Assets/js/site.js?v=34"></script>
 <script>
 // ── Site settings. Each optional piece stays hidden until its value is filled in.
 const SITE = {
@@ -885,6 +890,15 @@ const LOGOS = {
 };
 // ── "Where I fit": one card per lane, shown right after About (nothing renders when this is empty).
 // Each evidence bullet links to its proof: href is an anchor on the page, project is a project card's data-id (opens its modal).
+// The lane icons, redrawn in the constellation style: thin lines with small dots at the joints (one dot a little larger)
+const fitIcon = (lines, dots, big) => `<svg class="fit-glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${lines.map(d => `<path d="${d}"/>`).join('')}${dots.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${i === big ? 1.6 : 1.05}"/>`).join('')}</svg>`;
+const FIT_ICONS = {
+  'trending-up': fitIcon(['M2.5 18.5 8.5 12.5 13 15.5 21 7', 'M15.5 7H21V12.5'], [[2.5, 18.5], [8.5, 12.5], [13, 15.5], [21, 7], [15.5, 7], [21, 12.5]], 3),
+  code: fitIcon(['M8 6 2.5 12 8 18', 'M16 6 21.5 12 16 18', 'M13.5 4.5 10.5 19.5'], [[8, 6], [2.5, 12], [8, 18], [16, 6], [21.5, 12], [16, 18], [13.5, 4.5], [10.5, 19.5]], 1),
+  layers: fitIcon(['M12 3 21 8 12 13 3 8Z', 'M3 12.5 12 17.5 21 12.5', 'M3 16.5 12 21.5 21 16.5'], [[12, 3], [21, 8], [12, 13], [3, 8], [3, 12.5], [12, 17.5], [21, 12.5], [3, 16.5], [12, 21.5], [21, 16.5]], 0),
+  heart: fitIcon(['M12 20.5 4 12.5 2.8 8.4 4.8 4.8 8.6 4 12 7.4 15.4 4 19.2 4.8 21.2 8.4 20 12.5Z'], [[12, 20.5], [4, 12.5], [2.8, 8.4], [4.8, 4.8], [8.6, 4], [12, 7.4], [15.4, 4], [19.2, 4.8], [21.2, 8.4], [20, 12.5]], 5),
+  briefcase: fitIcon(['M3 8H21V19H3Z', 'M9 8V5H15V8'], [[3, 8], [21, 8], [21, 19], [3, 19], [9, 5], [15, 5]], 0),
+};
 const FIT_ROLES = [
   {
     title: 'Asset & Wealth Management',
@@ -974,14 +988,17 @@ const introOn = document.documentElement.classList.contains('intro-on');
   if (FIT_ROLES.length && about) {
     const sec = document.createElement('section');
     sec.className = 'section fit-section'; sec.id = 'fit'; sec.setAttribute('aria-labelledby', 'fitTitle');
-    sec.innerHTML = '<div class="container"><div class="reveal"><div class="section-label">Roles</div><h2 class="section-title" id="fitTitle">Where I <span class="accent--underline">fit</span></h2>'
+    sec.innerHTML = '<div class="container"><div class="reveal"><div class="section-label" aria-hidden="true"></div><h2 class="section-title" id="fitTitle">Where I <span class="accent--underline">fit</span></h2>'
       + '<p class="section-sub">Four lanes where my experience lines up, each linked to the work behind it.</p></div><div class="fit-grid"></div></div>';
     const grid = sec.querySelector('.fit-grid');
+    // each lane: a card (the article keeps the scroll reveal; the inner card takes the hover lift) with a constellation
+    // rule drawn across its top, a constellation-style icon, the title, the pitch and its evidence links
     FIT_ROLES.forEach(({ title, icon, pitch, evidence = [] }, i) => {
-      const card = document.createElement('article'), ic = document.createElement('div'), h = document.createElement('strong'), p = document.createElement('p'), ul = document.createElement('ul');
-      card.className = `value-card reveal reveal-delay-${i % 3 + 1}`;
-      ic.className = 'value-icon'; ic.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${icon || 'briefcase'}"/></svg>`;
-      h.textContent = title; p.textContent = pitch || '';
+      const lane = document.createElement('article'), card = document.createElement('div'), ic = document.createElement('div'), h = document.createElement('h3'), p = document.createElement('p'), ul = document.createElement('ul');
+      lane.className = `fit-lane reveal reveal-delay-${i % 2 + 1}`; lane.style.setProperty('--i', i);
+      card.className = 'fit-card'; card.innerHTML = constellationRule('fit-' + i);
+      ic.className = 'fit-icon'; ic.innerHTML = FIT_ICONS[icon] || FIT_ICONS.briefcase;
+      h.className = 'fit-title'; h.textContent = title; p.className = 'fit-pitch'; p.textContent = pitch || '';
       ul.className = 'fit-evidence';
       evidence.forEach(({ text, href, project }) => {
         if (!text) return;
@@ -993,8 +1010,12 @@ const introOn = document.documentElement.classList.contains('intro-on');
       });
       card.append(ic, h, p);
       if (ul.children.length) card.appendChild(ul);
-      grid.appendChild(card);
+      lane.appendChild(card); grid.appendChild(lane);
     });
+    // the rules draw across the cards' tops, ~150ms apart, once the grid comes into view
+    const rules = grid.querySelectorAll('.c-rule');
+    if (reduceMotion) rules.forEach(r => r.classList.add('is-drawn'));
+    else DoveKit.inViewOnce(grid, () => rules.forEach(r => r.classList.add('is-drawn')), { threshold: 0.2 });
     if (SITE.openTo) {
       const open = document.createElement('p'), label = document.createElement('strong');
       open.className = 'fit-open reveal'; label.textContent = 'Open to';
@@ -1060,7 +1081,7 @@ function skipIntro() {
 }
 let introRunning = false;
 if (introOn && typeof runDoveIntro === 'function') {
-  try { runDoveIntro({ onDone: () => startHero(0) }); introRunning = true; }
+  try { runDoveIntro({ onDone: () => startHero(0), onReveal: () => startHero(0) }); introRunning = true; }   // onReveal: the hero's entrance starts under the camera pan
   catch (e) { console.error('Intro failed; showing the page', e); skipIntro(); }
 }
 if (!introRunning) {
@@ -1631,6 +1652,162 @@ document.querySelectorAll('.conf-img-wrap img').forEach(img => {
 // captioned with the event and place, the About photo, and Experience photos, with the company and the role
 const tidy = el => el.textContent.replace(/\s+/g, ' ').trim();
 addLightboxGallery(confShots, btn => { const c = btn.closest('.conf-card'); return [tidy(c.querySelector('h3')), tidy(c.querySelector('.conf-loc'))]; });
+// ── The Mission-Driven band's drawing: the /impact constellation, still, drawn in once on scroll
+if (typeof renderImpactConstellation === 'function') renderImpactConstellation(document.getElementById('teaserConstellation'), { teaser: true });
+
+// ── Side-nav constellation: the section dots, set slightly off a straight line, are joined by thin gold lines (full
+//    strength up to where you are, faint ahead), and a small gold dove (the nav logo's) stands in for the current dot,
+//    gliding from dot to dot as you scroll. The dots keep their buttons, labels and click-to-scroll.
+(function sideConstellation() {
+  if (!sideNav || !sideDots.length) return;
+  const NS = 'http://www.w3.org/2000/svg', dots = [...sideDots], DX = [0, -4, 3, -2, 4, -3, 2, -4, 1];
+  dots.forEach((d, i) => { d.style.left = DX[i % DX.length] + 'px'; });
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'side-lines'); svg.setAttribute('aria-hidden', 'true');
+  const faint = document.createElementNS(NS, 'polyline'), lit = document.createElementNS(NS, 'polyline');
+  faint.setAttribute('class', 'sl-faint'); lit.setAttribute('class', 'sl-lit'); svg.append(faint, lit); sideNav.prepend(svg);
+  const doveEl = document.createElement('span'); doveEl.className = 'side-dove'; doveEl.setAttribute('aria-hidden', 'true'); sideNav.appendChild(doveEl);
+  mountDove(doveEl, { hoverEl: null }); sideNav.classList.add('has-dove');
+  const targets = dots.map(d => document.getElementById(d.dataset.section));
+  let C = [], cum = [0], total = 0, cur = null, goal = 0;
+  const measure = () => {
+    const nb = sideNav.getBoundingClientRect(); if (!nb.height) return false;
+    C = dots.map(d => { const b = d.getBoundingClientRect(); return [b.left + b.width / 2 - nb.left, b.top + b.height / 2 - nb.top]; });
+    const pts = C.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+    faint.setAttribute('points', pts); lit.setAttribute('points', pts);
+    cum = [0]; for (let i = 1; i < C.length; i++) cum.push(cum[i - 1] + Math.hypot(C[i][0] - C[i - 1][0], C[i][1] - C[i - 1][1]));
+    total = cum[cum.length - 1]; lit.style.strokeDasharray = total + ' ' + total;
+    return true;
+  };
+  // where you are, as a position along the dots (2.5 = halfway from the third section to the fourth)
+  const position = () => {
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) return dots.length - 1;
+    const y = window.scrollY + window.innerHeight * 0.3;
+    const tops = targets.map(el => el ? el.getBoundingClientRect().top + window.scrollY : Infinity);
+    for (let i = tops.length - 1; i >= 0; i--) if (y >= tops[i]) return i < tops.length - 1 ? i + Math.min(1, (y - tops[i]) / Math.max(1, tops[i + 1] - tops[i])) : i;
+    return 0;
+  };
+  const draw = f => {
+    const i = Math.min(C.length - 2, Math.floor(f)), u = f - i, a = C[i], b = C[i + 1] || a;
+    const x = a[0] + (b[0] - a[0]) * u, y = a[1] + (b[1] - a[1]) * u;
+    doveEl.style.transform = `translate(${(x - 7).toFixed(1)}px, ${(y - 7.5).toFixed(1)}px)`;
+    lit.style.strokeDashoffset = (total - (cum[i] + (cum[i + 1] - cum[i] || 0) * u)).toFixed(1);
+    dots.forEach((d, k) => { d.classList.toggle('is-dove', Math.abs(C[k][1] - y) < 7); d.classList.toggle('is-passed', k <= f + 0.02); });   // passed dots fill in; the one under the dove steps aside
+  };
+  // the dove glides toward where you are (straight there with reduced motion)
+  const tk = DoveKit.ticker(dt => {
+    cur += (goal - cur) * Math.min(1, dt / 140);
+    if (Math.abs(goal - cur) < 0.002) cur = goal;
+    draw(cur); return cur !== goal;
+  });
+  const update = () => {
+    if (!C.length && !measure()) return;
+    goal = position();
+    if (cur === null || reduceMotion) { cur = goal; draw(cur); } else tk.start();
+  };
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', () => { measure(); update(); });
+  window.addEventListener('load', () => { measure(); update(); });
+  measure(); update();
+})();
+
+// ── Conferences route map: a dot-and-line outline of the continental US (Natural Earth 1:110m, public domain,
+//    simplified; Albers projection), the event cities as gold anchors, and the route between them in the order they
+//    were first visited. In view, a small gold dove flies the route once, drawing each arc behind it. A city shows its
+//    events on hover or focus and jumps to its card on click. Phones and reduced motion: the finished map, no flight.
+const CONF_CITIES = {   // at: [lat, lon]; off: where its dot sits from the true spot (drawing units), to keep the
+  // north-east cities, a few miles apart at this scale, separately clickable
+  boston:    { name: 'Boston',        at: [42.36, -71.06],  off: [10, -12] },
+  sf:        { name: 'San Francisco', at: [37.77, -122.42], off: [0, 0] },
+  newhaven:  { name: 'New Haven',     at: [41.31, -72.92],  off: [14, 6] },
+  nyc:       { name: 'New York',      at: [40.71, -74.01],  off: [-4, 16] },
+  charlotte: { name: 'Charlotte',     at: [35.23, -80.84],  off: [0, 0] },
+};
+// the route: each city in the order of its first event (the site lists years, not months, so within a year this is
+// an assumption; reorder here). Boston (Harvard WECode, HackMIT 2025) → San Francisco (ColorStack 2025) → New Haven
+// (YHack) → New York (Women in Finance) → Charlotte (ALPFA)
+const CONF_ROUTE = ['boston', 'sf', 'newhaven', 'nyc', 'charlotte'];
+const US_OUTLINE = '-122.8,49.0,-95.2,49.0,-94.8,49.4,-94.3,48.7,-91.6,48.1,-88.4,48.3,-82.6,45.3,-82.1,43.6,-83.1,42.1,-82.7,41.7,-78.9,42.9,-79.2,43.5,-78.7,43.6,-76.8,43.6,-74.9,45.0,-71.5,45.0,-69.2,47.4,-67.8,47.1,-67.8,45.7,-67.0,44.8,-70.1,43.7,-70.8,42.3,-70.0,41.6,-73.7,40.9,-71.9,40.9,-74.0,40.8,-74.9,38.9,-75.5,39.5,-75.1,38.4,-75.9,37.2,-75.7,37.9,-76.4,39.1,-76.3,38.1,-77.0,38.2,-76.3,37.9,-75.7,35.6,-81.3,31.4,-81.3,30.0,-80.1,26.9,-80.4,25.2,-81.2,25.2,-81.7,25.9,-83.7,29.9,-85.1,29.6,-86.4,30.4,-89.6,30.2,-89.4,29.2,-93.2,29.8,-94.7,29.5,-97.1,27.8,-97.1,25.9,-97.5,25.8,-99.0,26.4,-101.0,29.4,-102.5,29.8,-103.1,29.0,-103.9,29.3,-106.5,31.8,-111.0,31.3,-114.7,32.7,-117.1,32.5,-118.5,34.0,-120.6,34.6,-124.4,40.3,-124.5,42.8,-123.9,45.5,-124.7,48.2,-123.1,48.0,-122.6,47.1';
+(function routeMap() {
+  const sec = document.getElementById('conferences'), grid = sec && sec.querySelector('.conf-grid');
+  if (!grid) return;
+  const NS = 'http://www.w3.org/2000/svg', R = Math.PI / 180;
+  // the cards, by city (from each card's location line), each with an id to jump to
+  const cards = [...grid.querySelectorAll('.conf-card')];
+  cards.forEach(c => { c.id = c.id || 'conf-' + tidy(c.querySelector('h3')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); });
+  const cityCards = k => cards.filter(c => tidy(c.querySelector('.conf-loc')).startsWith(CONF_CITIES[k].name));
+  // Albers equal-area conic (standard parallels 29.5° and 45.5°, centred on 96° W)
+  const n = (Math.sin(29.5 * R) + Math.sin(45.5 * R)) / 2, Cc = Math.cos(29.5 * R) ** 2 + 2 * n * Math.sin(29.5 * R), r0 = Math.sqrt(Cc - 2 * n * Math.sin(37.5 * R)) / n;
+  const albers = (lat, lon) => { const r = Math.sqrt(Cc - 2 * n * Math.sin(lat * R)) / n, th = n * (lon + 96) * R; return [r * Math.sin(th), -(r0 - r * Math.cos(th))]; };
+  const raw = US_OUTLINE.split(',').map(Number), outline = [];
+  for (let i = 0; i < raw.length; i += 2) outline.push(albers(raw[i + 1], raw[i]));
+  const xs = outline.map(p => p[0]), ys = outline.map(p => p[1]), W = 600, PAD = 24;
+  const k = (W - 2 * PAD) / (Math.max(...xs) - Math.min(...xs)), H = Math.round((Math.max(...ys) - Math.min(...ys)) * k + 2 * PAD);
+  const proj = (lat, lon) => { const [x, y] = albers(lat, lon); return [PAD + (x - Math.min(...xs)) * k, PAD + (y - Math.min(...ys)) * k]; };
+  const pt = p => p.map(v => v.toFixed(1)).join(' ');
+
+  const fig = document.createElement('figure'); fig.className = 'route-map reveal';
+  fig.style.setProperty('--ar', (W / H).toFixed(3));
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', 'Conference route map: choose a city to see its events');
+  const mk = (tag, cls, parent = svg, attrs = {}) => { const e = document.createElementNS(NS, tag); if (cls) e.setAttribute('class', cls); Object.entries(attrs).forEach(([a, v]) => e.setAttribute(a, v)); parent.appendChild(e); return e; };
+  const deco = mk('g', 'rm-deco', svg, { 'aria-hidden': 'true' });
+  const outlinePath = mk('path', 'rm-outline', deco, { d: 'M' + outline.map(p => pt([PAD + (p[0] - Math.min(...xs)) * k, PAD + (p[1] - Math.min(...ys)) * k])).join('L') + 'Z' });
+  DoveKit.dotsAlong(outlinePath, 160).forEach((q, i) => mk('circle', 'rm-dot', deco, { cx: q.x.toFixed(1), cy: q.y.toFixed(1), r: i % 7 === 0 ? 1.9 : 1.3 }));
+  // the route's arcs: each bows upward between two cities
+  const P = Object.fromEntries(Object.entries(CONF_CITIES).map(([key, c]) => [key, proj(...c.at)]));
+  const arcs = CONF_ROUTE.slice(1).map((key, i) => {
+    const a = P[CONF_ROUTE[i]], b = P[key], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    // the bulge points up, and down on every other leg, so a route that doubles back doesn't retrace itself
+    let nx = -(b[1] - a[1]) / d, ny = (b[0] - a[0]) / d; if ((ny > 0) !== (i % 2 === 1)) { nx = -nx; ny = -ny; }
+    const bow = Math.max(10, d * (i % 2 ? 0.16 : 0.28));
+    return mk('path', 'rm-arc', deco, { d: `M${pt(a)} Q${pt([mx + nx * bow, my + ny * bow])} ${pt(b)}`, pathLength: '1' });
+  });
+  // the cities: a pin at the true spot, a leader out to its dot where needed, and a link
+  const tip = document.createElement('div'); tip.className = 'constellation-tip'; tip.setAttribute('aria-hidden', 'true');
+  const nodes = {};
+  Object.entries(CONF_CITIES).forEach(([key, c]) => {
+    const list = cityCards(key); if (!list.length) return;
+    const events = list.map(card => `${tidy(card.querySelector('h3'))} (${tidy(card.querySelector('.conf-badge')).replace(/ & /g, ', ')})`);
+    const [px, py] = P[key], x = px + c.off[0], y = py + c.off[1];
+    const a = mk('a', 'rm-city', svg, { href: '#' + list[0].id, 'aria-label': `${c.name}: ${events.join('; ')}. Go to ${list.length > 1 ? 'its cards' : 'its card'}` });
+    if (c.off[0] || c.off[1]) mk('line', 'rm-leader', a, { x1: px.toFixed(1), y1: py.toFixed(1), x2: x.toFixed(1), y2: y.toFixed(1) });
+    mk('circle', 'rm-pin', a, { cx: px.toFixed(1), cy: py.toFixed(1), r: 1.8 });
+    mk('circle', 'rm-hit', a, { cx: x.toFixed(1), cy: y.toFixed(1), r: 10 });
+    mk('circle', 'rm-node', a, { cx: x.toFixed(1), cy: y.toFixed(1), r: 4.6 });
+    const show = on => { tip.classList.toggle('is-on', on); if (on) { tip.textContent = `${c.name} · ${list.map(card => tidy(card.querySelector('h3'))).join(', ')}`; tip.style.left = (x / W * 100) + '%'; tip.style.top = (y / H * 100) + '%'; } };
+    a.addEventListener('mouseenter', () => show(true)); a.addEventListener('mouseleave', () => show(false));
+    a.addEventListener('focus', () => show(true)); a.addEventListener('blur', () => show(false));
+    a.addEventListener('click', e => {
+      e.preventDefault(); show(false);
+      scrollToSection(list[0], 24); list[0].setAttribute('tabindex', '-1'); list[0].focus({ preventScroll: true });
+      list.forEach(card => { card.classList.remove('is-flash'); void card.offsetWidth; card.classList.add('is-flash'); });
+    });
+    nodes[key] = a;
+  });
+  fig.append(svg, tip);
+  // the section's header becomes two columns: the label, heading and summary on the left, the map on the right
+  const head = sec.querySelector('.container > .reveal'), wrap = document.createElement('div');
+  wrap.className = 'conf-head'; head.before(wrap); wrap.append(head, fig);
+  // the dove: flies the route once when the map comes into view; otherwise (phones, reduced motion) it rests on the last city
+  const dove = DoveKit.svgDove(svg, 30, 'rm-dove'), last = P[CONF_ROUTE[CONF_ROUTE.length - 1]];
+  const still = reduceMotion || window.matchMedia('(max-width: 768px)').matches;
+  const rest = () => { arcs.forEach(p => DoveKit.drawOn(p, 1)); if (dove) { DoveKit.placeDove(dove, last[0] + 2, last[1] - 7); dove.g.style.opacity = 1; } fig.classList.add('is-done'); };
+  if (still || !dove) return rest();
+  arcs.forEach(p => DoveKit.drawOn(p, 0));
+  dove.g.style.opacity = 0; DoveKit.placeDove(dove, ...P[CONF_ROUTE[0]]);
+  DoveKit.inViewOnce(svg, async () => {
+    dove.g.style.opacity = 1;
+    const ease = x => x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+    for (let i = 0; i < arcs.length; i++) {
+      const len = arcs[i].getTotalLength();
+      await DoveKit.flyAlong({ path: arcs[i], dove, duration: 420 + len * 1.7, ease, el: svg, onStep: u => DoveKit.drawOn(arcs[i], u) });
+      const next = nodes[CONF_ROUTE[i + 1]]; if (next) { next.classList.remove('is-hit'); void next.getBBox(); next.classList.add('is-hit'); }
+    }
+    DoveKit.placeDove(dove, last[0] + 2, last[1] - 7); dove.flutter();
+    fig.classList.add('is-done');
+  }, { threshold: 0.5 });
+})();
+
 addLightboxGallery([document.querySelector('.about-shot')]);   // a single photo: caption from its data-lb-title / data-lb-desc
 addLightboxGallery([...document.querySelectorAll('.exp-photo')], btn => { const c = btn.closest('.exp-card'); return [tidy(c.querySelector('.exp-company')), tidy(c.querySelector('h3'))]; });
 
@@ -1640,7 +1817,9 @@ initTimeline(document.querySelector('#experience .timeline'));
 
 document.getElementById('copyEmail').addEventListener('click', async e => {
   const email = e.currentTarget.dataset.email;
-  showToast(await copyText(email) ? COPIED : `Copy failed. Email: ${email}`);
+  const ok = await copyText(email);
+  showToast(ok ? COPIED : `Copy failed. Email: ${email}`);
+  if (ok && Site.navDove) Site.navDove.flutter();   // the nav dove flutters along with the toast
 });
 document.getElementById('modalLinks').addEventListener('click', async e => {
   const btn = e.target.closest('.modal-copy');

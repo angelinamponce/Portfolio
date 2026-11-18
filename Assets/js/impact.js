@@ -258,12 +258,39 @@ function impactShot({ image, alt, fit = 'cover', position, overlay = true, srcse
 function impactMedia(shot, caption) {
   if (!shot) return null;
   const media = impactEl('div', 'impact-media');
-  const frame = impactEl('div', 'impact-frame');   // the offset gold frame behind the image
+  const frame = impactEl('div', 'impact-frame');   // holds the image (its 1px gold outline is on .impact-shot)
   frame.appendChild(shot);
   media.appendChild(frame);
   if (shot.classList.contains('is-cover')) shot.classList.add('has-parallax');   // photos drift on scroll; logos/art don't
   if (caption) media.appendChild(impactEl('p', 'impact-caption', caption));
   return media;
+}
+
+// The constellation marks above the focus-area headings: hand-drawn arrangements (x, y, r in a 72 × 16 box), a different
+// one for each heading (the four case studies, then the commitments), drawn in when the heading scrolls into view
+// (constellationMark in Assets/js/site.js; the same draw-in as the homepage's section marks)
+const IMPACT_MARKS = [
+  [[4, 11, 1.5], [22, 5, 2.6], [41, 9, 1.3], [68, 6, 1.6]],
+  [[4, 6, 1.4], [19, 12, 1.7], [37, 8, 1.3], [52, 3.5, 2.5], [68, 10, 1.4]],
+  [[4, 9, 2.4], [30, 4, 1.4], [68, 11, 1.6]],
+  [[4, 4, 1.3], [17, 10, 1.6], [33, 12, 1.3], [50, 6, 1.5], [68, 7, 2.5]],
+  [[4, 12, 1.6], [24, 7, 1.3], [44, 10, 2.5], [68, 4, 1.4]],
+  [[4, 7, 1.5], [21, 4, 1.3], [40, 11, 1.7], [56, 8, 2.4], [68, 12, 1.3]],
+  [[4, 5, 2.5], [35, 11, 1.4], [68, 7, 1.6]],
+  [[4, 10, 1.3], [16, 5, 1.6], [34, 7, 2.4], [52, 12, 1.3], [68, 6, 1.5]],
+  [[4, 8, 1.6], [26, 12, 1.3], [47, 5, 2.5], [68, 9, 1.4]],
+];
+const impactMark = i => {
+  const d = impactEl('div', 'impact-mark'); d.setAttribute('aria-hidden', 'true');
+  if (typeof constellationMark === 'function') d.innerHTML = constellationMark(null, { points: IMPACT_MARKS[i % IMPACT_MARKS.length] });
+  return d;
+};
+// draw each mark in a container as it comes into view (all at once with reduced motion)
+function drawImpactMarks(root) {
+  root.querySelectorAll('.impact-mark .c-mark').forEach(m => {
+    if (reduceMotion || typeof DoveKit === 'undefined') m.classList.add('is-drawn');
+    else DoveKit.inViewOnce(m, () => m.classList.add('is-drawn'), { threshold: 0.9 });
+  });
 }
 
 // The four case-study cards, into an .impact-grid. headingLevel is the card title's heading level.
@@ -279,7 +306,7 @@ function renderImpactCases(grid, { headingLevel = 3 } = {}) {
     card.appendChild(content);
     const body = impactEl('div', 'impact-body');
     // hierarchy: focus area (the row's heading) → organization (gold) → descriptor (small, muted)
-    body.append(impactEl('h' + headingLevel, 'impact-focus', tag), impactEl('p', 'impact-org', org));
+    body.append(impactMark(i), impactEl('h' + headingLevel, 'impact-focus', tag), impactEl('p', 'impact-org', org));
     if (orgNote) body.appendChild(impactEl('p', 'impact-org-note', orgNote));
     const text = story || [problem, did].filter(Boolean).join(' ');
     if (text) body.appendChild(impactEl('p', 'impact-story', text));
@@ -298,6 +325,7 @@ function renderImpactCases(grid, { headingLevel = 3 } = {}) {
     }
     grid.appendChild(card);
   });
+  drawImpactMarks(grid);
 }
 
 // The "Long-term commitments" block: its label (a heading at labelLevel), then a vertical timeline, most recent at the
@@ -314,25 +342,32 @@ function renderImpactCommitments(container, { labelLevel = 2, headingLevel = 3 }
   const tl = impactEl('div', 'timeline impact-timeline');
   const progress = impactEl('div', 'timeline-progress'); progress.setAttribute('aria-hidden', 'true');
   tl.appendChild(progress);
-  IMPACT_COMMITMENTS.forEach(({ id, tag, role, org, orgNote, since, line, image, alt, fit, position, overlay, srcset, full, description }) => {
+  IMPACT_COMMITMENTS.forEach(({ id, tag, role, org, orgNote, since, line, image, alt, fit, position, overlay, srcset, full, description }, idx) => {
     const item = impactEl('article', 'timeline-item impact-tl-item reveal');
     item.id = 'commit-' + id;
     const dot = impactEl('div', 'timeline-dot'); dot.setAttribute('aria-hidden', 'true');
     const body = impactEl('div', 'impact-tl-body');
     body.appendChild(dot);   // inside the text column, so it lines up with the year whether the photo is beside or above
-    if (since) body.appendChild(impactEl('p', 'impact-tl-year', since));
+    const yearRow = impactEl('div', 'impact-tl-head');   // the year, with the heading's constellation mark beside it
+    if (since) yearRow.appendChild(impactEl('p', 'impact-tl-year', since));
+    yearRow.appendChild(impactMark(IMPACT.length + idx));
+    body.appendChild(yearRow);
     body.append(impactEl('h' + headingLevel, 'impact-focus', tag), impactEl('p', 'impact-org', org),
       impactEl('p', 'impact-org-note', [role, orgNote].filter(Boolean).join(' · ')), impactEl('p', 'impact-commit-line', line));
     item.append(body);
     // the timeline photo loads the -800 file (image); the lightbox still opens the largest file in srcset (or full)
     const largest = srcset ? srcset.split(',').map(e => e.trim().split(/\s+/)).sort((x, y) => parseInt(y[1]) - parseInt(x[1]))[0][0] : image;
     const shot = impactShot({ image, alt, fit, position, overlay, full: full || largest, description });
-    if (shot) { const th = impactEl('div', 'impact-tl-thumb'); th.appendChild(shot); item.appendChild(th); item.classList.add('has-thumb'); }
+    if (shot) {
+      const th = impactEl('div', 'impact-tl-thumb'), fr = impactEl('div', 'impact-frame');
+      fr.appendChild(shot); th.appendChild(fr); item.appendChild(th); item.classList.add('has-thumb');
+    }
     tl.appendChild(item);
   });
   wrap.append(label, tl);
   container.appendChild(wrap);
   if (typeof initTimeline === 'function') initTimeline(tl);
+  drawImpactMarks(wrap);
 }
 
 // ── Hero constellation: an original line drawing (two cupped hands holding a globe, a three-leaf sprout on top, small
@@ -421,24 +456,27 @@ const CONSTELLATION_STEPS = {
 // Renders the constellation into holder. Plays the grow-in once per session (?intro=1 replays it; so does clicking
 // the dove); otherwise, and with reduced motion, it starts finished. Afterwards: a gentle drift and twinkle on the
 // dots (not on phones or with reduced motion) and the dove's own blink and wing flutter.
-function renderImpactConstellation(holder) {
+// opts.teaser: the homepage's decorative copy (no entries, no seed or flight, no replay, a still globe): the drawing
+// draws itself in once when it scrolls into view, the dove already resting on the sprout.
+function renderImpactConstellation(holder, opts = {}) {
   if (!holder) return;
-  try { buildConstellation(holder); }
+  try { buildConstellation(holder, opts); }
   catch (e) {   // fail-safe: anything going wrong leaves the finished drawing (or at least nothing broken)
     console.error('Constellation animation failed; showing it finished', e);
-    try { holder.replaceChildren(); buildConstellation(holder, { forceStill: true }); } catch (e2) { console.error(e2); }
+    try { holder.replaceChildren(); buildConstellation(holder, { ...opts, forceStill: true }); } catch (e2) { console.error(e2); }
   }
 }
-function buildConstellation(holder, { forceStill = false } = {}) {
+function buildConstellation(holder, { forceStill = false, teaser = false } = {}) {
   const NS = 'http://www.w3.org/2000/svg', C = IMPACT_CONSTELLATION, W = 400, H = 440, S = CONSTELLATION_STEPS;
   const phone = window.matchMedia('(max-width: 900px)').matches;
   const still = forceStill || reduceMotion;
   let replay = false;
-  try { replay = /[?&]intro=1\b/.test(location.search) || sessionStorage.getItem('apImpactIntroSeen') !== '1'; sessionStorage.setItem('apImpactIntroSeen', '1'); } catch (e) {}
+  if (!teaser) try { replay = /[?&]intro=1\b/.test(location.search) || sessionStorage.getItem('apImpactIntroSeen') !== '1'; sessionStorage.setItem('apImpactIntroSeen', '1'); } catch (e) {}
   const K = phone ? 2.5 / 3.45 : 1;   // phones: the same sequence, ~2.5s
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'impact-constellation');
-  svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', 'Impact entries drawn as hands holding a globe: choose one to jump to it');
+  if (teaser) { svg.setAttribute('aria-hidden', 'true'); svg.classList.add('is-teaser'); }
+  else { svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', 'Impact entries drawn as hands holding a globe: choose one to jump to it'); }
   const mk = (tag, cls, parent = svg) => { const n = document.createElementNS(NS, tag); if (cls) n.setAttribute('class', cls); parent.appendChild(n); return n; };
   holder.appendChild(svg);
   const clamp01 = x => Math.max(0, Math.min(1, x));
@@ -625,7 +663,7 @@ function buildConstellation(holder, { forceStill = false } = {}) {
 
   // 3. anchors: entries on the hands take the nearest free dot on a main or detail line; entries on the globe are pinned
   //    at their coordinates and turn with it
-  const rows = [...IMPACT.map(r => ({ ...r, anchor: 'impact-' + r.id })), ...IMPACT_COMMITMENTS.map(r => ({ ...r, anchor: 'commit-' + r.id }))];
+  const rows = teaser ? [] : [...IMPACT.map(r => ({ ...r, anchor: 'impact-' + r.id })), ...IMPACT_COMMITMENTS.map(r => ({ ...r, anchor: 'commit-' + r.id }))];
   const taken = new Set(), placed = [];
   rows.forEach(r => {
     const ga = C.globeAnchors[r.id];
@@ -679,6 +717,7 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   });
   // the anchors (and the globe) join the tab order only once the drawing is complete; pins on the globe's far side stay out
   const setAnchorsLive = live => {
+    live = live && !teaser;   // the teaser's globe stays still
     globeLive = live; svg.classList.toggle('is-globe-live', live);
     gHit.setAttribute('tabindex', live ? '0' : '-1');
     placed.forEach(p => { if (p.globe) p.near = null; else if (live) p.link.removeAttribute('tabindex'); else p.link.setAttribute('tabindex', '-1'); });
@@ -687,7 +726,8 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   // 5. the dove: the nav logo's vector dove, positioned over the drawing in the drawing's own units
   const bird = document.createElement('button');
   bird.type = 'button'; bird.className = 'const-bird';
-  bird.setAttribute('aria-label', 'Replay the constellation animation');
+  if (teaser) { bird.setAttribute('aria-hidden', 'true'); bird.tabIndex = -1; bird.classList.add('is-teaser'); }
+  else bird.setAttribute('aria-label', 'Replay the constellation animation');
   holder.appendChild(bird);
   const dove = mountDove(bird, { hoverEl: null });
   const doveSvg = dove && dove.svg;
@@ -764,6 +804,7 @@ function buildConstellation(holder, { forceStill = false } = {}) {
       const u = clamp01((t - S.perch[0]) / (S.perch[1] - S.perch[0])), v = ease.back(u);
       bx = HOLD[0] + (PERCH[0] - HOLD[0]) * v; by = HOLD[1] + (PERCH[1] - HOLD[1]) * v;
     }
+    if (teaser) { bx = PERCH[0]; by = PERCH[1]; flap = false; bird.style.opacity = t >= S.perch[0] ? 1 : 0; }   // the teaser's dove is simply there, on the sprout
     placeBird(bx, by, flap);
     svg.classList.toggle('is-settled', t >= S.anchors[0]);
   }
@@ -771,17 +812,18 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   // 7. run: the sequence (or the finished state), then idle; paused while hidden or off screen
   const rnd = (a, b) => a + Math.random() * (b - a);
   groups.forEach(gp => { gp.ph = rnd(0, Math.PI * 2); gp.w = rnd(0.0006, 0.0011); });
-  const idleMotion = !still && !phone;
-  let seqT = 0, mode = 'idle', last = null, raf = 0, onScreen = true, nextTwinkle = 0, perched = false;
+  const idleMotion = !still && !phone && !teaser;
+  let seqT = 0, mode = 'idle', nextTwinkle = 0, perched = false;
   const finishState = () => {
     seqT = S.total; mode = 'idle'; drift = 0;
     setAnchorsLive(true); render(S.total); svg.classList.add('is-settled');
-    bird.classList.add('is-perched'); bird.tabIndex = 0;
+    if (!teaser) { bird.classList.add('is-perched'); bird.tabIndex = 0; }
     if (still) svg.classList.add('is-still');
   };
-  const frame = now => {
+  // one frame (the shared DoveKit ticker calls it, paused while the tab is hidden or the drawing is off screen);
+  // returns false when there's nothing left to animate
+  const frame = (dt, now) => {
     try {
-      const dt = last === null ? 16 : Math.min(64, now - last); last = now;
       if (mode === 'seq') {
         seqT += dt / K;
         render(Math.min(seqT, S.total));
@@ -797,15 +839,12 @@ function buildConstellation(holder, { forceStill = false } = {}) {
             for (let n = 0; n < 2; n++) { const p = plain[Math.floor(Math.random() * plain.length)]; p.el.classList.remove('twinkle'); void p.el.getBBox; p.el.classList.add('twinkle'); setTimeout(() => p.el.classList.remove('twinkle'), 1600); }
           }
         } else if (turned) drawGlobe(S.total);
-        if (!idleMotion && !globeBusy()) { raf = 0; return; }
+        if (!idleMotion && !globeBusy()) return false;
       }
-      raf = requestAnimationFrame(frame);
-    } catch (e) { console.error('Constellation animation failed; showing it finished', e); finishState(); raf = 0; }
+      return true;
+    } catch (e) { console.error('Constellation animation failed; showing it finished', e); finishState(); return false; }
   };
-  const run = () => { if (!raf && onScreen && !document.hidden) { last = null; raf = requestAnimationFrame(frame); } };
-  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
-  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; onScreen ? run() : stop(); }).observe(svg);
-  document.addEventListener('visibilitychange', () => document.hidden ? stop() : run());
+  const tk = DoveKit.ticker(frame, { el: svg }), run = tk.start, stop = tk.stop;
 
   // 8. turning the globe: drag (mouse, pen or a horizontal touch drag; vertical swipes still scroll the page, see
   //    touch-action in the CSS), with a little spin left over on release; arrow keys when it's focused. The idle turn
@@ -876,9 +915,12 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   };
   bird.addEventListener('click', () => { if (bird.classList.contains('is-perched')) play(); });   // Enter / Space click it too
   window.addEventListener('resize', () => { if (mode !== 'seq') render(S.total); });
-  if (replay && !still) play(); else { finishState(); run(); }
+  if (teaser && !still) {   // drawn in from the hands on, once, when it comes into view
+    render(S.hands[0] - 1);
+    DoveKit.inViewOnce(holder, () => { seqT = S.hands[0] - 50; perched = true; mode = 'seq'; stop(); run(); }, { threshold: 0.35 });
+  } else if (replay && !still) play(); else { finishState(); run(); }
   // fail-safe: if the sequence is still running long after it should have ended (and the page is visible), finish it
-  setTimeout(() => { if (mode === 'seq' && !document.hidden) finishState(); }, (S.total / 1000 * K + 3) * 1000);
+  if (!teaser) setTimeout(() => { if (mode === 'seq' && !document.hidden) finishState(); }, (S.total / 1000 * K + 3) * 1000);
 }
 
 // Search entries for every case study and commitment. go(anchorId) takes the visitor there.

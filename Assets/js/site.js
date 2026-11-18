@@ -369,6 +369,19 @@ function sampleDove(src) {
     img.src = src;
   });
 }
+// CSS-style cubic-bezier(x1, y1, x2, y2) easing as a function of x (0–1)
+function cubicBezier(x1, y1, x2, y2) {
+  const f = (a, b, t) => 3 * a * t * (1 - t) ** 2 + 3 * b * (1 - t) * t * t + t ** 3;
+  return x => {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    let lo = 0, hi = 1, t = x;
+    for (let i = 0; i < 24; i++) { t = (lo + hi) / 2; if (f(x1, x2, t) < x) lo = t; else hi = t; }
+    return f(y1, y2, t);
+  };
+}
+// Tonal depth for the ASCII dove: dense glyphs (# % @) at full strength, light ones (. : -) at ~60%, the rest between
+const DOVE_TONE = { '.': 0.58, ':': 0.6, '-': 0.64, '=': 0.74, '+': 0.8, '*': 0.88, '#': 1, '%': 1, '@': 1 };
+const doveTone = ch => DOVE_TONE[ch] || 1;
 const doveEase = { out: x => 1 - Math.pow(1 - x, 3), inOut: x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2 };
 // the fold keyframe for a flutter at p (0–1): out → in → out
 const doveFoldFrame = (frames, p) => frames[Math.round(doveEase.inOut(p < 0.5 ? p * 2 : 2 - p * 2) * (frames.length - 1))];
@@ -394,6 +407,9 @@ function initAsciiBird(canvas, o = {}) {
   const A = DOVE_ASCII, ctx = canvas.getContext('2d'), FLUTTER = 560;
   let G = null, wantStart = false, started = false, mode = 'hidden', t0 = 0, raf = 0, blinkUntil = 0, flutterAt = -1;
   let cellW = 0, cellH = 0, font = '';
+  // facing: 1 as drawn (looking right), -1 mirrored; a turn takes 150ms (the grid squeezes through edge-on)
+  let face = 1, faceFrom = 1, faceAt = -1;
+  const FLIP = 150, faceNow = now => faceAt < 0 ? face : faceFrom + (face - faceFrom) * doveEase.inOut(Math.min(1, (now - faceAt) / FLIP));
   function resize() {
     const h = canvas.clientHeight || 120, dpr = window.devicePixelRatio || 1;
     cellH = h / G.ROWS; cellW = cellH * A.CHAR_ASPECT;
@@ -410,6 +426,8 @@ function initAsciiBird(canvas, o = {}) {
     let frame = G.frames[0];
     if (flutterAt >= 0 && tIntro >= introMs) { const p = (now - flutterAt) / FLUTTER; if (p >= 1) flutterAt = -1; else frame = doveFoldFrame(G.frames, p); }
     const blinking = now < blinkUntil;
+    const fx = faceNow(now); if (faceAt >= 0 && now - faceAt >= FLIP) faceAt = -1;
+    ctx.save(); ctx.translate(W / 2, 0); ctx.scale(fx, 1); ctx.translate(-W / 2, 0);
     for (const k of frame) {
       let x = (k.c + 0.5) * cellW, y = k.r * cellH, glyph = k.ch, alpha = 1;
       if (k.eye) { if (!blinking || tIntro < introMs) continue; glyph = '-'; }   // the eye is a gap; a blink fills it
@@ -419,20 +437,28 @@ function initAsciiBird(canvas, o = {}) {
         glyph = p < 0.35 ? '.' : A.RAMP[Math.max(1, Math.round(A.RAMP.indexOf(glyph) * Math.min(1, (p - 0.35) / 0.5)))];
         alpha = 0.3 + 0.7 * p;
       }
-      ctx.globalAlpha = alpha; ctx.fillText(glyph, x, y);
+      ctx.globalAlpha = alpha * doveTone(glyph); ctx.fillText(glyph, x, y);
     }
+    ctx.restore();
     ctx.globalAlpha = 1;
   }
   const loop = now => {
     draw(now);
     if (mode === 'intro' && now - t0 >= introMs) { mode = 'idle'; idle.start(); }
-    raf = (mode === 'intro' || flutterAt >= 0 || now < blinkUntil) ? requestAnimationFrame(loop) : 0;
+    raf = (mode === 'intro' || flutterAt >= 0 || now < blinkUntil || faceAt >= 0) ? requestAnimationFrame(loop) : 0;
   };
   const kick = () => { if (!raf) raf = requestAnimationFrame(loop); };
   const flutter = () => { if (mode === 'idle' && flutterAt < 0 && !reduceMotion) { flutterAt = performance.now(); kick(); } };
   const idle = doveIdle({ blink: () => { blinkUntil = performance.now() + 150; kick(); }, flutter, blinkEvery, flutterEvery });
-  canvas.addEventListener('mouseenter', flutter);
+  if (o.hoverFlutter !== false) canvas.addEventListener('mouseenter', flutter);
   window.addEventListener('resize', () => { if (G) resize(); });
+  // turn to face dir (1 right, -1 left); instantly with reduced motion or when asked
+  const setFacing = (dir, instant) => {
+    if (dir === face && faceAt < 0) return;
+    const now = performance.now();
+    if (instant || reduceMotion || mode !== 'idle') { face = dir; faceAt = -1; if (mode === 'idle') draw(now); return; }
+    faceFrom = faceNow(now); face = dir; faceAt = now; kick();
+  };
   new MutationObserver(() => { if (mode === 'idle') draw(performance.now()); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   function start() {
     if (!G) { wantStart = true; return; }
@@ -443,7 +469,7 @@ function initAsciiBird(canvas, o = {}) {
     mode = 'intro'; t0 = performance.now(); kick();
   }
   sampleDove(canvas.dataset.src).then(g => { G = g; resize(); if (canvas.parentElement) canvas.parentElement.classList.add('is-live'); if (wantStart) start(); });
-  return { start, flutter };
+  return { start, flutter, setFacing, get facing() { return face; }, busy: () => flutterAt >= 0 || faceAt >= 0, grid: () => G, canvas };
 }
 
 // ── Vector dove: the nav logo on every page. Traced from the same image (potrace), split into body and wings along
@@ -480,43 +506,407 @@ function mountDove(el, { blinkEvery = [6000, 12000], flutterEvery = [20000, 4000
   doveIdle({ blink, flutter, blinkEvery, flutterEvery }).start();
   return { blink, flutter, svg };
 }
+// ── DoveKit: the shared motion pieces behind every constellation and flying dove on the site (the section marks, the
+//    side-nav constellation, the conferences route map, and the Impact page's hands-and-globe). Everything here plays
+//    once per page load, pauses while the tab is hidden, and renders its final state with reduced motion.
+//   inViewOnce(el, fn)          fn() the first time el scrolls into view
+//   ticker(step, { el })        a requestAnimationFrame loop: step(dt, now) each frame (return false to stop); paused
+//                               while the tab is hidden or (with el) while el is off screen. Returns { start, stop }
+//   dotsAlong(path, n | { spacing }) points spaced evenly along an SVG path element
+//   drawOn(path, u)             a path with pathLength="1" drawn on to u (0–1) by its stroke dash
+//   flyAlong({ path, dove, … }) a vector dove (an SVG <g> made with mountDove) flown along a path, banking and facing
+//                               its direction of travel, flapping; resolves when it arrives
+const DoveKit = (() => {
+  const inViewOnce = (el, fn, { threshold = 0.3, rootMargin = '0px 0px -8% 0px' } = {}) => {
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) return void fn();
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); fn(); } }, { threshold, rootMargin });
+    io.observe(el);
+  };
+  const ticker = (step, { el } = {}) => {
+    let raf = 0, last = null, wanted = false, onScreen = true;
+    const frame = now => {
+      const dt = last === null ? 16 : Math.min(64, now - last); last = now;
+      let go = false;
+      try { go = step(dt, now) !== false; } catch (e) { console.error('Animation step failed', e); }
+      if (go) raf = requestAnimationFrame(frame); else { raf = 0; wanted = false; }
+    };
+    const start = () => { wanted = true; if (!raf && onScreen && !document.hidden) { last = null; raf = requestAnimationFrame(frame); } };
+    const pause = () => { cancelAnimationFrame(raf); raf = 0; };
+    const stop = () => { wanted = false; pause(); };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); else if (wanted) start(); });
+    if (el && 'IntersectionObserver' in window) new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; if (!onScreen) pause(); else if (wanted) start(); }).observe(el);
+    return { start, stop };
+  };
+  const dotsAlong = (path, opt) => {
+    const len = path.getTotalLength(), n = typeof opt === 'number' ? opt : Math.max(1, Math.round(len / opt.spacing));
+    return Array.from({ length: n }, (_, i) => { const q = path.getPointAtLength(len * i / n); return { x: q.x, y: q.y, frac: i / n }; });
+  };
+  const drawOn = (path, u) => { path.style.strokeDashoffset = (1 - Math.max(0, Math.min(1, u))).toFixed(4); };
+  // the dove's group is placed at the path point (its feet there: foot = share of its box), rotated a little toward the
+  // direction of travel (bank, radians at most) and mirrored to face it; flapping while it flies
+  const placeDove = (dove, x, y, ang = 0, face = 1) => dove.g.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(ang * 180 / Math.PI).toFixed(1)}) scale(${face} 1)`);
+  const flyAlong = ({ path, dove, duration = 1000, ease = x => x, bank = 0.3, onStep, el }) => new Promise(resolve => {
+    const len = path.getTotalLength(); let t = 0;
+    if (dove.svg) dove.svg.classList.add('is-flapping');
+    const tk = ticker(dt => {
+      t += dt;
+      const u = Math.min(1, t / duration), e = ease(u), d = len * e;
+      const p = path.getPointAtLength(d), q = path.getPointAtLength(Math.min(len, d + 2)), r = path.getPointAtLength(Math.max(0, d - 2));
+      const dx = q.x - r.x, dy = q.y - r.y, face = dx >= 0 ? 1 : -1;
+      placeDove(dove, p.x, p.y, Math.max(-bank, Math.min(bank, Math.atan2(dy, Math.abs(dx) || 1e-6) * 0.6)) * face, face);
+      if (onStep) onStep(e, p);
+      if (u >= 1) { if (dove.svg) dove.svg.classList.remove('is-flapping'); resolve(); return false; }
+    }, { el: el || path.ownerSVGElement });
+    tk.start();
+  });
+  // a vector dove inside an SVG: a <g> holding the nav logo's dove at width w (drawing units), feet at its origin
+  const svgDove = (parent, w, cls = 'kit-dove') => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', cls); parent.appendChild(g);
+    const inner = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.appendChild(inner);
+    const d = mountDove(inner, { hoverEl: null }); if (!d) return null;
+    const h = w * DOVE_VECTOR.h / DOVE_VECTOR.w;
+    Object.entries({ width: w, height: h, x: -w * 0.55, y: -h * 0.85 }).forEach(([k, v]) => d.svg.setAttribute(k, v.toFixed(1)));
+    d.svg.style.width = w.toFixed(1) + 'px'; d.svg.style.height = h.toFixed(1) + 'px';   // (so no page rule for svg sizes can stretch it)
+    return { g, svg: d.svg, flutter: d.flutter, w, h };
+  };
+  // a seeded random (mulberry32), for arrangements that differ per place but stay the same on every visit
+  const seeded = seed => { let a = typeof seed === 'number' ? seed : [...String(seed)].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 2654435761) >>> 0, 2166136261); return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+  // a smooth path through points (centripetal Catmull-Rom), sampled into a polyline with its running length.
+  // at(d) gives the point d along it, and the direction of travel there
+  const spline = (pts, per = 16) => {
+    const tj = (a, b) => Math.pow(Math.hypot(b[0] - a[0], b[1] - a[1]), 0.5) || 1e-4;
+    const cr = (p0, p1, p2, p3, u) => {
+      const t1 = tj(p0, p1), t2 = t1 + tj(p1, p2), t3 = t2 + tj(p2, p3), t = t1 + (t2 - t1) * u;
+      const L = (a, b, ta, tb) => [((tb - t) * a[0] + (t - ta) * b[0]) / (tb - ta), ((tb - t) * a[1] + (t - ta) * b[1]) / (tb - ta)];
+      const A1 = L(p0, p1, 0, t1), A2 = L(p1, p2, t1, t2), A3 = L(p2, p3, t2, t3);
+      return L(L(A1, A2, 0, t2), L(A2, A3, t1, t3), t1, t2);
+    };
+    const ext = (a, b) => [2 * a[0] - b[0], 2 * a[1] - b[1]], P = [ext(pts[0], pts[1]), ...pts, ext(pts[pts.length - 1], pts[pts.length - 2])];
+    const poly = [];
+    for (let i = 1; i < P.length - 2; i++) for (let k = 0; k < per; k++) poly.push(cr(P[i - 1], P[i], P[i + 1], P[i + 2], k / per));
+    poly.push(pts[pts.length - 1]);
+    const len = [0]; for (let i = 1; i < poly.length; i++) len.push(len[i - 1] + Math.hypot(poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]));
+    const total = len[len.length - 1];
+    const at = d => {
+      d = Math.max(0, Math.min(total, d)); let lo = 0, hi = len.length - 1;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (len[m] < d) lo = m; else hi = m; }
+      const f = len[hi] > len[lo] ? (d - len[lo]) / (len[hi] - len[lo]) : 0, a = poly[lo], b = poly[hi];
+      return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, dx: b[0] - a[0], dy: b[1] - a[1] };
+    };
+    return { total, at };
+  };
+  return { inViewOnce, ticker, dotsAlong, drawOn, flyAlong, placeDove, svgDove, seeded, spline };
+})();
+Site.kit = DoveKit;
+
+// ── Section marks: the small constellation above each section title (in place of the old hairline and diamond).
+//    3–5 gold dots, one a little larger, joined by thin lines; each section gets its own arrangement (seeded by its id,
+//    so it's the same on every visit). In view, the dots pop in left to right and the lines draw between them.
+// (points: a hand-drawn arrangement instead, [[x, y, r], ...] in a width × height box, left to right)
+function constellationMark(seed, { mirror = false, width: W = 72, height: H = 16, dots: [lo, hi] = [3, 5], points } = {}) {
+  const rnd = DoveKit.seeded(seed), n = lo + Math.floor(rnd() * (hi - lo + 1)), big = Math.floor(rnd() * n);
+  const pts = points ? points.map(([x, y, r]) => ({ x: mirror ? W - x : x, y, r })) : Array.from({ length: n }, (_, i) => {
+    const x = 4 + (W - 8) * (i / (n - 1)) + (i && i < n - 1 ? (rnd() - 0.5) * (W / n) * 0.6 : 0);
+    return { x: mirror ? W - x : x, y: 3.5 + rnd() * (H - 7), r: i === big ? 2.5 : 1.3 + rnd() * 0.55 };
+  });
+  if (mirror) pts.reverse();
+  const lines = pts.slice(1).map((p, i) => `<path pathLength="1" style="--i:${i}" d="M${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}L${p.x.toFixed(1)} ${p.y.toFixed(1)}"/>`).join('');
+  const dots = pts.map((p, i) => `<circle style="--i:${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.r.toFixed(2)}"/>`).join('');
+  return `<svg class="c-mark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true" focusable="false">${lines}${dots}</svg>`;
+}
+// A constellation rule: a thin line with a few dots, stretched across its container (the top of a card). The line is
+// revealed left to right (.is-drawn), each dot popping in as the line reaches it.
+function constellationRule(seed) {
+  const rnd = DoveKit.seeded(seed), n = 4 + Math.floor(rnd() * 2), big = 1 + Math.floor(rnd() * (n - 2));
+  const pts = Array.from({ length: n }, (_, i) => ({ x: i === 0 ? 0 : i === n - 1 ? 100 : (100 * i / (n - 1)) + (rnd() - 0.5) * (60 / n), y: 2.5 + rnd() * 7 }));
+  const d = 'M' + pts.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join('L');
+  const dots = pts.map((p, i) => `<i style="left:${p.x.toFixed(1)}%;top:${p.y.toFixed(1)}px;--at:${(p.x / 100).toFixed(2)}"${i === big ? ' class="is-big"' : ''}></i>`).join('');
+  return `<span class="c-rule" aria-hidden="true"><svg viewBox="0 0 100 12" preserveAspectRatio="none" focusable="false"><path d="${d}"/></svg>${dots}</span>`;
+}
+function initSectionMarks() {
+  document.querySelectorAll('.section-label:not(.has-mark)').forEach(label => {
+    const sec = label.closest('section'), id = (sec && sec.id) || label.textContent;
+    label.insertAdjacentHTML('afterbegin', constellationMark(id));
+    if (label.closest('.contact-content')) label.insertAdjacentHTML('beforeend', constellationMark(id + '-r', { mirror: true }));   // Contact is centred: one on each side
+    label.classList.add('has-mark');
+    const marks = label.querySelectorAll('.c-mark');
+    if (reduceMotion) marks.forEach(m => m.classList.add('is-drawn'));
+    else DoveKit.inViewOnce(label, () => marks.forEach(m => m.classList.add('is-drawn')), { threshold: 0.6 });
+  });
+}
+document.addEventListener('DOMContentLoaded', initSectionMarks);
+
+// ── The hero dove's occasional life (heroDoveLife): on top of its bob, blink and flutter, now and then it
+//    · flies a small loop around the name: takes off with a few beats, swings down and around the name block and back
+//      over the top (an ellipse ~1.3× the name's width, spline-smoothed), banking into the turns, flapping harder as it
+//      climbs and gliding down, then lands on its perch with one broad beat and a soft settle (every 30–45s; 45–60s and
+//      a tighter loop on phones)
+//    · watches the cursor (mouse only): turns to face it when it has been on the other side for a moment, and hops
+//      8–12px away (one or two beats) when it comes within ~120px, settling back ~1.5s after it leaves (once per 4s)
+//    · scatters into gold dots when clicked / tapped / activated with Enter or Space, then re-forms (the intro's
+//      formation)
+//    One behaviour at a time; never while it flutters. The occasional loop only counts down while the hero is in view
+//    and the tab is visible, and waits until 5s after the visitor last scrolled, clicked or typed. Flights draw on their
+//    own full-screen canvas above the hero (pointer-events off: it never blocks a click), the perched dove hidden
+//    meanwhile. Reduced motion: no loop or hops, instant turns, and the scatter is a plain fade out and in.
+//    ?birddebug=1: press L (loop), S (startle) or C (scatter) to see each on demand.
+function heroDoveLife(dove) {
+  const canvas = dove && dove.canvas, slot = canvas && canvas.closest('.hero-bird');
+  const hero = document.getElementById('hero'), nameEl = document.querySelector('#hero .hero-name'), root = document.documentElement;
+  if (!slot || !hero || !nameEl) return;
+  const A = DOVE_ASCII, mobile = window.matchMedia('(max-width: 768px)').matches;
+  const mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches && !mobile;
+  const debug = /[?&]birddebug=1\b/.test(location.search);
+  const rnd = (a, b) => a + Math.random() * (b - a), clamp01 = x => Math.max(0, Math.min(1, x));
+  const introOn = () => root.classList.contains('intro-on');
+  const assemble = cubicBezier(0.22, 1, 0.36, 1);
+
+  // the one interactive part: a button over the perched dove
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'hero-dove-btn'; btn.setAttribute('aria-label', 'Dove: click to scatter');
+  slot.appendChild(btn);
+  const fitBtn = () => { btn.style.width = canvas.offsetWidth + 'px'; };
+  window.addEventListener('resize', fitBtn); setTimeout(fitBtn, 0); new ResizeObserver(fitBtn).observe(canvas);
+
+  // the flight layer: a full-screen canvas above the hero, never taking clicks
+  const ov = document.createElement('canvas'); ov.className = 'hero-dove-fly'; ov.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(ov);
+  const g = ov.getContext('2d'); let vw = 0, vh = 0, dpr = 1;
+  const sizeOv = () => { vw = innerWidth; vh = innerHeight; dpr = window.devicePixelRatio || 1; ov.width = Math.round(vw * dpr); ov.height = Math.round(vh * dpr); };
+  sizeOv(); window.addEventListener('resize', sizeOv);
+  const perch = () => { const r = canvas.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height, r }; };
+  const clearOv = () => { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, ov.width, ov.height); };
+  // the dove on the flight layer, centred at (x, y): s = scale of its perched size, rot = bank, fx = facing (−1 … 1);
+  // place(k, x, y) can move or restyle each character (returns [x, y, glyph, alpha], or null to skip it)
+  const drawAt = ({ x, y, s = 1, rot = 0, fx = 1, list, alpha = 1, place }) => {
+    const G = dove.grid(), P = perch(), cellH = P.h / G.ROWS, cellW = cellH * A.CHAR_ASPECT, W = cellW * G.COLS;
+    clearOv(); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = getComputedStyle(canvas).color; g.textBaseline = 'top'; g.textAlign = 'center';
+    g.font = `${(cellH * 1.05).toFixed(2)}px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace`;
+    g.translate(x, y); g.rotate(rot); g.scale((Math.abs(fx) < 0.04 ? 0.04 * Math.sign(fx || 1) : fx) * s, s);
+    for (const k of (list || G.frames[0])) {
+      if (k.eye) continue;
+      let px = (k.c + 0.5) * cellW - W / 2, py = k.r * cellH - P.h / 2, glyph = k.ch, a = 1;
+      if (place) { const q = place(k, px, py); if (!q) continue; [px, py, glyph, a] = q; }
+      g.globalAlpha = alpha * a * doveTone(glyph); g.fillText(glyph, px, py);
+    }
+    g.globalAlpha = 1;
+  };
+  // wingbeats: each beat a fold-and-open of the wing frames, its length varied ±15%; between beats the wings are out
+  const wings = () => {
+    let at = -1, dur = 0;
+    return (now, beatMs) => {
+      const G = dove.grid();
+      if (at >= 0 && now - at < dur) return doveFoldFrame(G.frames, (now - at) / dur);
+      if (beatMs) { at = now; dur = beatMs * rnd(0.85, 1.15); return G.frames[0]; }
+      at = -1; return G.frames[0];
+    };
+  };
+
+  let busy = null, stopCurrent = null;   // the running behaviour ('loop' | 'startle' | 'scatter') and how to cut it short
+  const begin = (kind, stop) => { busy = kind; stopCurrent = stop; canvas.style.visibility = 'hidden'; };
+  const end = () => { busy = null; stopCurrent = null; clearOv(); canvas.style.visibility = ''; };
+  const free = (ignoreFlutter) => !busy && dove.grid() && (ignoreFlutter || !dove.busy()) && !introOn();
+
+  // ── the loop flight
+  function loopFlight() {
+    if (!free() || reduceMotion) return false;
+    const P0 = perch(), N = nameEl.getBoundingClientRect(), CRUISE = 0.62, half = P0.w * CRUISE / 2;
+    const cx = N.left + N.width / 2, cy = N.top + N.height * 0.45;
+    const a = N.width * (mobile ? 0.55 : 0.65), b = N.height * (mobile ? 0.5 : 0.62) + P0.h * 0.12;
+    const left = Math.max(half + 8, cx - a), right = Math.min(vw - half - 8, cx + a);
+    // anticlockwise: down and left off the perch, along under the name, up the right side, back over the top, and a
+    // gliding descent onto the perch
+    const path = DoveKit.spline([
+      [P0.x, P0.y], [left + (P0.x - left) * 0.3, cy - b * 0.15], [cx - a * 0.35, cy + b], [cx + a * 0.4, cy + b * 0.95],
+      [right, cy], [cx + a * 0.35, cy - b], [P0.x + P0.w * 0.55, P0.y - P0.h * 0.32], [P0.x, P0.y],
+    ]);
+    const DUR = mobile ? 2500 : 2800, LAND = 300, SETTLE = 220, flap = wings(), t0 = performance.now();
+    let fx = dove.facing;
+    const tk = DoveKit.ticker((dt, now) => {
+      const t = now - t0, u = Math.min(1, t / DUR), e = 0.5 - 0.5 * Math.cos(Math.PI * u);
+      if (u < 1) {
+        const q = path.at(path.total * e), sp = Math.hypot(q.dx, q.dy) || 1, climb = -q.dy / sp;
+        const toLand = DUR - t, share = path.total * e / path.total;
+        const s = 1 + (CRUISE - 1) * (share < 0.15 ? share / 0.15 : share > 0.8 ? (1 - share) / 0.2 : 1);
+        const want = toLand < 260 ? dove.facing : Math.abs(q.dx) > sp * 0.2 ? Math.sign(q.dx) : (fx >= 0 ? 1 : -1);
+        fx += (want - fx) * Math.min(1, dt / 60);
+        const bank = Math.max(-0.24, Math.min(0.24, Math.atan2(q.dy, Math.abs(q.dx) || 1e-6) * 0.5)) * (fx >= 0 ? 1 : -1) * clamp01(toLand / 200);
+        let list;
+        if (toLand <= LAND) list = doveFoldFrame(dove.grid().frames, 1 - toLand / LAND);   // one broad beat to land
+        else if (t < 3 * 140) list = flap(now, 140);   // three strong beats to take off
+        else list = flap(now, climb > 0.25 ? 110 : climb < -0.2 ? 0 : 190);   // harder climbing, glide descending
+        drawAt({ x: q.x, y: q.y, s, rot: bank, fx, list });
+        return true;
+      }
+      // the settle: a small dip past the perch and back, then the perched dove takes over
+      const p = clamp01((t - DUR) / SETTLE), P = perch();
+      drawAt({ x: P.x, y: P.y + 4 * Math.sin(Math.PI * 2 * p) * (1 - p), fx: dove.facing });
+      if (p >= 1) { end(); return false; }
+      return true;
+    });
+    begin('loop', () => { tk.stop(); end(); });
+    tk.start();
+    return true;
+  }
+
+  // ── the startle hop: away from the cursor, then back once it has gone
+  let mx = -9999, my = -9999, lastStartle = -1e9;
+  const nearBird = (x, y, pad) => { const r = perch().r; return x > r.left - pad && x < r.right + pad && y > r.top - pad && y < r.bottom + pad; };
+  function startle(cx, cy) {
+    if (!free() || reduceMotion) return false;
+    lastStartle = performance.now();
+    const P0 = perch(); let dx = P0.x - cx, dy = P0.y - cy; const m = Math.hypot(dx, dy) || 1; dx /= m; dy = Math.min(dy / m, 0.3);
+    const dist = rnd(8, 12), off = [dx * dist, dy * dist - 2], flap = wings(), HOP = 320, BACK = 380, t0 = performance.now();
+    let phase = 'out', heldAt = 0, backAt = 0;
+    const tk = DoveKit.ticker((dt, now) => {
+      const P = perch();
+      if (phase === 'out') {
+        const u = clamp01((now - t0) / HOP), e = doveEase.out(u);
+        drawAt({ x: P.x + off[0] * e, y: P.y + off[1] * e - Math.sin(Math.PI * u) * 7, fx: dove.facing, list: flap(now, u < 0.75 ? 150 : 0) });
+        if (u >= 1) { phase = 'hold'; heldAt = now; }
+      } else if (phase === 'hold') {
+        drawAt({ x: P.x + off[0], y: P.y + off[1], fx: dove.facing });
+        const gone = !nearBird(mx, my, 150);
+        if ((gone && now - heldAt > 1500) || now - heldAt > 8000) { phase = 'back'; backAt = now; }
+      } else {
+        const u = clamp01((now - backAt) / BACK), e = doveEase.inOut(u);
+        drawAt({ x: P.x + off[0] * (1 - e), y: P.y + off[1] * (1 - e) - Math.sin(Math.PI * u) * 6 + (u > 0.8 ? Math.sin(Math.PI * (u - 0.8) / 0.2) * 2 : 0), fx: dove.facing, list: flap(now, u < 0.6 ? 170 : 0) });
+        if (u >= 1) { end(); return false; }
+      }
+      return true;
+    });
+    begin('startle', () => { tk.stop(); end(); });
+    tk.start();
+    return true;
+  }
+
+  // ── scatter and re-form
+  function scatter() {
+    if (busy === 'startle' && stopCurrent) stopCurrent();   // a click cuts a hop short
+    if (!free(true)) return;   // (and wins over a hover flutter in progress)
+    if (reduceMotion) {   // a plain fade out and back in
+      busy = 'scatter'; canvas.style.transition = 'opacity 0.2s ease'; canvas.style.opacity = '0';
+      setTimeout(() => { canvas.style.opacity = ''; setTimeout(() => { canvas.style.transition = ''; busy = null; }, 260); }, 420);
+      return;
+    }
+    const G = dove.grid(), OUT = 400, HOLD = 220, BACK = 700, t0 = performance.now();
+    G.frames[0].forEach(k => { const ang = Math.atan2(k.r - G.ROWS / 2, (k.c - G.COLS / 2) * A.CHAR_ASPECT) + rnd(-0.6, 0.6); k.sd = rnd(40, 120) * (0.5 + k.d); k.sa = ang; });
+    const tk = DoveKit.ticker((dt, now) => {
+      const t = now - t0, P = perch();
+      drawAt({ x: P.x, y: P.y, fx: dove.facing, place: (k, x, y) => {
+        let o, glyph = k.ch, a = 1;
+        if (t < OUT + HOLD) {   // out: each character flies off as a dot
+          const p = doveEase.out(clamp01(t / OUT)); o = p; if (p > 0.35) glyph = '•'; a = 1 - 0.2 * p;
+        } else {   // back: the intro's formation, centre first, densifying as they arrive
+          const p = assemble(clamp01((t - OUT - HOLD - k.d * BACK * 0.35) / (BACK * 0.6))); o = 1 - p;
+          glyph = p < 0.35 ? '•' : A.RAMP[Math.max(1, Math.round(A.RAMP.indexOf(k.ch) * Math.min(1, (p - 0.35) / 0.5)))]; a = 0.8 + 0.2 * p;
+        }
+        return [x + Math.cos(k.sa) * k.sd * o, y + Math.sin(k.sa) * k.sd * o, glyph, a];
+      } });
+      if (t >= OUT + HOLD + BACK) { end(); return false; }
+      return true;
+    });
+    begin('scatter', () => { tk.stop(); end(); });
+    tk.start();
+  }
+  btn.addEventListener('click', scatter);
+  btn.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse' && !busy) dove.flutter(); });   // the hover flutter it always had (mouse only)
+
+  // ── the cursor: facing and startle (mouse only)
+  if (mouse) {
+    let side = 1, faceTimer = 0, pending = false;
+    const check = () => {
+      pending = false;
+      if (introOn() || !heroInView) return;
+      const P = perch(), want = mx < P.x - P.w * 0.15 ? -1 : mx > P.x + P.w * 0.15 ? 1 : side;
+      if (want !== side) {   // turn after the cursor has stayed on the other side for a moment
+        side = want; clearTimeout(faceTimer);
+        faceTimer = setTimeout(() => { if (!busy) dove.setFacing(side); }, side === -1 ? 1000 : 400);
+      }
+      if (nearBird(mx, my, 120) && performance.now() - lastStartle > 4000) startle(mx, my);
+    };
+    window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; if (!pending) { pending = true; requestAnimationFrame(check); } }, { passive: true });
+    document.addEventListener('mouseleave', () => { mx = my = -9999; });
+  }
+
+  // ── the occasional loop: counts down only while the hero is in view and the tab visible; waits for a quiet moment
+  let heroInView = true;
+  new IntersectionObserver(([e]) => { heroInView = e.isIntersecting; }, { threshold: 0.25 }).observe(hero);
+  let lastInteract = 0;
+  ['scroll', 'wheel', 'keydown', 'pointerdown', 'touchstart'].forEach(t => window.addEventListener(t, () => { lastInteract = performance.now(); }, { passive: true }));
+  const gap = () => mobile ? rnd(45000, 60000) : rnd(30000, 45000);
+  let remain = gap();
+  if (!reduceMotion) setInterval(() => {
+    if (document.hidden || !heroInView || introOn()) return;   // paused
+    if ((remain -= 1000) > 0) return;
+    if (!free() || performance.now() - lastInteract < 5000) { remain = 1000; return; }   // try again in a second
+    if (loopFlight()) remain = gap();
+  }, 1000);
+
+  // ── ?birddebug=1: L loop, S startle (from a cursor just right of the bird), C scatter
+  if (debug) {
+    window.addEventListener('keydown', e => {
+      if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea|select/i.test(document.activeElement.tagName)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'l') loopFlight();
+      else if (k === 's') { const P = perch(); mx = P.r.right + 60; my = P.y; startle(mx, my); setTimeout(() => { mx = my = -9999; }, 300); }
+      else if (k === 'c') scatter();
+    });
+    setTimeout(() => { if (typeof showToast === 'function') showToast('Bird debug: press L (loop), S (startle), C (scatter)'); }, 1200);
+    window.heroDoveDebug = { get facing() { return dove.facing; }, get busy() { return busy; }, loopFlight, startle: () => { const P = perch(); startle(P.r.right + 60, P.y); }, scatter };
+  }
+  return { loopFlight, startle, scatter };
+}
+
 // every page: the nav logo becomes the dove (a nav link click sends it into a flutter), the footer gets the ASCII one
 // (each in its own try: a failure in the birds never stops the rest of the site's script)
 try {
   const navDove = mountDove(document.querySelector('.logo-dove'), { hoverEl: document.querySelector('.logo-wrap') });
+  Site.navDove = navDove;   // (a copied email sends it into a flutter too)
   if (navDove) document.querySelectorAll('#primary-nav a').forEach(a => a.addEventListener('click', navDove.flutter));
 } catch (e) { console.error('Nav dove failed', e); }
-try {   // the hero's dove above the name: idle straight away (hidden under the intro while that plays)
-  const heroDove = initAsciiBird(document.querySelector('.hero-dove'), { intro: false });
-  if (heroDove) heroDove.start();
+try {   // the hero's dove above the name: idle straight away (hidden under the intro while that plays), plus its
+  // occasional loop, cursor awareness and click-to-scatter (heroDoveLife)
+  const heroDove = initAsciiBird(document.querySelector('.hero-dove'), { intro: false, hoverFlutter: false });
+  if (heroDove) { heroDove.start(); heroDoveLife(heroDove); }
 } catch (e) { console.error('Hero dove failed', e); }
 try {
-  const footerDove = initAsciiBird(document.querySelector('.footer-dove'), { intro: false, blinkEvery: [6000, 12000], flutterEvery: [20000, 40000] });
+  const footerDove = initAsciiBird(document.querySelector('.footer-dove'), { intro: false });   // the sign-off: gold, with the hero dove's idles
   if (footerDove) footerDove.start();
 } catch (e) { console.error('Footer dove failed', e); }
 
-// ── Homepage intro (first visit in a session; ?intro=1 replays it). ~3s (2.2s on phones):
-//    assemble (dots → dove) · the name slides in · one wing fold at takeoff · the dove flies along an arc into its slot
-//    above the hero name (the hero dove, measured live every frame, so a resize mid-flight is followed), shrinking to
-//    exactly its size with a slight overshoot and settle · on arrival the hero dove (the same grid at the same size,
-//    hidden until now) takes over, so the bird stays · meanwhile the name glides onto the hero name (FLIP) and the
-//    overlay fades. Any click, scroll or key (or the Skip button) jumps to the end: the bird resting in the hero.
-//    The page is rendered underneath from the start; the overlay is aria-hidden.
-function runDoveIntro({ onDone }) {
+// ── Homepage intro (first visit in a session; ?intro=1 replays it). ~3.8s (~3s on phones):
+//    1. assemble (dots drift in, building outward from the centre) · the name slides in as the last dots settle
+//    2. the dove takes off with strong wingbeats and flies right along a rising-then-falling Bézier arc, growing to ~3×
+//       (2× on phones) as if coming toward the viewer, then blurs and fades just past the right edge
+//    3. a camera pan: the intro scene slides out to the left while the hero (and header) slide in from the right, with a
+//       little parallax; the intro name glides onto the hero name (FLIP) and hands over to it. The hero's own entrance
+//       (subtitle, bullets, buttons, headshot, stats) starts during the pan
+//    4. the dove re-enters from just off the left edge, small and faint, and flies an easy arc into its slot above the
+//       name (the hero dove, measured live every frame, so a resize is followed), growing to its resting size; one broad
+//       wingbeat, a fold and a soft settle, then the hero dove (same grid, same size) takes over and starts its idles
+//    Any click, scroll or key (or the Skip button) jumps to the end: the bird resting in the hero. The intro pauses while
+//    the tab is hidden. The page is rendered underneath from the start; the overlay is aria-hidden.
+function runDoveIntro({ onDone, onReveal = () => {} }) {
   const intro = document.getElementById('intro'), root = document.documentElement;
   const canvas = intro && intro.querySelector('.intro-canvas'), heroName = document.querySelector('#hero .hero-name');
   const nameEl = intro && intro.querySelector('.intro-name'), roleEl = intro && intro.querySelector('.intro-role');
   const heroBird = document.querySelector('#hero .hero-bird'), heroDove = heroBird && heroBird.querySelector('.hero-dove');
-  let done = false, raf = 0, failsafe = 0;
+  let done = false, raf = 0, failsafe = 0, failsafeLeft = 5500, failsafeSet = 0, onHide = null;
   const anims = [];
+  const armFailsafe = ms => { clearTimeout(failsafe); failsafeLeft = ms; failsafeSet = performance.now(); failsafe = setTimeout(finish, ms); };
   function finish() {
     if (done) return;
     done = true;
     clearTimeout(failsafe); cancelAnimationFrame(raf); anims.forEach(a => a.cancel());
     ['keydown', 'pointerdown', 'wheel', 'touchmove'].forEach(t => window.removeEventListener(t, finish));
     window.removeEventListener('resize', onResize);
+    if (onHide) document.removeEventListener('visibilitychange', onHide);
     if (intro) intro.remove();
     if (heroBird) heroBird.style.removeProperty('visibility');
+    if (heroName) heroName.style.removeProperty('opacity');
     root.classList.replace('intro-on', 'intro-done');   // the hero dove shows and starts bobbing (see .intro-on .hero-bird)
     try { onDone(); } catch (e) { console.error(e); root.classList.remove('hero-pending'); document.body.classList.add('page-loaded'); }
   }
@@ -525,113 +915,221 @@ function runDoveIntro({ onDone }) {
   if (!intro || !canvas || !heroName || !heroDove || !intro.animate) return finish();
   ['keydown', 'pointerdown', 'wheel', 'touchmove'].forEach(t => window.addEventListener(t, finish, { passive: true }));
   intro.querySelector('.intro-skip-btn').addEventListener('click', finish);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) finish(); });
-  failsafe = setTimeout(finish, 4000);   // whatever happens, the page is revealed within 4s
+  armFailsafe(5500);   // whatever happens, the page is revealed (the CSS and <head> fail-safes follow at 6s)
 
   sampleDove(canvas.dataset.src).then(G => { try { playIntro(G); } catch (e) { console.error('Intro failed; showing the page', e); finish(); } }, finish);
   function playIntro(G) {
     if (done) return;
-    const mobile = window.matchMedia('(max-width: 768px)').matches, K = mobile ? 2.2 / 3 : 1;
-    const T = { assemble: 1200 * K, nameIn: [1200 * K, 1700 * K], roleIn: [1350 * K, 1650 * K], fold: [1900 * K, 2200 * K],
-      fly: [2200 * K, 2720 * K], flip: [2200 * K, 2900 * K], bg: [2200 * K, 2620 * K], end: 2960 * K };
+    const mobile = window.matchMedia('(max-width: 768px)').matches;
+    // timeline (ms). out: takeoff → gone past the right edge · pan: the camera move · back: re-entry → touchdown
+    // (its last 300ms are one broad wingbeat) · settle: the fold and settle in the slot
+    const T = mobile
+      ? { assemble: 1300, nameDots: [760, 140, 400], sharpen: [1180, 1380], roleIn: [1220, 1400], out: [1380, 2000], pan: [1700, 2250], reveal: 1900, back: [2200, 2800], settle: 170 }
+      : { assemble: 1700, nameDots: [1000, 250, 500], sharpen: [1580, 1800], roleIn: [1620, 1850], out: [1800, 2600], pan: [2200, 2900], reveal: 2450, back: [2850, 3600], settle: 200 };
+    // nameDots: [start, left-to-right stagger, each dot's travel]. The name's dots gather while the dove's last dots
+    // settle, then sharpen into the real text (gold dots out, cream text in); the dove takes off as the name resolves,
+    // and the pan starts mid-flight.
+    T.end = T.back[1] + T.settle + 30;
+    const OUT = T.out[1] - T.out[0], PAN = T.pan[1] - T.pan[0], BACK = T.back[1] - T.back[0];
+    const MAXS = mobile ? 2 : 3, FADE_AT = mobile ? 1.7 : 2.5;   // fly-out scale, and where the fade begins
     let vw = innerWidth, vh = innerHeight;
     const dpr = window.devicePixelRatio || 1, A = DOVE_ASCII, ctx = canvas.getContext('2d');
     const sizeCanvas = () => { vw = innerWidth; vh = innerHeight; canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
     sizeCanvas();
     onResize = sizeCanvas; window.addEventListener('resize', onResize);
+    const gold = getComputedStyle(heroDove).color;   // the hero dove's gold, so the bird never changes colour
     // layout: the dove, with the name beside it (desktop) or centred under it (phones)
     const birdH = mobile ? Math.min(vh * 0.24, 190) : Math.min(vh * 0.34, 280);
     const cellH = birdH / G.ROWS, cellW = cellH * A.CHAR_ASPECT, birdW = cellW * G.COLS;
     nameEl.innerHTML = heroName.innerHTML; nameEl.querySelectorAll('.name-underline').forEach(n => n.remove());
     const natural = nameEl.getBoundingClientRect();
+    // the name's letters, for its dots: each character's box as the browser lays it out (so kerning, letter-spacing and
+    // the line break match the real text), relative to the name's own box at its natural size
+    const nameCS = getComputedStyle(nameEl), nameFont = `${nameCS.fontStyle} ${nameCS.fontWeight} ${nameCS.fontSize} ${nameCS.fontFamily}`;
+    const chars = [];
+    { const walk = document.createTreeWalker(nameEl, NodeFilter.SHOW_TEXT), range = document.createRange();
+      for (let n = walk.nextNode(); n; n = walk.nextNode()) for (let i = 0; i < n.data.length; i++) {
+        if (!n.data[i].trim()) continue;
+        range.setStart(n, i); range.setEnd(n, i + 1);
+        const r = range.getClientRects()[0]; if (r) chars.push({ ch: n.data[i], x: r.left - natural.left, top: r.top - natural.top, h: r.height });
+      } }
     const s = (mobile ? birdH * 0.62 : birdH * 0.72) / natural.height;   // the name's size beside the dove
     const nw = natural.width * s, nh = natural.height * s, gap = mobile ? 22 : 44;
     let bx, by, nx, ny;
     if (mobile) { by = (vh - (birdH + gap + nh + 34)) / 2; bx = (vw - birdW) / 2; nx = (vw - nw) / 2; ny = by + birdH + gap; }
     else { const total = birdW + gap + nw; bx = (vw - total) / 2; by = (vh - birdH) / 2; nx = bx + birdW + gap; ny = by + (birdH - nh) / 2; }
     nameEl.style.left = nx + 'px'; nameEl.style.top = ny + 'px';
+    // sample the letters into dots: draw them offscreen at the intro size, then take points on a grid sized for ~550
+    // dots (~320 on phones), each with its screen target, a scattered start and a start time by its x (reading order)
+    const nameDots = (() => {
+      const W = Math.ceil(nw) + 8, H = Math.ceil(nh) + 8, off = document.createElement('canvas'); off.width = W; off.height = H;
+      const o = off.getContext('2d'); o.fillStyle = '#000'; o.textBaseline = 'alphabetic'; o.textAlign = 'left';
+      o.scale(s, s); o.font = nameFont; try { o.letterSpacing = '0px'; } catch (e) {}
+      const m = o.measureText('Hg'), asc = m.fontBoundingBoxAscent || parseFloat(nameCS.fontSize) * 0.9, desc = m.fontBoundingBoxDescent || parseFloat(nameCS.fontSize) * 0.25;
+      chars.forEach(c => o.fillText(c.ch, c.x, c.top + (c.h - asc - desc) / 2 + asc));   // each glyph on its own baseline
+      const px = o.getImageData(0, 0, W, H).data;
+      let ink = 0; for (let i = 3; i < px.length; i += 4) if (px[i] > 128) ink++;
+      const step = Math.max(1.5, Math.sqrt(ink / (mobile ? 320 : 550))), out = [];
+      for (let y = step / 2; y < H; y += step) for (let x = step / 2; x < W; x += step) {
+        const jx = x + (Math.random() - 0.5) * step * 0.5, jy = y + (Math.random() - 0.5) * step * 0.5;
+        if (px[(Math.min(H - 1, Math.round(jy)) * W + Math.min(W - 1, Math.round(jx))) * 4 + 3] > 128)
+          out.push({ x: nx + jx, y: ny + jy, sx: Math.random() * vw, sy: Math.random() * vh, at: T.nameDots[0] + T.nameDots[1] * (jx / W) + Math.random() * 60 });
+      }
+      return out;
+    })();
+    const dotR = Math.max(1.1, cellH * 0.14);   // about the size of the dove's '.' dots
     roleEl.style.left = (mobile ? (vw - roleEl.offsetWidth) / 2 : nx) + 'px'; roleEl.style.top = (ny + nh + 12) + 'px';
-    // the hero name's resting place (its entrance is switched off while the intro runs, so this is where it ends up)
+    // the hero name's resting place, measured before the hero is moved off to the right for the pan
     const hero = heroName.getBoundingClientRect(), dx = hero.left - nx, dy = hero.top - ny;
-    const at = ms => ms / T.end, E = 'cubic-bezier(.22,1,.36,1)', EIO = 'cubic-bezier(.65,0,.35,1)';
+
+    // ── the overlay's own timeline: the name slides in, then rides the pan onto the hero name and hands over to it
+    const at = ms => ms / T.end, PE = 'cubic-bezier(.65,0,.35,1)';
     anims.push(nameEl.animate([
-      { offset: 0, opacity: 0, transform: `translateX(-40px) scale(${s})` },
-      { offset: at(T.nameIn[0]), opacity: 0, transform: `translateX(-40px) scale(${s})`, easing: E },
-      { offset: at(T.nameIn[1]), opacity: 1, transform: `translateX(0px) scale(${s})` },
-      { offset: at(T.flip[0]), opacity: 1, transform: `translateX(0px) scale(${s})`, easing: EIO },
-      { offset: at(T.flip[1]), opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(1)` },
-      { offset: 1, opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(1)` },
+      { offset: 0, opacity: 0, transform: `translateX(0px) scale(${s})` },
+      { offset: at(T.sharpen[0]), opacity: 0, transform: `translateX(0px) scale(${s})` },
+      { offset: at(T.sharpen[1]), opacity: 1, transform: `translateX(0px) scale(${s})` },   // the real text sharpens in over the dots
+      { offset: at(T.pan[0]), opacity: 1, transform: `translateX(0px) scale(${s})`, easing: PE },
+      { offset: at(T.pan[1]), opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(1)` },
+      { offset: at(T.pan[1] + 1), opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(1)` },
+      { offset: 1, opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(1)` },
     ], { duration: T.end, fill: 'forwards' }));
     anims.push(roleEl.animate([
-      { offset: 0, opacity: 0 }, { offset: at(T.roleIn[0]), opacity: 0 }, { offset: at(T.roleIn[1]), opacity: 1 },
-      { offset: at(T.flip[0]), opacity: 1 }, { offset: at(T.flip[0] + 200 * K), opacity: 0 }, { offset: 1, opacity: 0 },
+      { offset: 0, opacity: 0 }, { offset: at(T.roleIn[0]), opacity: 0 }, { offset: at(T.roleIn[1]), opacity: 1 }, { offset: 1, opacity: 1 },
     ], { duration: T.end, fill: 'forwards' }));
-    // the overlay fades while the dove is in flight, so the nav (tile, name) is in full view when it lands
-    anims.push(intro.querySelector('.intro-bg').animate([
-      { offset: 0, opacity: 1 }, { offset: at(T.bg[0]), opacity: 1 }, { offset: at(T.bg[1]), opacity: 0 }, { offset: 1, opacity: 0 },
-    ], { duration: T.end, fill: 'forwards' }));
-    anims.push(intro.querySelector('.intro-skip-btn').animate([{ opacity: 0 }, { opacity: 0.85, offset: 0.1 }, { opacity: 0.85, offset: 0.7 }, { opacity: 0 }], { duration: T.end, fill: 'forwards' }));
+    anims.push(intro.querySelector('.intro-skip-btn').animate([{ opacity: 0 }, { opacity: 0.85, offset: 0.1 }, { opacity: 0.85, offset: at(T.pan[0]) }, { opacity: 0, offset: at(T.pan[0] + 200) }, { opacity: 0 }], { duration: T.end, fill: 'forwards' }));
+    // ── the camera pan: the scene moves left, the hero (and header) arrive from the right. Parallax: the overlay's
+    //    ground moves a full screen, its leftover foreground (the role line) further; the hero's ground and header move
+    //    a full screen, its content a little further. Hero-side moves add to whatever transform the entrance applies.
+    const pan = (el, from, to, extra = {}) => { if (el) anims.push(el.animate([{ transform: from }, { transform: to }], { duration: PAN, delay: T.pan[0], easing: PE, fill: 'both', ...extra })); };
+    const span = mobile ? 100 : 100, fg = mobile ? 115 : 125, inFg = mobile ? 10 : 14;
+    pan(intro.querySelector('.intro-bg'), 'translateX(0)', `translateX(-${span}vw)`);
+    pan(roleEl, 'translateX(0)', `translateX(-${fg}vw)`, { composite: 'add' });
+    const back = { fill: 'backwards', composite: 'add' };   // nothing left behind once it's in place
+    pan(document.getElementById('hero'), `translateX(${span}vw)`, 'translateX(0)', back);
+    pan(document.getElementById('header'), `translateX(${span}vw)`, 'translateX(0)', back);
+    document.querySelectorAll('#hero .hero-content, #hero .hero-right').forEach(el => pan(el, `translateX(${inFg}vw)`, 'translateX(0)', back));
 
     // the landing spot: the hero dove's canvas, which holds the same grid (its height sets the size), measured live
     const landing = () => {
       const r = heroDove.getBoundingClientRect(), h = r.height, w = h / G.ROWS * A.CHAR_ASPECT * G.COLS;
       return { cx: r.left + w / 2, cy: r.top + h / 2, w, h };
     };
-    const P0 = [bx + birdW / 2, by + birdH / 2];
-    // easeOutBack: a slight overshoot past the logo, then settles onto it
-    const settle = x => { const c1 = 1.2, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+    const P0 = [bx + birdW / 2, by + birdH / 2];   // takeoff: where the dove assembled
+    const bez = (p0, p1, p2, p3, u) => { const v = 1 - u; return [0, 1].map(i => v * v * v * p0[i] + 3 * v * v * u * p1[i] + 3 * v * u * u * p2[i] + u * u * u * p3[i]); };
+    const bezD = (p0, p1, p2, p3, u) => { const v = 1 - u; return [0, 1].map(i => 3 * v * v * (p1[i] - p0[i]) + 6 * v * u * (p2[i] - p1[i]) + 3 * u * u * (p3[i] - p2[i])); };
+    const clamp01 = x => Math.max(0, Math.min(1, x));
+    const assembleEase = cubicBezier(0.22, 1, 0.36, 1);
+    // wingbeats as a list of { start, dur } (ms from the phase start), each duration ±15%; between them the wings are out
+    const jit = d => d * (0.85 + Math.random() * 0.3);
+    const beatsOut = (() => {   // 3 strong beats at takeoff, a short glide, then quick beats to the edge
+      const b = []; let t = 0;
+      for (let i = 0; i < 3; i++) { const d = jit(mobile ? 120 : 150); b.push({ start: t, dur: d }); t += d; }
+      t += OUT * 0.2;
+      while (t < OUT) { const d = jit(mobile ? 80 : 95); b.push({ start: t, dur: d }); t += d; }
+      return b;
+    })();
+    const beatsBack = (() => {   // relaxed beats with short glides between, ending 300ms before touchdown
+      const b = []; let t = 60;
+      while (t < BACK - 300 - 120) { const d = jit(mobile ? 230 : 270); b.push({ start: t, dur: d }); t += d + jit(110); }
+      b.push({ start: BACK - 300, dur: 300 });   // one broad beat to land
+      return b;
+    })();
+    const wingsAt = (beats, ms) => { for (const bt of beats) if (ms >= bt.start && ms < bt.start + bt.dur) return doveFoldFrame(G.frames, (ms - bt.start) / bt.dur); return G.frames[0]; };
+
     const cells = G.frames[0];
-    cells.forEach(k => { k.sx = Math.random() * vw; k.sy = Math.random() * vh; k.dens = A.RAMP.indexOf(k.ch) / (A.RAMP.length - 1); });
+    cells.forEach(k => { k.sx = Math.random() * vw; k.sy = Math.random() * vh; });
     const font = px => `${px.toFixed(2)}px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace`;
-    let landed = false;
-    const t0 = performance.now();
+    const drawBird = list => {   // in the current transform, centred on the origin
+      for (const k of list) { if (k.eye) continue; ctx.globalAlpha = baseAlpha * doveTone(k.ch); ctx.fillText(k.ch, (k.c + 0.5) * cellW - birdW / 2, k.r * cellH - birdH / 2); }
+    };
+    let baseAlpha = 1, blurNow = '';
+    const setBlur = px => { const v = px > 0.05 ? `blur(${px.toFixed(1)}px)` : ''; if (v !== blurNow) { canvas.style.filter = v; blurNow = v; } };
+    const place = (x, y, rot, sc, list) => { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(sc, sc); drawBird(list); ctx.restore(); };
+
+    // the clock: only runs while the tab is visible (the intro pauses with the page)
+    let clock = 0, last = null, revealed = false, handedName = false;
     const frame = now => {
-      const t = now - t0;
-      ctx.clearRect(0, 0, vw, vh); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = '#f5efe3';
-      if (t < T.fly[0]) {
-        const folding = t >= T.fold[0] && t < T.fold[1];
-        const list = folding ? doveFoldFrame(G.frames, (t - T.fold[0]) / (T.fold[1] - T.fold[0])) : G.frames[0];
-        ctx.font = font(cellH * 1.05);
-        for (const k of list) {
+      // one clock for everything: the name animation's own time (it spans the whole intro and pauses with the others),
+      // so the canvas, the sharpen, the name's FLIP and the pan stay in lockstep
+      clock += last === null ? 0 : Math.max(0, now - last); last = now;
+      const master = anims[0] && anims[0].currentTime;
+      const t = typeof master === 'number' ? master : clock;
+      ctx.clearRect(0, 0, vw, vh); ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = gold; ctx.font = font(cellH * 1.05);
+      if (!revealed && t >= T.reveal) { revealed = true; try { onReveal(); } catch (e) { console.error(e); } }   // the hero's entrance, under the pan
+      if (!handedName && t >= T.pan[1]) { handedName = true; heroName.style.opacity = '1'; }   // the intro name has landed on it: swap
+      if (t >= T.nameDots[0] && t < T.sharpen[1]) {
+        // the name's dots: drift in from the scatter on the dove's easing, then fade as the crisp text fades in
+        const fadeOut = 1 - clamp01((t - T.sharpen[0]) / (T.sharpen[1] - T.sharpen[0]));
+        const paths = [new Path2D(), new Path2D(), new Path2D()];   // faint → full as they arrive, like the dove's dots
+        for (const d of nameDots) {
+          if (t < d.at) continue;
+          const p = assembleEase(clamp01((t - d.at) / T.nameDots[2])), x = d.sx + (d.x - d.sx) * p, y = d.sy + (d.y - d.sy) * p;
+          const path = paths[p < 0.35 ? 0 : p < 0.8 ? 1 : 2];
+          path.moveTo(x + dotR, y); path.arc(x, y, dotR, 0, Math.PI * 2);
+        }
+        [0.35, 0.65, 0.95].forEach((a, i) => { ctx.globalAlpha = a * fadeOut; ctx.fill(paths[i]); });
+        ctx.globalAlpha = 1;
+      }
+      if (t < T.out[0]) {
+        // 1. assembling: scattered dots gather into the dove, densifying glyph by glyph
+        for (const k of cells) {
           if (k.eye) continue;
           let x = bx + (k.c + 0.5) * cellW, y = by + k.r * cellH, glyph = k.ch, alpha = 1;
-          if (t < T.assemble && !folding) {
-            const p = doveEase.out(Math.max(0, Math.min(1, (t - k.d * T.assemble * 0.35) / (T.assemble * 0.6))));
+          if (t < T.assemble) {
+            // built outward from the centre: each dot starts by its distance from the middle (a wide stagger) and
+            // drifts in on a soft ease-out
+            const p = assembleEase(clamp01((t - k.d * T.assemble * 0.5) / (T.assemble * 0.5)));
             x = k.sx + (x - k.sx) * p; y = k.sy + (y - k.sy) * p;
             glyph = p < 0.35 ? '.' : A.RAMP[Math.max(1, Math.round(A.RAMP.indexOf(glyph) * Math.min(1, (p - 0.35) / 0.5)))];
             alpha = 0.25 + 0.75 * p;
           }
-          ctx.globalAlpha = alpha; ctx.fillText(glyph, x, y);
+          ctx.globalAlpha = alpha * doveTone(glyph); ctx.fillText(glyph, x, y);
         }
-      } else {
-        // flight → landing → crossfade
-        const L = landing(), P2 = [L.cx, L.cy];
-        const P1 = [P0[0] + (P2[0] - P0[0]) * 0.25, P0[1] + (P2[1] - P0[1]) * 0.9];   // a gentle arc
-        const sEnd = L.h / birdH;
-        const u = Math.min(1, (t - T.fly[0]) / (T.fly[1] - T.fly[0]));
-        const v = settle(u);
-        const cx = (1 - v) * (1 - v) * P0[0] + 2 * (1 - v) * v * P1[0] + v * v * P2[0];
-        const cy = (1 - v) * (1 - v) * P0[1] + 2 * (1 - v) * v * P1[1] + v * v * P2[1];
-        const sc = 1 + (sEnd - 1) * Math.min(1.04, v);
-        if (u >= 1 && !landed) { landed = true; heroBird.style.visibility = 'visible'; }   // arrived: the hero dove takes over
-        const fadeOut = landed ? 0 : 1;
-        const cw = cellW * sc, ch = cellH * sc, small = ch < 3;   // tiny: draw each character as a block of its density
-        if (!small) ctx.font = font(ch * 1.05);
-        for (const k of cells) {
-          if (k.eye) continue;
-          const x = cx + ((k.c + 0.5) * cellW - birdW / 2) * sc, y = cy + (k.r * cellH - birdH / 2) * sc;
-          const trail = 0.35 * Math.sin(Math.PI * u) * (k.c / G.COLS);              // the tail side trails a little mid-flight
-          const alpha = (1 - trail) * fadeOut;
-          if (alpha <= 0.01) continue;
-          if (small) { ctx.globalAlpha = alpha * (0.35 + 0.65 * k.dens); ctx.fillRect(x - cw / 2, y, cw, ch); }
-          else { ctx.globalAlpha = alpha; ctx.fillText(k.ch, x, y); }
-        }
+      } else if (t < T.out[1]) {
+        // 2. out toward the viewer: up a little, then down and off the right edge, growing faster as it nears
+        const u = (t - T.out[0]) / OUT, v = 0.55 * u + 0.45 * u * u;
+        const P3 = [vw + vw * 0.08, P0[1] + vh * 0.1], P1 = [P0[0] + (P3[0] - P0[0]) * 0.25, P0[1] - vh * 0.13], P2 = [P0[0] + (P3[0] - P0[0]) * 0.62, P0[1] - vh * 0.03];
+        const [x, y] = bez(P0, P1, P2, P3, v), [tx, ty] = bezD(P0, P1, P2, P3, v);
+        const sc = 1 + (MAXS - 1) * Math.pow(u, 2.3);
+        const fade = clamp01((sc - FADE_AT) / (MAXS - FADE_AT));
+        baseAlpha = 1 - fade; setBlur((mobile ? 2.5 : 3.5) * clamp01((sc - FADE_AT + 0.3) / (MAXS - FADE_AT + 0.3)));
+        const bank = Math.max(-0.19, Math.min(0.19, Math.atan2(ty, tx) * 0.6));
+        if (baseAlpha > 0.01) place(x, y, bank, sc, wingsAt(beatsOut, t - T.out[0]));
+        baseAlpha = 1;
+      } else if (t >= T.back[0] && t < T.back[1]) {
+        // 4. back in from the left: faint and small, an easy arc up and over into the slot, growing to its resting size
+        setBlur(0);
+        const L = landing(), rest = L.h / birdH, u = (t - T.back[0]) / BACK, v = doveEase.inOut(u) * 0.85 + u * 0.15;
+        const S0 = [-L.w * 0.3, L.cy + vh * 0.08], run = L.cx - S0[0];
+        const P1 = [S0[0] + run * 0.4, L.cy - vh * 0.13], P2 = [L.cx - run * 0.22, L.cy - vh * 0.06];
+        const [x, y] = bez(S0, P1, P2, [L.cx, L.cy], v), [tx, ty] = bezD(S0, P1, P2, [L.cx, L.cy], v);
+        const sc = rest * (0.6 + 0.4 * doveEase.out(u));
+        const bank = Math.max(-0.17, Math.min(0.17, Math.atan2(ty, tx) * 0.5)) * clamp01((BACK - (t - T.back[0])) / 250);
+        baseAlpha = clamp01((t - T.back[0]) / 300);
+        place(x, y, bank, sc, wingsAt(beatsBack, t - T.back[0]));
+        baseAlpha = 1;
+      } else if (t >= T.back[1]) {
+        // landing: a quick fold and a tiny dip past the slot, then the hero dove takes over in the same place
+        const L = landing(), p = clamp01((t - T.back[1]) / T.settle);
+        const dip = 4 * Math.sin(Math.PI * 2 * p) * (1 - p) * (p < 0.5 ? 1 : 0.5);
+        if (p < 1) place(L.cx, L.cy + dip, 0, L.h / birdH, p < 0.7 ? doveFoldFrame(G.frames, p / 0.7) : G.frames[0]);
+        else if (heroBird.style.visibility !== 'visible') heroBird.style.visibility = 'visible';
       }
       ctx.globalAlpha = 1;
       if (t >= T.end) return finish();
       raf = requestAnimationFrame(safeFrame);
     };
     const safeFrame = now => { try { frame(now); } catch (e) { console.error('Intro failed; showing the page', e); finish(); } };
+    // paused while the tab is hidden: the clock, the pan and the fail-safe all stop, and pick up where they were. If the
+    // page's own fail-safes (6s, CSS and <head>) may already have fired by then, it just finishes.
+    onHide = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf); raf = 0; anims.forEach(a => a.pause());
+        clearTimeout(failsafe); failsafeLeft -= performance.now() - failsafeSet;
+      } else if (performance.now() > 5600) finish();
+      else { anims.forEach(a => a.play()); last = null; raf = requestAnimationFrame(safeFrame); armFailsafe(Math.max(500, failsafeLeft)); }
+    };
+    document.addEventListener('visibilitychange', onHide);
     raf = requestAnimationFrame(safeFrame);
   }
 }
@@ -652,7 +1150,7 @@ function buildCmdkItems() {
   return [
     ...[...document.querySelectorAll('#primary-nav a')].map(a => ({ group: 'Sections', label: a.textContent.trim(), run: () => a.click() })),
     ...Site.search.flatMap(provider => typeof provider === 'function' ? provider() : provider),
-    { group: 'Actions', label: 'Copy email address', hint: siteEmail, run: async () => showToast(await copyText(siteEmail) ? COPIED : `Copy failed. Email: ${siteEmail}`) },
+    { group: 'Actions', label: 'Copy email address', hint: siteEmail, run: async () => { const ok = await copyText(siteEmail); showToast(ok ? COPIED : `Copy failed. Email: ${siteEmail}`); if (ok && Site.navDove) Site.navDove.flutter(); } },
     { group: 'Actions', label: 'Download resume', run: downloadResume },
     { group: 'Actions', label: 'Switch between light and dark mode', run: () => themeBtn.click() },
   ];
