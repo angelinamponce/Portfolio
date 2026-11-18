@@ -32,6 +32,11 @@
   --page-line-strong: var(--line-strong);
   --page-accent: var(--brass-ink);   /* brass text on the page */
   --card:        var(--cream-hi);
+  /* tooltips (map cities, constellation anchors, side-nav labels): their own pair, so they contrast in every theme and
+     inside any section (--ink and --card are remapped in places) */
+  --tip-bg:      var(--cream-hi);
+  --tip-ink:     var(--forest);
+  --tip-line:    var(--line-strong);
   --rule:        rgba(14,31,22,0.12);   /* the hairline between items in a section */
   --hero-bg:     var(--forest);      /* hero, logo strip and intro: green in both themes */
   --dove-gold:   var(--brass-hi);    /* the homepage ASCII dove (and the intro's): light brass, since it always sits on the green hero */
@@ -147,11 +152,11 @@ img { max-width: 100%; display: block; }
   content: attr(data-label);
   position: absolute; right: 18px; top: 50%;
   font-size: 10px; font-weight: 500;
-  color: var(--ink); letter-spacing: 1px;
+  color: var(--tip-ink); letter-spacing: 1px;
   text-transform: uppercase;
   white-space: nowrap;
-  background: var(--card);
-  border: 1px solid var(--line);
+  background: var(--tip-bg);
+  border: 1px solid var(--tip-line);
   padding: 5px 12px; border-radius: 3px;
   opacity: 0; pointer-events: none;
   box-shadow: var(--shadow-sm);
@@ -1399,8 +1404,8 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 .constellation-node:focus-visible .node-hit { stroke: var(--focus); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
 .constellation-tip {
   position: absolute; z-index: 3; transform: translate(-50%, calc(-100% - 18px)); max-width: 240px; width: max-content;
-  padding: 6px 12px; border-radius: 6px; background: var(--card); border: 1px solid var(--line-strong); box-shadow: var(--shadow-sm);
-  font-size: 12px; line-height: 1.4; color: var(--ink); text-align: center; pointer-events: none;
+  padding: 6px 12px; border-radius: 6px; background: var(--tip-bg); border: 1px solid var(--tip-line); box-shadow: var(--shadow-sm);
+  font-size: 12px; line-height: 1.4; color: var(--tip-ink); text-align: center; pointer-events: none;
   opacity: 0; transition: opacity 0.2s ease;
 }
 .constellation-tip.is-on { opacity: 1; }
@@ -2167,6 +2172,7 @@ dialog { color: inherit; }
   --page: var(--green-900); --page-ink: var(--on-dark); --page-ink-2: var(--on-dark-2); --page-ink-3: var(--on-dark-3);
   --page-line: var(--line-dark); --page-line-strong: var(--line-dark-strong); --page-accent: var(--brass-hi);
   --card: var(--cream); --hero-bg: var(--green-900); --focus: var(--brass-hi);
+  --tip-bg: var(--green-800); --tip-ink: var(--cream); --tip-line: rgba(212,181,125,0.5);   /* a step up from the page, cream text, gold edge */
   --rule: rgba(205,178,126,0.18);
   color-scheme: dark;
 }
