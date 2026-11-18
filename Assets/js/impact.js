@@ -341,41 +341,62 @@ function renderImpactCommitments(container, { labelLevel = 2, headingLevel = 3 }
 // entries are larger "anchor" dots on the drawing: hover or focus one for the organization, click / Enter to jump to
 // its row. Coordinates are in a 400 × 440 box.
 const IMPACT_CONSTELLATION = {
-  dots: 128,   // roughly how many dots the whole outline is sampled into
+  // dot spacing along each line weight (drawing units); joints are always dotted
+  spacing: { main: 20, detail: 26, fine: 34 },
+  // each line: its path, weight ('main' outlines, 'detail' fingers and land, 'fine' grid and circuit traces), when
+  // it draws during the grow-in (ms, from its start point), joint nodes (medium dots) and whether it ends in a hollow node
   paths: [
-    { d: 'M295,205 A95,95 0 1,1 105,205 A95,95 0 1,1 295,205 Z', closed: true, grow: { at: [1800, 2250], from: 'seed' } },   // the globe
-    { d: 'M138,150 C160,132 196,138 206,154 C214,168 236,166 240,184 C244,204 222,206 214,222 C206,240 186,232 178,246 C170,262 150,252 152,234 C154,216 132,212 128,194 C124,176 126,160 138,150 Z', closed: true, grow: { at: [2050, 2600] } },   // one large irregular landmass
-    { d: 'M248,240 C260,232 276,242 272,258 C268,272 252,278 244,268 C238,258 240,246 248,240 Z', closed: true, grow: { at: [2250, 2600] } },   // and a small island
-    { d: 'M200,110 C198,94 202,74 200,54', grow: { at: [2500, 2700] } },   // the sprout stem
-    { d: 'M200,90 C186,88 170,78 164,62 C180,60 196,70 200,90 Z', closed: true, grow: { at: [2650, 2950] } },   // left leaf
-    { d: 'M200,78 C214,74 230,62 236,46 C220,46 204,56 200,78 Z', closed: true, grow: { at: [2700, 3000] } },   // right leaf
-    { d: 'M200,54 C190,42 190,28 200,16 C210,28 210,42 200,54 Z', closed: true, grow: { at: [2750, 3000] } },   // top leaf
-    { d: 'M175.7,310.2 A108,108 0 0,1 98.5,168.1', grow: { at: [1450, 1950] } },   // left finger 1
-    { d: 'M173.5,320.0 A118,118 0 0,1 83.8,184.5', grow: { at: [1450, 1950] } },   // left finger 2
-    { d: 'M171.2,329.7 A128,128 0 0,1 72.0,205.0', grow: { at: [1450, 1950] } },   // left finger 3
-    { d: 'M169.0,339.5 A138,138 0 0,1 64.1,229.0', grow: { at: [1450, 1950] } },   // left finger 4
-    { d: 'M224.3,310.2 A108,108 0 0,0 301.5,168.1', grow: { at: [1450, 1950] } },   // right finger 1
-    { d: 'M226.5,320.0 A118,118 0 0,0 316.2,184.5', grow: { at: [1450, 1950] } },   // right finger 2
-    { d: 'M228.8,329.7 A128,128 0 0,0 328.0,205.0', grow: { at: [1450, 1950] } },   // right finger 3
-    { d: 'M231.0,339.5 A138,138 0 0,0 335.9,229.0', grow: { at: [1450, 1950] } },   // right finger 4
-    { d: 'M64.1,229.0 C52,282 70,342 104,382 C120,402 128,422 130,440', grow: { at: [1300, 1850], from: 'end' } },   // left hand: outer edge to the wrist
-    { d: 'M194,316 C190,352 182,400 180,440', grow: { at: [1300, 1550], from: 'end' } },   // left wrist, inside
-    { d: 'M98.5,168.1 L84.5,150.1 L70.5,150.1', trace: true, grow: { at: [1850, 2000] } },   // left circuit trace 1
-    { d: 'M83.8,184.5 L65.8,176.5 L53.8,176.5', trace: true, grow: { at: [1850, 2000] } },   // left circuit trace 2
-    { d: 'M335.9,229.0 C348,282 330,342 296,382 C280,402 272,422 270,440', grow: { at: [1300, 1850], from: 'end' } },   // right hand: outer edge to the wrist
-    { d: 'M206,316 C210,352 218,400 220,440', grow: { at: [1300, 1550], from: 'end' } },   // right wrist, inside
-    { d: 'M301.5,168.1 L315.5,150.1 L329.5,150.1', trace: true, grow: { at: [1850, 2000] } },   // right circuit trace 1
-    { d: 'M316.2,184.5 L334.2,176.5 L346.2,176.5', trace: true, grow: { at: [1850, 2000] } },   // right circuit trace 2
+    { d: 'M121,440 L119,414', w: 'main', at: [1300, 1420] },   // left forearm, outer
+    { d: 'M179,440 L181,414', w: 'main', at: [1300, 1420] },   // left forearm, inner
+    { d: 'M116,414 L184,414 L184,404 L116,404 Z', w: 'main', at: [1380, 1520], closed: true, joints: [[116,414],[184,414]] },   // left cuff
+    { d: 'M122,398 C106,372 98,338 104.9,313.4 L136.4,275.8 A99,99 0 0,0 186.2,298 C190,322 186,370 178,398 Z', w: 'main', at: [1450, 1800], closed: true, joints: [[122,398],[178,398]] },   // left palm
+    { d: 'M132.3,386.6 Q152,369.6 167.3,348.6 A5,5 0 0,1 174.7,355.4 Q159.4,376.4 139.7,393.4 Z', w: 'main', at: [1650, 1850], closed: true, joints: [[136,390],[174.4,348.3]] },   // left thumb
+    { d: 'M136.4,275.8 A99,99 0 0,1 107,166.1 A5,5 0 0,0 97.6,162.7 A109,109 0 0,0 129.9,283.5 Z', w: 'detail', at: [1650, 1950], closed: true, joints: [[125.2,272.2],[104.1,159.8]] },   // left index finger
+    { d: 'M128,285.8 A112,112 0 0,1 92.3,169.1 A5,5 0 0,0 82.7,166.4 A122,122 0 0,0 121.6,293.5 Z', w: 'detail', at: [1690, 1960], closed: true, joints: [[115.8,281.3],[89.0,163.0]] },   // left middle finger
+    { d: 'M119.7,295.8 A125,125 0 0,1 76.2,182.6 A5,5 0 0,0 66.3,181.2 A135,135 0 0,0 113.2,303.4 Z', w: 'detail', at: [1730, 1970], closed: true, joints: [[106.5,290.3],[72.1,177.0]] },   // left ring finger
+    { d: 'M111.3,305.7 A138,138 0 0,1 62.3,209.6 A5,5 0 0,0 52.4,210.3 A148,148 0 0,0 104.9,313.4 Z', w: 'detail', at: [1770, 1980], closed: true, joints: [[97.1,299.3],[57.1,205.0]] },   // left little finger
+    { d: 'M102.3,235.6 A104,104 0 0,1 105,157.7 L97,149.7 L85,149.7', w: 'fine', at: [2650, 2950], kind: 'trace', joints: [[102.3,235.6]], hollowEnd: true },   // left circuit trace (index)
+    { d: 'M77.8,244.5 A130,130 0 0,1 72.8,173 L64.8,165 L52.8,165', w: 'fine', at: [2650, 2950], kind: 'trace', joints: [[77.8,244.5]], hollowEnd: true },   // left circuit trace (ring)
+    { d: 'M279,440 L281,414', w: 'main', at: [1300, 1420] },   // right forearm, outer
+    { d: 'M221,440 L219,414', w: 'main', at: [1300, 1420] },   // right forearm, inner
+    { d: 'M284,414 L216,414 L216,404 L284,404 Z', w: 'main', at: [1380, 1520], closed: true, joints: [[284,414],[216,414]] },   // right cuff
+    { d: 'M278,398 C294,372 302,338 295.1,313.4 L263.6,275.8 A99,99 0 0,1 213.8,298 C210,322 214,370 222,398 Z', w: 'main', at: [1450, 1800], closed: true, joints: [[278,398],[222,398]] },   // right palm
+    { d: 'M260.3,393.4 Q240.6,376.4 225.3,355.4 A5,5 0 0,1 232.7,348.6 Q248,369.6 267.7,386.6 Z', w: 'main', at: [1650, 1850], closed: true, joints: [[264,390],[225.6,348.3]] },   // right thumb
+    { d: 'M263.6,275.8 A99,99 0 0,0 293,166.1 A5,5 0 0,1 302.4,162.7 A109,109 0 0,1 270.1,283.5 Z', w: 'detail', at: [1650, 1950], closed: true, joints: [[274.8,272.2],[295.9,159.8]] },   // right index finger
+    { d: 'M272,285.8 A112,112 0 0,0 307.7,169.1 A5,5 0 0,1 317.3,166.4 A122,122 0 0,1 278.4,293.5 Z', w: 'detail', at: [1690, 1960], closed: true, joints: [[284.2,281.3],[311.0,163.0]] },   // right middle finger
+    { d: 'M280.3,295.8 A125,125 0 0,0 323.8,182.6 A5,5 0 0,1 333.7,181.2 A135,135 0 0,1 286.8,303.4 Z', w: 'detail', at: [1730, 1970], closed: true, joints: [[293.5,290.3],[327.9,177.0]] },   // right ring finger
+    { d: 'M288.7,305.7 A138,138 0 0,0 337.7,209.6 A5,5 0 0,1 347.6,210.3 A148,148 0 0,1 295.1,313.4 Z', w: 'detail', at: [1770, 1980], closed: true, joints: [[302.9,299.3],[342.9,205.0]] },   // right little finger
+    { d: 'M297.7,235.6 A104,104 0 0,0 295,157.7 L303,149.7 L315,149.7', w: 'fine', at: [2650, 2950], kind: 'trace', joints: [[297.7,235.6]], hollowEnd: true },   // right circuit trace (index)
+    { d: 'M322.2,244.5 A130,130 0 0,0 327.2,173 L335.2,165 L347.2,165', w: 'fine', at: [2650, 2950], kind: 'trace', joints: [[322.2,244.5]], hollowEnd: true },   // right circuit trace (ring)
+    { d: 'M200,292 A92,92 0 0,1 200,108', w: 'main', at: [1800, 2200] },   // globe, left half
+    { d: 'M200,292 A92,92 0 0,0 200,108', w: 'main', at: [1800, 2200] },   // globe, right half
+    { d: 'M118.1,158 A81.9,13 0 0,0 281.9,158', w: 'fine', at: [2350, 2750], kind: 'grid' },   // globe grid, latitude 1
+    { d: 'M108,200 A92,18 0 0,0 292,200', w: 'fine', at: [2410, 2790], kind: 'grid' },   // globe grid, latitude 2
+    { d: 'M118.1,242 A81.9,13 0 0,0 281.9,242', w: 'fine', at: [2470, 2830], kind: 'grid' },   // globe grid, latitude 3
+    { d: 'M200,108 A46,92 0 0,0 200,292', w: 'fine', at: [2400, 2850], kind: 'grid' },   // globe grid, meridian west
+    { d: 'M200,108 A46,92 0 0,1 200,292', w: 'fine', at: [2400, 2850], kind: 'grid' },   // globe grid, meridian east
+    { d: 'M130,146 C131.2,142.5 135.7,135.7 140,133 C144.3,130.3 151,131.2 156,130 C161,128.8 165.3,127 170,126 C174.7,125 180.3,123.2 184,124 C187.7,124.8 191.7,128.2 192,131 C192.3,133.8 188,137.8 186,141 C184,144.2 181.3,146.8 180,150 C178.7,153.2 179.5,157 178,160 C176.5,163 172.2,165 171,168 C169.8,171 172,177 171,178 C170,179 167.2,174.2 165,174 C162.8,173.8 159.2,175 158,177 C156.8,179 157.2,183.3 158,186 C158.8,188.7 160.7,191.5 163,193 C165.3,194.5 168.7,193.5 172,195 C175.3,196.5 180.5,199.2 183,202 C185.5,204.8 187.2,208 187,212 C186.8,216 184.5,221.3 182,226 C179.5,230.7 175,235 172,240 C169,245 166,255 164,256 C162,257 160.8,250.3 160,246 C159.2,241.7 159.5,235.3 159,230 C158.5,224.7 157,218.8 157,214 C157,209.2 159.5,204 159,201 C158.5,198 156,198.5 154,196 C152,193.5 148.8,189.7 147,186 C145.2,182.3 144.5,178 143,174 C141.5,170 139.7,165.3 138,162 C136.3,158.7 134.3,156.7 133,154 C131.7,151.3 128.8,149.5 130,146 Z', w: 'detail', at: [2100, 2500], closed: true },   // the Americas
+    { d: 'M214,170 C217,168.2 221.7,165.7 226,165 C230.3,164.3 235.7,165.2 240,166 C244.3,166.8 249,167.7 252,170 C255,172.3 255.3,176.7 258,180 C260.7,183.3 267.3,187 268,190 C268.7,193 263.7,194 262,198 C260.3,202 259.7,208.7 258,214 C256.3,219.3 254.3,224.7 252,230 C249.7,235.3 246.7,243.3 244,246 C241.3,248.7 238.3,248.3 236,246 C233.7,243.7 231.7,237.3 230,232 C228.3,226.7 227.7,218.7 226,214 C224.3,209.3 222.7,206.7 220,204 C217.3,201.3 212.3,201 210,198 C207.7,195 206.3,189.7 206,186 C205.7,182.3 206.7,178.7 208,176 C209.3,173.3 211,171.8 214,170 Z', w: 'detail', at: [2150, 2500], closed: true },   // Africa
+    { d: 'M214,150 C215,147 217.7,142.7 220,140 C222.3,137.3 225.3,136.7 228,134 C230.7,131.3 233.7,126.2 236,124 C238.3,121.8 239.7,120.7 242,121 C244.3,121.3 249.3,123.5 250,126 C250.7,128.5 245,133.7 246,136 C247,138.3 253.3,137.7 256,140 C258.7,142.3 263,147.3 262,150 C261,152.7 253.7,155 250,156 C246.3,157 243,155.3 240,156 C237,156.7 235,159.7 232,160 C229,160.3 225,158.3 222,158 C219,157.7 215.3,159.3 214,158 C212.7,156.7 213,153 214,150 Z', w: 'detail', at: [2200, 2480], closed: true },   // Europe
+    { d: 'M200,108 C198,90 202,66 200,44', w: 'main', at: [2500, 2650], joints: [[200,108]] },   // sprout stem
+    { d: 'M200,86 C195.8,70 174,62.1 160,64 C166,76.9 184.2,91 200,86 Z', w: 'main', at: [2600, 2820], closed: true, joints: [[160,64]] },   // left leaf
+    { d: 'M197.6,84.7 L168,68.4', w: 'detail', at: [2720, 2880] },   // left leaf vein
+    { d: 'M200,72 C215.4,77.7 233.8,64.5 240,52 C226.2,49.5 204.6,56.3 200,72 Z', w: 'main', at: [2640, 2860], closed: true, joints: [[240,52]] },   // right leaf
+    { d: 'M202.4,70.8 L232,56', w: 'detail', at: [2760, 2920] },   // right leaf vein
+    { d: 'M200,44 C210,36 207,20 200,12 C193,20 190,36 200,44 Z', w: 'main', at: [2680, 2900], closed: true, joints: [[200,12]] },   // top leaf
+    { d: 'M200,42.1 L200,18.4', w: 'detail', at: [2800, 2960] },   // top leaf vein
   ],
-  // where each entry sits on the drawing (snapped to the nearest dot): case studies on the globe, the hackathon on
-  // the sprout, commitments along the hands
-  // the grow-in (renderImpactConstellation): each path's grow says when it draws (ms) and from where ('end': from its
-  // last point; 'seed': outward from the seed). The seed lands between the palms; the dove perches on the top dot.
-  seed: [200, 306],
-  anchors: {
-    'cpc': [150, 176], 'stackhacks': [226, 196], 'pathways-inc': [258, 256], 'code-with-claude': [200, 18],
-    'grace-community': [98, 168], 'greenwich-first-selectman': [302, 168],
-    'mothers-for-others': [98, 264], 'harvest-time-vbs': [302, 264], 'operation-smile': [175, 330],
+  seed: [200, 302],   // where the dove's seed lands, between the palms
+  anchors: {   // where each entry sits (snapped to the nearest dot on a main or detail line)
+    'cpc': [178, 150],
+    'stackhacks': [258, 214],
+    'pathways-inc': [236, 124],
+    'code-with-claude': [240, 52],
+    'grace-community': [104.1, 159.8],
+    'greenwich-first-selectman': [295.9, 159.8],
+    'mothers-for-others': [57.1, 205],
+    'harvest-time-vbs': [342.9, 205],
+    'operation-smile': [174.4, 348.3],
   },
 };
 // The constellation's grow-in, in ms (scaled down on phones). A small vector dove (the nav logo's dove) flies in from
@@ -412,64 +433,71 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   const mk = (tag, cls, parent = svg) => { const n = document.createElementNS(NS, tag); if (cls) n.setAttribute('class', cls); parent.appendChild(n); return n; };
   holder.appendChild(svg);
 
-  // 1. sample every path into evenly spaced points, and give each point the moment it appears
-  const probe = mk('g'); probe.setAttribute('visibility', 'hidden');
-  const shapes = C.paths.map(p => { const el = mk('path', '', probe); el.setAttribute('d', p.d); return { ...p, el, len: el.getTotalLength() }; });
-  const step = shapes.reduce((t, p) => t + p.len, 0) / C.dots;
-  const [SX, SY] = C.seed;
-  const pts = [], segs = [];
-  shapes.forEach(p => {
-    const n = Math.max(2, Math.round(p.len / step)), first = pts.length, count = p.closed ? n : n + 1;
-    const [t0, t1] = p.grow.at;
-    const own = [];
-    for (let i = 0; i < count; i++) {
-      const q = p.el.getPointAtLength(p.len * i / n);
-      own.push({ x: q.x, y: q.y, ring: p.trace && i === count - 1, ord: i / n });
+  // 1. the lines: each part of the drawing is a smooth path, drawn on by its stroke dash during the grow-in, with dots
+  //    spaced along it by line weight, medium joint nodes (knuckles, fingertips, leaf tips) and a hollow node where a
+  //    circuit trace ends. Each part is one group, so the idle drift moves a line and its dots together. Phones leave
+  //    out the faint globe grid and the circuit traces.
+  const parts = C.paths.filter(p => !(phone && (p.kind === 'grid' || p.kind === 'trace')));
+  const pts = [], groups = [];
+  parts.forEach(p => {
+    const g = mk('g', 'c-part w-' + p.w + (p.kind ? ' k-' + p.kind : ''));
+    const path = mk('path', 'c-path', g); path.setAttribute('d', p.d); path.setAttribute('pathLength', '1');
+    const len = path.getTotalLength();
+    const grp = { el: g, path, t0: p.at[0], t1: p.at[1], tf: '' };
+    groups.push(grp);
+    const along = (x, y) => {   // how far along the path (0–1) a point sits: the nearest of 240 samples
+      let best = 0, bd = Infinity;
+      for (let i = 0; i <= 240; i++) { const q = path.getPointAtLength(len * i / 240), d = (q.x - x) ** 2 + (q.y - y) ** 2; if (d < bd) { bd = d; best = i / 240; } }
+      return best;
+    };
+    const spacing = C.spacing[p.w];
+    const own = (p.joints || []).map(([x, y]) => ({ x, y, frac: along(x, y), size: 'joint' }));
+    if (p.kind !== 'trace') {   // traces carry only their joints and the hollow end
+      const n = Math.max(1, Math.round(len / spacing)), count = p.closed ? n : n + 1;
+      for (let i = 0; i < count; i++) {
+        const frac = i / n, q = path.getPointAtLength(len * frac);
+        if (own.some(o => Math.hypot(o.x - q.x, o.y - q.y) < spacing * 0.45)) continue;   // no dot crowding a joint
+        own.push({ x: q.x, y: q.y, frac, size: p.w });
+      }
     }
-    // order along the drawing: as written, reversed (drawn from the path's end), or outward from the seed
-    if (p.grow.from === 'end') own.forEach(q => { q.ord = 1 - q.ord; });
-    if (p.grow.from === 'seed') { const d = own.map(q => Math.hypot(q.x - SX, q.y - SY)), lo = Math.min(...d), hi = Math.max(...d); own.forEach((q, i) => { q.ord = (d[i] - lo) / (hi - lo || 1); }); }
-    own.forEach(q => { q.appear = t0 + (t1 - t0) * q.ord; pts.push(q); });
-    for (let i = 1; i < count; i++) segs.push({ a: first + i - 1, b: first + i });
-    if (p.closed) segs.push({ a: first + count - 1, b: first, closeAt: p.grow.from === 'seed' ? null : (p.grow.from === 'end' ? t0 : t1) });
+    if (p.hollowEnd) { const q = path.getPointAtLength(len); own.push({ x: q.x, y: q.y, frac: 1, size: 'ring' }); }
+    own.forEach(o => {
+      o.appear = grp.t0 + (grp.t1 - grp.t0) * o.frac; o.group = grp; o.canAnchor = !p.kind && o.size !== 'ring';
+      o.r = { main: 1.6, detail: 1.35, fine: 1.1, joint: 2.5, ring: 2.6 }[o.size];
+      o.el = mk('circle', 'c-dot d-' + o.size, g); o.el.setAttribute('cx', o.x.toFixed(1)); o.el.setAttribute('cy', o.y.toFixed(1));
+      pts.push(o);
+    });
   });
-  probe.remove();
-  // each line draws from its earlier end to its later one (a closed path's closing line ends with the path)
-  segs.forEach(sg => {
-    let A = pts[sg.a], B = pts[sg.b], t0 = A.appear, t1 = B.appear;
-    if (sg.closeAt != null) { t1 = sg.closeAt; if (t1 < t0) { [sg.a, sg.b] = [sg.b, sg.a]; t0 = pts[sg.a].appear; } }
-    if (t1 < t0) { [sg.a, sg.b] = [sg.b, sg.a]; [t0, t1] = [t1, t0]; }
-    sg.t0 = t0; sg.t1 = Math.max(t1, t0 + 40);
-  });
+  const [SX, SY] = C.seed;
 
-  // 2. anchors: each entry takes the nearest free dot
+  // 2. anchors: each entry takes the nearest free dot on a main or detail line
   const rows = [...IMPACT.map(r => ({ ...r, anchor: 'impact-' + r.id })), ...IMPACT_COMMITMENTS.map(r => ({ ...r, anchor: 'commit-' + r.id }))];
   const taken = new Set();
   rows.forEach(r => {
     const at = C.anchors[r.id]; if (!at) return;
     let best = -1, bd = Infinity;
-    pts.forEach((p, i) => { const d = (p.x - at[0]) ** 2 + (p.y - at[1]) ** 2; if (!taken.has(i) && !p.ring && d < bd) { bd = d; best = i; } });
+    pts.forEach((p, i) => { if (!p.canAnchor || taken.has(i)) return; const d = (p.x - at[0]) ** 2 + (p.y - at[1]) ** 2; if (d < bd) { bd = d; best = i; } });
     if (best >= 0) { taken.add(best); pts[best].row = r; }
   });
 
-  // 3. draw: lines, the seed, dots, then the anchors as links
-  const lines = segs.map(sg => ({ ...sg, el: mk('line', 'c-line') }));
+  // 3. the seed, then the anchors as links above the drawing (hovering one lights its line)
   const seedRing = mk('circle', 'c-seed-ring'), seed = mk('circle', 'c-seed');
   seed.setAttribute('r', 3.4); seedRing.setAttribute('r', 3.4);
-  pts.forEach(p => { p.el = mk('circle', p.ring ? 'c-dot c-ring' : 'c-dot'); p.r = p.ring ? 2.6 : 1.7; });
   const tip = impactEl('div', 'constellation-tip'); tip.setAttribute('aria-hidden', 'true');
   holder.appendChild(tip);
   const anchors = [];
-  pts.forEach((p, i) => {
+  pts.forEach(p => {
     if (!p.row) return;
     const r = p.row, a = mk('a', 'constellation-node');
+    p.el.style.display = 'none';   // the anchor's large dot stands in for the small one
     a.setAttribute('href', '#' + r.anchor); a.setAttribute('aria-label', `${r.org}: jump to its ${r.since !== undefined ? 'commitment' : 'case study'}`);
-    p.hit = mk('circle', 'node-hit', a); p.hit.setAttribute('r', 14);
+    p.hit = mk('circle', 'node-hit', a); p.hit.setAttribute('r', 14); p.hit.setAttribute('cx', p.x.toFixed(1)); p.hit.setAttribute('cy', p.y.toFixed(1));
     p.node = mk('circle', 'node-dot', a); p.node.setAttribute('r', (4.2 + 0.9 * Math.sqrt(Math.max(0, r.years || 0))).toFixed(1));
+    p.node.setAttribute('cx', p.x.toFixed(1)); p.node.setAttribute('cy', p.y.toFixed(1));
     p.node.style.animationDelay = (anchors.length * 45) + 'ms';
-    const mine = lines.filter(l => l.a === i || l.b === i);
+    p.link = a;
     const show = on => {
-      mine.forEach(l => l.el.classList.toggle('is-lit', on));
+      p.group.el.classList.toggle('is-lit', on);
       tip.classList.toggle('is-on', on);
       if (on) { tip.textContent = r.org; tip.style.left = (p.x / W * 100) + '%'; tip.style.top = (p.y / H * 100) + '%'; }
     };
@@ -525,18 +553,17 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   const pop = x => x <= 0 ? 0 : x >= 1 ? 1 : 1 + 1.7 * Math.pow(x - 1, 3) + 0.7 * Math.pow(x - 1, 2);   // 0 → 1, a small overshoot
   let drift = 0, tIdle = 0;
   function render(t) {
-    pts.forEach(p => {
-      const dx = drift ? Math.sin(tIdle * p.w + p.ph) * drift : 0, dy = drift ? Math.cos(tIdle * p.w * 1.3 + p.ph) * drift : 0;
-      p.cx = p.x + dx; p.cy = p.y + dy;
-      const s = pop((t - p.appear) / 180);
-      p.el.setAttribute('cx', p.cx.toFixed(1)); p.el.setAttribute('cy', p.cy.toFixed(1)); p.el.setAttribute('r', (p.r * s).toFixed(2));
-      if (p.node) { p.node.setAttribute('cx', p.cx.toFixed(1)); p.node.setAttribute('cy', p.cy.toFixed(1)); p.hit.setAttribute('cx', p.cx.toFixed(1)); p.hit.setAttribute('cy', p.cy.toFixed(1)); }
+    groups.forEach(gp => {   // each line draws on; while idle, each part drifts as a whole
+      const u = clamp01((t - gp.t0) / (gp.t1 - gp.t0));
+      gp.path.style.strokeDashoffset = (1 - u).toFixed(4);
+      gp.path.style.visibility = u > 0 ? 'visible' : 'hidden';
+      const tf = drift ? `translate(${(Math.sin(tIdle * gp.w + gp.ph) * drift).toFixed(2)} ${(Math.cos(tIdle * gp.w * 1.3 + gp.ph) * drift).toFixed(2)})` : '';
+      if (tf !== gp.tf) { gp.el.setAttribute('transform', tf); gp.tf = tf; }
     });
-    lines.forEach(l => {
-      const A = pts[l.a], B = pts[l.b], u = clamp01((t - l.t0) / (l.t1 - l.t0));
-      l.el.setAttribute('x1', A.cx.toFixed(1)); l.el.setAttribute('y1', A.cy.toFixed(1));
-      l.el.setAttribute('x2', (A.cx + (B.cx - A.cx) * u).toFixed(1)); l.el.setAttribute('y2', (A.cy + (B.cy - A.cy) * u).toFixed(1));
-      l.el.style.visibility = u > 0 ? 'visible' : 'hidden';
+    pts.forEach(p => {   // dots pop in as their line reaches them
+      const sc = pop((t - p.appear) / 180);
+      if (sc !== p.sc) { p.el.setAttribute('r', (p.r * sc).toFixed(2)); p.sc = sc; }
+      if (p.link && p.group.tf !== p.ltf) { p.link.setAttribute('transform', p.group.tf); p.ltf = p.group.tf; }
     });
     // the seed: falls with gravity, a small bounce, a glow ring, then fades into the globe
     let sy = -999, so = 0;
@@ -573,7 +600,7 @@ function buildConstellation(holder, { forceStill = false } = {}) {
 
   // 6. run: the sequence (or the finished state), then idle; paused while hidden or off screen
   const rnd = (a, b) => a + Math.random() * (b - a);
-  pts.forEach(p => { p.ph = rnd(0, Math.PI * 2); p.w = rnd(0.0006, 0.0011); });
+  groups.forEach(gp => { gp.ph = rnd(0, Math.PI * 2); gp.w = rnd(0.0006, 0.0011); });
   const idleMotion = !still && !phone;
   let seqT = 0, mode = 'idle', last = null, raf = 0, onScreen = true, nextTwinkle = 0, perched = false;
   const finishState = () => {
@@ -594,7 +621,7 @@ function buildConstellation(holder, { forceStill = false } = {}) {
         tIdle += dt; drift = Math.min(1, tIdle / 800) * 1.5; render(S.total);
         if (tIdle > nextTwinkle) {
           nextTwinkle = tIdle + rnd(1100, 2200);
-          const plain = pts.filter(p => !p.row);
+          const plain = pts.filter(p => !p.row && p.size !== 'ring');
           for (let n = 0; n < 2; n++) { const p = plain[Math.floor(Math.random() * plain.length)]; p.el.classList.remove('twinkle'); void p.el.getBBox; p.el.classList.add('twinkle'); setTimeout(() => p.el.classList.remove('twinkle'), 1600); }
         }
       } else { raf = 0; return; }

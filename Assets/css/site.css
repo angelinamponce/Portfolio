@@ -1270,11 +1270,20 @@ header {
    background, so drawn in the page's gold. Lines draw in once (~1s); a dot lights its own lines on hover or focus. ── */
 .page-hero-art { position: relative; }
 .impact-constellation { display: block; width: 100%; height: auto; max-height: 520px; overflow: visible; }
-/* lines draw by their end points (the script grows each from its earlier dot); dots pop in as a line reaches them */
-.impact-constellation .c-line {
-  stroke: var(--page-accent); stroke-width: 1; stroke-opacity: 0.42; vector-effect: non-scaling-stroke;
-  transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease;
-}
+/* Three line weights: 'main' outlines (hands, globe ring, sprout), 'detail' (fingers, land, veins), 'fine' (globe
+   grid, circuit traces). Each line draws on via its stroke dash (pathLength 1); dots: small along a line, medium at
+   joints, hollow where a circuit trace ends, large only for the nine entries. */
+.impact-constellation .c-path { fill: none; stroke: var(--page-accent); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease; }
+.impact-constellation .w-main .c-path { stroke-width: 1.5; stroke-opacity: 0.9; }
+.impact-constellation .w-detail .c-path { stroke-width: 1.1; stroke-opacity: 0.62; }
+.impact-constellation .w-fine .c-path { stroke-width: 0.9; stroke-opacity: 0.42; }
+.impact-constellation .c-part.is-lit .c-path { stroke-opacity: 1; stroke-width: 2; }
+.impact-constellation .c-dot { fill: var(--page-accent); transform-box: fill-box; transform-origin: center; }
+.impact-constellation .d-main { fill-opacity: 0.85; }
+.impact-constellation .d-detail { fill-opacity: 0.7; }
+.impact-constellation .d-fine { fill-opacity: 0.5; }
+.impact-constellation .d-joint { fill-opacity: 1; }
+.impact-constellation .d-ring { fill: var(--page); stroke: var(--page-accent); stroke-width: 1.1; }
 .impact-constellation .c-flight { fill: none; stroke: none; }
 /* the seed the dove drops: a gold dot that lands between the palms, with a soft glow ring */
 .impact-constellation .c-seed { fill: var(--page-accent); }
@@ -1290,9 +1299,7 @@ header {
 .const-bird .dove { display: block; width: 100%; height: 100%; overflow: visible; }
 .dove.is-flapping .dove-wings { animation: doveFold 0.3s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .dove.is-flapping .dove-wings { animation: none; } }
-.impact-constellation .c-line.is-lit { stroke-opacity: 1; stroke-width: 1.8; }
-.impact-constellation .c-dot { fill: var(--page-accent); fill-opacity: 0.75; transform-box: fill-box; transform-origin: center; }
-.impact-constellation .c-ring { fill: var(--page); stroke: var(--page-accent); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+
 .impact-constellation .c-dot.twinkle { animation: cTwinkle 1.5s ease-in-out; }
 @keyframes cTwinkle { 50% { fill-opacity: 1; transform: scale(2); } }
 .constellation-node { cursor: pointer; outline: none; }
