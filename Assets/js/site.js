@@ -282,27 +282,58 @@ if (!reduceMotion) window.addEventListener('scroll', () => {
   }));
 }, { passive: true });
 
-// ── Timeline: the line draws with scroll (--tp, 0–1) and each node (.timeline-item) gets .reached as the line passes its
-// .timeline-dot. initTimeline(element) for each timeline on a page (Experience on the homepage, commitments on /impact).
+// ── Timeline: a track from the first node's dot to the last one's (--t0 / --tlen, in the timeline's own CSS px), filled
+// in gold as you scroll (--tp, 0–1); each node (.timeline-item) gets .reached once the fill passes its .timeline-dot.
+// The fill follows a trigger line 65% down the window, and also ramps to the end over the last 200px of the page, so
+// the last nodes (which can never scroll up to the trigger) are reached at the very bottom. It eases toward its target
+// each frame (instantly with reduced motion). Positions are re-measured on resize, when the timeline changes size
+// (photos loading) and once the fonts are in. A timeline whose dots aren't drawn (Experience) is left as it is.
+// initTimeline(element) for each timeline on a page (Experience on the homepage, commitments on /impact).
 function initTimeline(tl) {
   if (!tl) return;
   const items = [...tl.querySelectorAll('.timeline-item')];
-  let ticking = false;
-  const update = () => {
-    ticking = false;
-    const r = tl.getBoundingClientRect();
-    const reach = window.innerHeight * 0.65;
-    const p = reduceMotion ? 1 : Math.max(0, Math.min(1, (reach - r.top) / r.height));
-    tl.style.setProperty('--tp', p.toFixed(4));
-    const tip = r.top + p * r.height;
-    items.forEach(item => {
-      const dot = item.querySelector('.timeline-dot').getBoundingClientRect();
-      item.classList.toggle('reached', dot.top + dot.height / 2 <= tip + 1);
-    });
+  if (!items.length) return;
+  let centres = [], t0 = 0, tlen = 0, shown = null, target = 0, raf = 0;
+  // a dot's centre in the timeline's own CSS px: measured on screen (sub-pixel exact), divided by the screen px per CSS
+  // px (the page's content zoom), less any offset its node is still sliding in from (the scroll reveal's translateY).
+  // A dot's reach animation scales it about its centre, so the centre holds.
+  const shiftOf = el => { const m = getComputedStyle(el).transform; return m && m !== 'none' ? new DOMMatrixReadOnly(m).m42 : 0; };
+  const measure = () => {
+    const r = tl.getBoundingClientRect(), k = r.height / (tl.offsetHeight || 1);
+    centres = items.map(it => { const d = it.querySelector('.timeline-dot'); if (!d || !d.offsetParent) return null; const q = d.getBoundingClientRect(); return q.height ? (q.top + q.height / 2 - r.top) / k - shiftOf(it) : null; });
+    if (centres.some(c => c === null)) { centres = []; return; }   // dots not drawn (or not laid out yet)
+    t0 = centres[0]; tlen = Math.max(0, centres[centres.length - 1] - t0);
+    tl.style.setProperty('--t0', t0.toFixed(1) + 'px'); tl.style.setProperty('--tlen', tlen.toFixed(1) + 'px');
   };
-  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-  window.addEventListener('resize', update);
-  update();
+  const aim = () => {
+    if (!centres.length || !tlen) return 0;
+    const r = tl.getBoundingClientRect(), k = r.height / (tl.offsetHeight || 1);   // screen px per CSS px
+    const normal = (window.innerHeight * 0.65 - (r.top + t0 * k)) / (tlen * k);
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const ramp = Math.max(0, Math.min(1, 1 - (maxScroll - window.scrollY) / 200));   // 0 → 1 over the last 200px
+    const p = Math.max(0, Math.min(1, normal));
+    return Math.min(1, p + (1 - p) * ramp);   // continuous, ≥ the normal progress, 1 at the bottom
+  };
+  const paint = p => {
+    tl.style.setProperty('--tp', p.toFixed(4));
+    const tip = t0 + p * tlen;
+    items.forEach((item, i) => item.classList.toggle('reached', centres.length > 0 && centres[i] <= tip + 0.5));
+  };
+  const frame = () => {
+    raf = 0;
+    if (shown === null || reduceMotion) shown = target;
+    else { shown += (target - shown) * 0.22; if (Math.abs(target - shown) < 0.001) shown = target; }
+    paint(shown);
+    if (shown !== target) raf = requestAnimationFrame(frame);
+  };
+  const update = () => { target = aim(); if (!raf) raf = requestAnimationFrame(frame); };
+  const remeasure = () => { measure(); update(); };
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', remeasure);
+  if ('ResizeObserver' in window) new ResizeObserver(remeasure).observe(tl);   // photos loading, wrapping changes
+  tl.querySelectorAll('img').forEach(img => { if (!img.complete) img.addEventListener('load', remeasure, { once: true }); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
+  remeasure();
 }
 
 // ── The dove: the site's bird, from Assets/img/abuelas-blessing.png. Shared pieces:

@@ -38,7 +38,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Assets/css/site.css?v=47">
+  <link rel="stylesheet" href="/Assets/css/site.css?v=58">
 </head>
 <body>
 
@@ -113,7 +113,22 @@
       <div class="page-hero-art hero-enter hero-enter-3" id="impactConstellation"></div>
     </div>
     <!-- scroll cue: hidden on phones, fades once the page scrolls (script below) -->
-    <a class="hero-scroll-cue" id="heroScrollCue" href="#case-studies" aria-label="Scroll to the case studies">Scroll<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></a>
+    <a class="hero-scroll-cue" id="heroScrollCue" href="#highlights" aria-label="Scroll to the highlights">Scroll<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></a>
+  </div>
+</section>
+
+<!-- Highlights: a carousel of the organizations, right under the full-screen hero (renderImpactHighlights in
+     Assets/js/impact.js; the cards come from IMPACT_HIGHLIGHTS). Its space is held from the start, but it stays hidden
+     and inert until the illustration has finished drawing (script below). -->
+<section class="impact-highlights-section" aria-labelledby="hlTitle">
+  <div class="container impact-highlights is-waiting" id="highlights" inert aria-hidden="true">
+    <div class="section-label" aria-hidden="true">Highlights</div>
+    <div class="hl-heading-row">
+      <span class="hl-orn" aria-hidden="true"></span>
+      <h2 class="section-title hl-heading" id="hlTitle">Nonprofit &amp; Community Work</h2>
+      <span class="hl-orn is-right" aria-hidden="true"></span>
+    </div>
+    <div id="impactHighlights"></div>
   </div>
 </section>
 
@@ -158,14 +173,37 @@
   </div>
 </footer>
 
-<script src="/Assets/js/impact.js?v=37"></script>
-<script src="/Assets/js/site.js?v=34"></script>
+<script src="/Assets/js/impact.js?v=53"></script>
+<script src="/Assets/js/site.js?v=37"></script>
 <script>
 renderImpactHero();
 renderImpactCases(document.getElementById('impactGrid'));
 renderImpactCommitments(document.querySelector('#case-studies .container'));
 impactLightbox();
+// The Highlights (below the fold) fade in once everything above them has: when the illustration's drawing sequence has
+// ended ('constellation:done' from buildConstellation, also sent at once when the sequence is skipped) and its entrance
+// fade has finished, or as soon as they scroll into view, whichever comes first (so scrolling down early never meets a
+// blank section). Fallback: shown after 8s whatever happens. Reduced motion: shown at once. Once per page load; a
+// replay of the drawing (clicking the dove) or a theme change never hides them again.
+(() => {
+  const hl = document.getElementById('highlights'), art = document.getElementById('impactConstellation');
+  if (!hl) return;
+  let shown = false;
+  const reveal = () => { if (shown) return; shown = true; hl.removeAttribute('inert'); hl.removeAttribute('aria-hidden'); hl.classList.remove('is-waiting'); };
+  if (reduceMotion || !art) return reveal();
+  const drawn = new Promise(res => { if (art.dataset.drawn) res(); else art.addEventListener('constellation:done', res, { once: true }); });
+  const faded = new Promise(res => {
+    const settled = () => !document.documentElement.classList.contains('hero-pending') && getComputedStyle(art).opacity === '1';
+    if (settled()) return res();
+    art.addEventListener('transitionend', e => { if (e.target === art && e.propertyName === 'opacity') res(); });
+    setTimeout(res, 4500);   // (the hero's own fail-safe reveals it by 4s)
+  });
+  Promise.all([drawn, faded]).then(reveal);
+  if ('IntersectionObserver' in window) new IntersectionObserver((es, io) => { if (es.some(e => e.isIntersecting)) { io.disconnect(); reveal(); } }, { rootMargin: '0px 0px -10% 0px' }).observe(hl);
+  setTimeout(reveal, 8000);
+})();
 renderImpactConstellation(document.getElementById('impactConstellation'));   // photos open in the site's lightbox, as on the homepage
+renderImpactHighlights(document.getElementById('impactHighlights'));
 // Search: every case study and commitment, scrolled to in place
 Site.search.push(() => impactSearchItems(id => {
   const el = document.getElementById(id);
@@ -174,13 +212,6 @@ Site.search.push(() => impactSearchItems(id => {
   if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
   el.focus({ preventScroll: true });
 }));
-// The scroll cue fades out once the page has scrolled, and back in at the top; a click scrolls to the first row
-(() => {
-  const cue = document.getElementById('heroScrollCue'); if (!cue) return;
-  const sync = () => cue.classList.toggle('is-gone', window.scrollY > 40);
-  window.addEventListener('scroll', sync, { passive: true }); sync();
-  cue.addEventListener('click', e => { e.preventDefault(); scrollToSection(document.getElementById('case-studies'), 0); });
-})();
 // The divider under the subtitle: a constellation line that draws in once the title has risen in
 (() => {
   const el = document.getElementById('impactHeroMark'); if (!el || typeof constellationMark !== 'function') return;
@@ -188,6 +219,22 @@ Site.search.push(() => impactSearchItems(id => {
   const mark = el.firstElementChild;
   if (reduceMotion) mark.classList.add('is-drawn');
   else window.addEventListener('load', () => setTimeout(() => mark.classList.add('is-drawn'), 700));
+})();
+// The scroll cue fades out once the page has scrolled, and back in at the top; a click scrolls to the highlights
+(() => {
+  const cue = document.getElementById('heroScrollCue'); if (!cue) return;
+  const sync = () => cue.classList.toggle('is-gone', window.scrollY > 40);
+  window.addEventListener('scroll', sync, { passive: true }); sync();
+  cue.addEventListener('click', e => { e.preventDefault(); scrollToSection(document.getElementById('highlights'), 0); });
+})();
+// The Highlights heading's ornaments: the hero divider's constellation line on the left, mirrored on the right, drawn
+// in when the heading scrolls into view
+(() => {
+  const orns = document.querySelectorAll('.hl-orn'); if (!orns.length || typeof constellationMark !== 'function') return;
+  orns.forEach(o => { o.innerHTML = constellationMark('impact-hero', { width: 112, height: 18, dots: [4, 5], mirror: o.classList.contains('is-right') }); });
+  const marks = [...orns].map(o => o.firstElementChild);
+  if (reduceMotion) marks.forEach(m => m.classList.add('is-drawn'));
+  else DoveKit.inViewOnce(document.querySelector('.hl-heading-row'), () => marks.forEach(m => m.classList.add('is-drawn')), { threshold: 0.6 });
 })();
 // The header settles and the hero text rises in once the page is ready (see .hero-enter)
 document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => { document.documentElement.classList.remove('hero-pending'); document.body.classList.add('page-loaded'); }));

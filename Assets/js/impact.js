@@ -75,7 +75,7 @@ const IMPACT = [
     org: 'StackHacks, Binghamton University',
     orgNote: 'President & Co-Founder',
     problem: 'Underrepresented students lack on-ramps into software engineering.',
-    did: 'Co-founded a student-run engineering org. Direct the executive board and 4 project divisions delivering workshops and product work for 100+ students.',
+    did: 'Co-founded a student-run engineering org for underrepresented students and allies. Direct the executive board and 4 project divisions delivering workshops and product work for 100+ students.',
     stat: '600%', statLabel: 'Membership growth',
     // landscape, wider than 4:3: the full height shows and ~9% is trimmed from each side, so the STACKHACKS
     // projector text and the front rows stay in frame
@@ -114,7 +114,22 @@ const IMPACT = [
 
 // Long-term commitments: rows under the case studies, a step smaller. since is the year shown as the stat; orgNote is
 // an optional description shown in parentheses after the organization.
-const IMPACT_COMMITMENTS = [   // most recent first; the image side keeps zigzagging on from the case studies
+const IMPACT_COMMITMENTS = [   // in the order shown on the page; the image side keeps zigzagging on from the case studies
+  {
+    id: 'operation-smile',
+    years: 12,   // years of involvement, sizes this row's dot in the hero constellation: since 2014
+    caption: '',
+    tag: 'Global Health',
+    role: 'Fundraising Volunteer',
+    org: 'Operation Smile',
+    since: '2014 – Present',
+    line: 'Raised $75,000+ toward free cleft lip and palate surgeries for 250+ children without access to care.',
+    // landscape, wider than 4:3: the sides are trimmed. 'right center' shifts as far right as the photo allows, which
+    // puts the child's face (62% across the source) at ~55% of the slot, with the photo she holds still in frame.
+    image: '/Assets/img/operation-smile-photo-800.jpg', position: 'right center', overlay: false,
+    srcset: '/Assets/img/operation-smile-photo-800.jpg 800w, /Assets/img/operation-smile-photo-1600.jpg 894w',   // source is 894px wide
+    alt: 'A child smiling, representing the patients Operation Smile serves.',
+  },
   {
     id: 'grace-community',
     years: 2,   // years of involvement, sizes this row's dot in the hero constellation: since 2024
@@ -122,7 +137,7 @@ const IMPACT_COMMITMENTS = [   // most recent first; the image side keeps zigzag
     tag: 'Food Security',
     role: 'Volunteer',
     org: 'Grace Community Church, Feed My Starving Children MobilePack',
-    since: '2024',
+    since: '2024 – Present',
     line: 'Pack nutritionally complete meals for children facing hunger around the world through church-hosted meal-packing events.',
     // landscape 4:3, the same shape as the slot: shown whole, so Angelina (right of centre) and the table stay in frame
     image: '/Assets/img/grace-community-photo-800.jpg', overlay: false,
@@ -139,11 +154,13 @@ const IMPACT_COMMITMENTS = [   // most recent first; the image side keeps zigzag
     orgNote: 'Fairfield County diaper bank',
     since: '2023',
     line: "Recruit and lead youth volunteers for the county's largest independent diaper bank serving low-income families; accepted the 2023 Proclamation on the organization's behalf.",
-    // the slot shows a 62% band of this photo's height; centre 46% keeps the "Town of Greenwich" lettering (23–31%),
-    // all four people and the Proclamation (60–78%) in frame. The original is 1290px wide (the -1600 file is not upscaled).
-    image: '/Assets/img/mothers-for-others-photo-800.jpg', position: 'center 46%', overlay: false,
-    srcset: '/Assets/img/mothers-for-others-photo-800.jpg 800w, /Assets/img/mothers-for-others-photo-1600.jpg 1290w',
-    alt: 'Angelina and fellow volunteers at Greenwich Town Hall receiving the 2023 Proclamation honoring Mothers for Others.',
+    // the -800/-1600 files are a 1.46:1 crop of the original (source-assets/, not deployed): the four of them fill ~85%
+    // of the width, centred, with the mural above and behind; it ends just above the wood rail (mid-thigh), with the
+    // proclamation whole. Shown at that shape (fit 'native': no further cropping, no object-position), with the 1px
+    // outline; the lightbox shows the same crop (the -1600 file).
+    image: '/Assets/img/mothers-for-others-photo-800.jpg?v=6', fit: 'native', overlay: false,
+    srcset: '/Assets/img/mothers-for-others-photo-800.jpg?v=6 800w, /Assets/img/mothers-for-others-photo-1600.jpg?v=6 1600w',
+    alt: 'Angelina with fellow Mothers for Others volunteers in front of a mural, one of them holding a framed proclamation.',
   },
   {
     id: 'greenwich-first-selectman',
@@ -152,8 +169,8 @@ const IMPACT_COMMITMENTS = [   // most recent first; the image side keeps zigzag
     tag: 'Civic Engagement',
     role: 'Intern & Volunteer',
     org: 'Office of the First Selectman, Town of Greenwich',
-    since: null,   // TODO: the start year. Rows with no year show no "Since" stat until it's filled in.
-    line: "Supported community outreach in the First Selectman's office, including engagement with Greenwich's Latino residents, and volunteer each year at the town's Independence Day celebration.",
+    since: '2023 – 2024',
+    line: "Supported community outreach in First Selectman Fred Camillo's office, including engagement with Greenwich's Latino residents, and volunteer each year at the town's Independence Day celebration.",
     // the -800/-1600 files are a 4:3 crop of the portrait original, centred on the two of them (head to waist, hand
     // flag in frame; the wall flag above didn't fit). The lightbox shows the uncropped original (full).
     image: '/Assets/img/greenwich-july4-photo-800.jpg?v=2', overlay: false,
@@ -168,26 +185,11 @@ const IMPACT_COMMITMENTS = [   // most recent first; the image side keeps zigzag
     tag: 'Youth Mentorship',
     role: 'Camp Counselor',
     org: 'Harvest Time Church Vacation Bible School',
-    since: '2019',
-    line: 'Mentor and support youth each summer, creating an inclusive, safe environment for every camper.',
+    since: '2019 – 2024',
+    line: 'Mentor and support campers ages 4 to 12, creating an inclusive, safe, and welcoming environment where every child can grow in their faith and get to know Christ.',
     image: '/Assets/img/harvest-time-photo-800.jpg', position: 'center 30%', overlay: false,
     srcset: '/Assets/img/harvest-time-photo-800.jpg 800w, /Assets/img/harvest-time-photo-1600.jpg 1600w',   // portrait: both faces and the SCUBA screen stay in frame; the name tag is retouched out of the file
     alt: 'Angelina with a fellow counselor at Harvest Time Church Vacation Bible School.',
-  },
-  {
-    id: 'operation-smile',
-    years: 12,   // years of involvement, sizes this row's dot in the hero constellation: since 2014
-    caption: '',
-    tag: 'Global Health',
-    role: 'Fundraising Volunteer',
-    org: 'Operation Smile',
-    since: '2014',
-    line: 'Raising funds toward free cleft lip and palate surgeries for 250+ children without access to care.',
-    // landscape, wider than 4:3: the sides are trimmed. 'right center' shifts as far right as the photo allows, which
-    // puts the child's face (62% across the source) at ~55% of the slot, with the photo she holds still in frame.
-    image: '/Assets/img/operation-smile-photo-800.jpg', position: 'right center', overlay: false,
-    srcset: '/Assets/img/operation-smile-photo-800.jpg 800w, /Assets/img/operation-smile-photo-1600.jpg 894w',   // source is 894px wide
-    alt: 'A child smiling, representing the patients Operation Smile serves.',
   },
 ];
 
@@ -819,6 +821,8 @@ function buildConstellation(holder, { forceStill = false, teaser = false } = {})
     setAnchorsLive(true); render(S.total); svg.classList.add('is-settled');
     if (!teaser) { bird.classList.add('is-perched'); bird.tabIndex = 0; }
     if (still) svg.classList.add('is-still');
+    // the drawing is complete (its sequence ended, or it started finished): tell the page (the Highlights wait for it)
+    holder.dataset.drawn = '1'; holder.dispatchEvent(new CustomEvent('constellation:done', { bubbles: true }));
   };
   // one frame (the shared DoveKit ticker calls it, paused while the tab is hidden or the drawing is off screen);
   // returns false when there's nothing left to animate
@@ -921,6 +925,160 @@ function buildConstellation(holder, { forceStill = false, teaser = false } = {})
   } else if (replay && !still) play(); else { finishState(); run(); }
   // fail-safe: if the sequence is still running long after it should have ended (and the page is visible), finish it
   if (!teaser) setTimeout(() => { if (mode === 'seq' && !document.hidden) finishState(); }, (S.total / 1000 * K + 3) * 1000);
+}
+
+// The /impact page's "Highlights" carousel (its own section right under the hero): one card per organization, in this
+// order. Each card: the organization's logo on a cream tile (or a monogram until the logo file is added), the
+// organization (serif), its type of nonprofit (small gold label), an optional distinction line, my role (a pill), one
+// line about the work, and a link to its detailed row further down the page (target: that row's id).
+//   logo         the logo file. Logos go in /public/logos/ (see the IMAGES notes at the top). Empty: a monogram of the
+//                organization's initials stands in, in the same tile.
+//   logoClass    optional extra class on the logo box, e.g. 'is-roomy' (smaller, with more breathing room)
+//   lockup       optional: the logo file is just the icon, and these lines of the name are set beside it as text (a
+//                horizontal lockup), e.g. ['Harvest Time', 'Church']
+//   distinction  optional one-line credibility statement shown under the type; leave it '' and no line is drawn
+const IMPACT_HIGHLIGHTS = [
+  { org: 'Community Preservation Corporation', type: 'Nonprofit affordable housing lender',
+    distinction: 'The #1 CDFI in the U.S. for multifamily affordable housing',
+    role: 'Summer Analyst', logo: '../public/logos/cpc-trim.png', logoClass: 'is-roomy',
+    line: 'Monitored a $353M portfolio of 10,000+ units and supported 35,000+ rent-regulated units.', target: 'impact-cpc' },
+  { org: 'Pathways Inc.', type: 'Nonprofit behavioral health services', distinction: '',
+    role: 'Summer Intern', logo: '../Assets/img/pathways-logo-trim.png',
+    line: 'Built one-on-one relationships with 15+ residents and led 10+ workshops on independence and daily living skills.', target: 'impact-pathways-inc' },
+  { org: 'Operation Smile', type: 'Global health nonprofit', distinction: '',
+    role: 'Fundraising Volunteer (2014 – Present)', logo: '../operationsmile-trim.png',   // (files in the site's root, margins trimmed; the path is relative to /impact/)
+    line: 'Raised $75,000+ toward free cleft lip and palate surgeries for 250+ children without access to care.', target: 'commit-operation-smile' },
+  { org: 'Harvest Time Church', type: 'Faith-based youth ministry', distinction: '',
+    role: 'VBS Camp Counselor (2019 – 2024)', logo: '../harvesttimechurch-icon.png', lockup: ['Harvest Time', 'Church'],   // the icon, with the name set beside it as text
+    line: 'Mentored campers ages 4 to 12 in an inclusive, safe, and welcoming environment.', target: 'commit-harvest-time-vbs' },
+  { org: 'Grace Community Church', orgNote: 'Feed My Starving Children MobilePack', type: 'Faith-based hunger relief', distinction: '',
+    role: 'Volunteer (2024 – Present)', logo: '../gracecommunitychurch-trim.jpg',
+    line: 'Packed nutritionally complete meals for children facing hunger around the world.', target: 'commit-grace-community' },
+  { org: 'Mothers for Others', type: 'Family support nonprofit, Fairfield County diaper bank',
+    distinction: "Fairfield County's largest independent diaper bank",
+    role: 'Youth Volunteer', logo: '../mothersforothers-trim.png',
+    line: "Recruited and led youth volunteers and accepted the 2023 Proclamation on the organization's behalf.", target: 'commit-mothers-for-others' },
+];
+
+// Renders the carousel into holder (the section's eyebrow and heading are in the page's HTML) as a spotlight: the active
+// card centred at full size, the previous and next cards scaled down behind it on either side, tucked under its edges
+// (phones: the active card only). Every card is the same height, so nothing jumps between slides. Previous / next and
+// a dot per card sit in one row below; ←/→ while it has focus and swipe on touch screens move it too. It loops (the side
+// cards wrap), never autoplays, and moves without animation under reduced motion. The active card jumps to its detailed
+// row; a side card comes to the centre when clicked. Only the active card is in the tab order; the current card is
+// announced politely (a visually hidden count).
+// A horizontal logo lockup as one small SVG, so it scales inside the logo box exactly like an image logo: the icon file
+// on the left and the name as real text on the right (one line per entry of h.lockup). Once the text has its font,
+// the viewBox is fitted to the drawing, icon and text sized so the text block is ~85% of the icon's height.
+function lockupSvg(h, onFail) {
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'hl-lockup'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', `${h.org} logo`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  const IH = 170, IW = 322, GAP = 30, FS = 70, LH = 0.98;   // icon at its file size; text in the same units
+  const icon = document.createElementNS(NS, 'image');
+  icon.setAttribute('href', h.logo); icon.setAttribute('width', IW); icon.setAttribute('height', IH);
+  icon.addEventListener('error', onFail);
+  const text = document.createElementNS(NS, 'text'); text.setAttribute('class', 'hl-lockup-text');
+  const lines = h.lockup, block = FS * LH * (lines.length - 1), top = (IH - block) / 2 + FS * 0.36;
+  lines.forEach((t, k) => {
+    const ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('x', IW + GAP); ts.setAttribute('y', (top + k * FS * LH).toFixed(1));
+    ts.setAttribute('class', k ? 'hl-lockup-sub' : 'hl-lockup-main'); ts.textContent = t; text.appendChild(ts);
+  });
+  svg.append(icon, text);
+  const fitBox = () => { try { const b = text.getBBox(); if (b.width) svg.setAttribute('viewBox', `0 ${Math.min(0, b.y).toFixed(1)} ${(b.x + b.width + 2).toFixed(1)} ${Math.max(IH, b.y + b.height).toFixed(1)}`); } catch (e) {} };
+  svg.setAttribute('viewBox', `0 0 ${IW + GAP + FS * 5.6} ${IH}`);   // a close guess until the text can be measured
+  requestAnimationFrame(fitBox); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBox);
+  return svg;
+}
+
+function renderImpactHighlights(holder) {
+  if (!holder || !IMPACT_HIGHLIGHTS.length) return;
+  const n = IMPACT_HIGHLIGHTS.length;
+  const region = impactEl('div', 'hl');
+  region.setAttribute('role', 'region'); region.setAttribute('aria-roledescription', 'carousel'); region.setAttribute('aria-label', 'Highlights');
+  const stage = impactEl('ul', 'hl-stage');
+  const monogram = org => org.split(/\s+/).filter(w => /^[A-Z]/.test(w)).map(w => w[0]).join('').slice(0, 3);
+  let cur = 0;
+  const slides = IMPACT_HIGHLIGHTS.map((h, i) => {
+    const li = impactEl('li', 'hl-slide');
+    li.setAttribute('role', 'group'); li.setAttribute('aria-roledescription', 'slide'); li.setAttribute('aria-label', `${i + 1} of ${n}: ${h.org}`);
+    const card = impactEl('a', 'hl-card'); card.href = '#' + h.target;
+    // the logo tile: the logo, or a monogram (also if the file fails to load)
+    const tile = impactEl('div', 'hl-logo' + (h.logoClass ? ' ' + h.logoClass : ''));   // logoClass: optional per-logo sizing (see .hl-logo.is-roomy)
+    const mono = () => { tile.replaceChildren(impactEl('span', 'hl-monogram', monogram(h.org))); tile.classList.add('is-monogram'); tile.setAttribute('aria-hidden', 'true'); };
+    if (h.logo) {
+      const img = impactEl('img'); img.src = h.logo; img.alt = `${h.org} logo`; img.loading = 'lazy'; img.decoding = 'async'; img.onerror = mono; img.onload = () => fit();
+      if (h.lockup) {   // icon on the left, the name as real text on the right
+        tile.classList.add('is-lockup');
+        tile.appendChild(lockupSvg(h, () => mono()));
+      } else tile.appendChild(img);
+    }
+    else mono();
+    card.append(tile, impactEl('h3', 'hl-org', h.org));
+    if (h.orgNote) card.appendChild(impactEl('p', 'hl-org-note', h.orgNote));
+    card.appendChild(impactEl('p', 'hl-type', h.type));
+    if (h.distinction) card.appendChild(impactEl('p', 'hl-distinction', h.distinction));
+    card.append(impactEl('span', 'hl-role', h.role), impactEl('p', 'hl-line', h.line));
+    const more = impactEl('span', 'hl-more', 'View details'); more.appendChild(impactEl('span', 'hl-more-arrow', ' →')).setAttribute('aria-hidden', 'true');
+    card.appendChild(more);
+    card.addEventListener('click', e => {
+      e.preventDefault();
+      if (i !== cur) return go(i);   // a side card comes to the centre
+      const el = document.getElementById(h.target); if (!el) return;
+      scrollToSection(el, 24); el.setAttribute('tabindex', '-1'); el.focus({ preventScroll: true });
+    });
+    li.appendChild(card); stage.appendChild(li);
+    return li;
+  });
+  // the controls, in one centred row under the cards: previous, the dots, next
+  const nav = impactEl('div', 'hl-nav');
+  const arrow = (dir, label) => { const b = impactEl('button', 'hl-arrow hl-' + dir); b.type = 'button'; b.setAttribute('aria-label', label); b.appendChild(impactIcon(dir === 'prev' ? 'chevron-left' : 'chevron-right')); return b; };
+  const prev = arrow('prev', 'Previous highlight'), next = arrow('next', 'Next highlight');
+  const dots = impactEl('div', 'hl-dots'); dots.setAttribute('role', 'group'); dots.setAttribute('aria-label', 'Choose a highlight');
+  const dotBtns = IMPACT_HIGHLIGHTS.map((h, i) => { const b = impactEl('button', 'hl-dot'); b.type = 'button'; b.setAttribute('aria-label', `Show highlight ${i + 1}: ${h.org}`); b.addEventListener('click', () => go(i)); dots.appendChild(b); return b; });
+  nav.append(prev, dots, next);
+  const live = impactEl('p', 'sr-only'); live.setAttribute('aria-live', 'polite'); live.setAttribute('aria-atomic', 'true');   // the count, for screen readers only
+  region.append(stage, nav, live);
+  holder.appendChild(region);
+
+  // every card as tall as the tallest, so the stage never changes height between slides
+  function fit() {
+    const cards = slides.map(s => s.querySelector('.hl-card'));
+    cards.forEach(c => { c.style.height = 'auto'; });
+    const h = Math.max(...cards.map(c => c.offsetHeight));
+    cards.forEach(c => { c.style.height = h + 'px'; });
+    stage.style.height = h + 'px';
+  }
+  function go(i, announce = true) {
+    cur = (i + n) % n;   // loops both ways; the side cards wrap with it
+    slides.forEach((s, k) => {
+      const d = (k - cur + n) % n, pos = d === 0 ? 0 : d === 1 ? 1 : d === n - 1 ? -1 : null;
+      s.dataset.pos = pos === null ? 'off' : String(pos);
+      s.setAttribute('aria-hidden', pos === 0 ? 'false' : 'true');
+      s.querySelector('.hl-card').tabIndex = pos === 0 ? 0 : -1;
+    });
+    dotBtns.forEach((b, k) => { if (k === cur) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+    if (announce) live.textContent = `Highlight ${cur + 1} of ${n}: ${IMPACT_HIGHLIGHTS[cur].org}`;
+  }
+  prev.addEventListener('click', () => go(cur - 1));
+  next.addEventListener('click', () => go(cur + 1));
+  region.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); go(cur + 1); }
+  });
+  // swipe: a horizontal drag of 40px+ on the cards (vertical swipes still scroll the page)
+  let sx = null, sy = 0;
+  stage.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') { sx = e.clientX; sy = e.clientY; } });
+  stage.addEventListener('pointerup', e => {
+    if (sx === null) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { go(cur + (dx < 0 ? 1 : -1)); stage.dataset.swiped = '1'; setTimeout(() => delete stage.dataset.swiped, 50); }
+  });
+  stage.addEventListener('pointercancel', () => { sx = null; });
+  stage.addEventListener('click', e => { if (stage.dataset.swiped) { e.preventDefault(); e.stopPropagation(); } }, true);   // a swipe isn't a tap on a card
+  window.addEventListener('resize', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  go(0, false); fit();
 }
 
 // Search entries for every case study and commitment. go(anchorId) takes the visitor there.

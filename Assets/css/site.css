@@ -450,7 +450,7 @@ header:not(.scrolled):not(.header--plain) .recruiter-pill:hover { background: tr
   font-weight: 300; letter-spacing: 0.2px;
 }
 .hero-desc li { position: relative; padding-left: 20px; }
-.hero-desc li::before { content: ''; position: absolute; left: 0; top: 0.8em; width: 9px; height: 1px; background: var(--brass); }
+.hero-desc li::before { content: ''; position: absolute; left: 2px; top: calc(0.8em - 2.5px); width: 5px; height: 5px; border-radius: 50%; background: var(--brass); }   /* a round bullet; the 20px padding keeps a hanging indent */
 .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
 
 .btn-mag {
@@ -1415,13 +1415,14 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 .impact-frame + .impact-caption { margin-top: 14px; }
 
 /* ── Long-term commitments: a vertical timeline (the Experience timeline's original line and nodes, restored here; the
-   Experience section itself is drawn as ruled rows). initTimeline sets --tp and .reached as you scroll. ── */
+   Experience section itself is drawn as ruled rows). The track runs from the first dot's centre to the last one's
+   (--t0 / --tlen, measured by initTimeline), which also sets the fill (--tp) and .reached as you scroll. ── */
 .impact-timeline { position: relative; margin-top: 56px; padding-left: 52px; border-bottom: 0; }
 .impact-timeline::before {
-  content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: calc(1px / var(--content-scale)); background: var(--rule);
+  content: ''; position: absolute; left: 11px; top: var(--t0, 0px); height: var(--tlen, 0px); width: calc(1px / var(--content-scale)); background: var(--rule);
 }
 .impact-timeline .timeline-progress {
-  display: block; position: absolute; left: 11px; top: 0; bottom: 0; width: calc(1px / var(--content-scale));
+  display: block; position: absolute; left: 11px; top: var(--t0, 0px); height: var(--tlen, 0px); width: calc(1px / var(--content-scale));
   background: linear-gradient(180deg, var(--brass) 0%, var(--brass-hi) 100%);
   transform-origin: top; transform: scaleY(var(--tp, 0));
 }
@@ -1507,18 +1508,18 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 .hero.hero--page { min-height: 0; display: block; background: var(--page); }
 .hero.hero--page::after { display: none; }
 /* Desktop and tablet: the hero fills the first screen (below the fixed header), text and drawing centred together in
-   it, the hairline under it just below the fold. The hero sits inside .content-zoom, so screen sizes are divided by
-   --content-scale. --art-h is the drawing's height on screen. */
+   it, so nothing below it shows until you scroll (the Highlights follow). The hero sits inside .content-zoom, so screen
+   sizes are divided by --content-scale. --art-h is the drawing's height on screen. */
 .hero.hero--page { --art-h: clamp(560px, calc(100svh - var(--nav-h) - 140px), 680px); }
 .hero--page .hero-left {
   position: relative; display: flex; flex-direction: column; --focus: var(--page-accent);
   padding: calc(var(--nav-h) / var(--content-scale)) 0 0;
-  min-height: calc((100vh + 8px) / var(--content-scale));
-  min-height: calc((100svh + 8px) / var(--content-scale));
+  min-height: calc(100vh / var(--content-scale));
+  min-height: calc(100svh / var(--content-scale));
 }
 .hero--page .page-hero-grid {
   flex: 1 0 auto; width: 100%; display: grid; grid-template-columns: minmax(0, 45fr) minmax(0, 55fr); column-gap: 48px; align-items: center;
-  padding-top: 24px; padding-bottom: 64px;
+  padding-top: 32px; padding-bottom: 32px;   /* equal, so the text and drawing sit centred in the screen below the header */
 }
 .hero--page .page-hero-art {
   justify-self: center; width: min(100%, calc(var(--art-h) * 400 / 440 / var(--content-scale))); aspect-ratio: 400 / 440;
@@ -1526,15 +1527,103 @@ html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webki
 .page-hero-text { min-width: 0; }
 .page-hero-text > :last-child { margin-bottom: 0; }
 .hero--page .hero-left .container { position: relative; }
-.hero--page .hero-left .container::after {
-  content: ''; position: absolute; left: 48px; right: 48px; bottom: 0; height: calc(1px / var(--content-scale)); background: var(--rule);
-}
 .page-hero-title {
   font-family: var(--font-display); font-size: clamp(56px, 7vw, 108px); font-weight: 600; line-height: 1.08;
   letter-spacing: -0.5px; color: var(--page-ink); max-width: 15em; margin-bottom: 28px;
 }
 .hero--page .hero-divider { margin-bottom: 24px; }
 .hero-divider.hero-divider--mark { width: auto; height: auto; background: none; line-height: 0; }
+/* /impact Highlights: its own centred section right under the hero (renderImpactHighlights in Assets/js/impact.js), set
+   as a spotlight: the active card centred at full size on a slightly lighter surface with a full gold border; the
+   previous and next cards scaled to 0.85 behind it on either side, tucked under its edges, their text and border dimmed
+   (their cream logo tiles stay cream). Phones show the active card only. Colours and fonts come from the page tokens. */
+.impact-highlights-section .impact-highlights { padding-top: 72px; padding-bottom: 16px; text-align: center; }   /* its own section, ~70px under the hero */
+/* waiting for the illustration (see the script in impact/index.html): space held, invisible, then a fade and a small rise */
+.impact-highlights { transition: opacity 0.55s ease, transform 0.55s cubic-bezier(.22,1,.36,1), visibility 0.55s; }
+.impact-highlights.is-waiting { opacity: 0; visibility: hidden; transform: translateY(14px); }
+@media (prefers-reduced-motion: reduce) { .impact-highlights { transition: none; transform: none; } }
+.hl-heading-row { display: flex; align-items: center; justify-content: center; gap: 26px; margin-bottom: 40px; }
+.impact-highlights .hl-heading { margin: 0; }
+.hl-orn { flex-shrink: 0; line-height: 0; }   /* the constellations flanking the heading */
+.impact-highlights .section-label .c-mark { display: none; }   /* the eyebrow is plain text here; the flanking marks carry the motif */
+.hl { --hl-w: min(100%, 660px); --hl-shift: 330px; --hl-surface: var(--cream-hi); --hl-dim: 0.9; text-align: center; }
+[data-theme="dark"] .hl { --hl-surface: var(--green-800); --hl-dim: 0.72; }   /* (dims chosen so the side cards' text stays at 4.5:1+) */
+.hl-stage { position: relative; margin: 0; padding: 0; list-style: none; touch-action: pan-y; }
+.hl-slide {
+  position: absolute; top: 0; left: 50%; width: var(--hl-w); display: flex; z-index: 1;
+  transform: translateX(-50%) scale(0.7); opacity: 0; visibility: hidden; pointer-events: none;
+  transition: transform 0.5s cubic-bezier(.22,1,.36,1), opacity 0.4s ease, visibility 0.4s;
+}
+.hl-slide[data-pos="0"] { transform: translateX(-50%) scale(1); opacity: 1; visibility: visible; pointer-events: auto; z-index: 3; }
+.hl-slide[data-pos="-1"], .hl-slide[data-pos="1"] { opacity: 1; visibility: visible; pointer-events: auto; z-index: 2; cursor: pointer; }
+.hl-slide[data-pos="-1"] { transform: translateX(calc(-50% - var(--hl-shift))) scale(0.85); }
+.hl-slide[data-pos="1"] { transform: translateX(calc(-50% + var(--hl-shift))) scale(0.85); }
+/* the side cards fade out toward the active card, so their text dissolves under it rather than being cut mid-word */
+.hl-slide[data-pos="-1"] .hl-card { -webkit-mask-image: linear-gradient(270deg, transparent 34%, #000 70%); mask-image: linear-gradient(270deg, transparent 34%, #000 70%); }
+.hl-slide[data-pos="1"] .hl-card { -webkit-mask-image: linear-gradient(90deg, transparent 34%, #000 70%); mask-image: linear-gradient(90deg, transparent 34%, #000 70%); }
+.hl-card {
+  display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; padding: 24px 36px 22px; text-align: center;
+  color: inherit; text-decoration: none; background: var(--hl-surface); border: 1px solid var(--page-line-strong);
+  transition: border-color 0.25s ease, box-shadow 0.4s ease;
+}
+.hl-slide[data-pos="0"] .hl-card { border-color: var(--img-line-hover); box-shadow: 0 24px 60px -32px rgba(0,0,0,0.45); }
+.hl-slide[data-pos="0"] .hl-card:hover { border-color: var(--page-accent); }
+/* the side cards: background cards, their text dimmed (not hidden) and a soft blur; the logo tile stays cream */
+.hl-slide:not([data-pos="0"]) .hl-card > :not(.hl-logo) { opacity: var(--hl-dim); filter: blur(0.4px); transition: opacity 0.4s ease; }
+:root:not([data-theme="dark"]) .hl-slide:not([data-pos="0"]) .hl-card > :not(.hl-logo) { filter: none; }   /* on cream, keep the dimmed text crisp */
+.hl-slide[data-pos="0"] .hl-card > * { transition: opacity 0.4s ease; }
+.hl-card:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.hl-logo {
+  /* one shared size on every card: 280 × 156 at full width, keeping that shape as the card narrows (side cards get it
+     scaled by their 0.85 transform) */
+  display: flex; align-items: center; justify-content: center; width: min(100%, 280px); aspect-ratio: 280 / 156; margin-bottom: 20px; padding: 8px; overflow: hidden;
+  background: var(--cream); border: 1px solid var(--img-line);
+}
+/* the logo fills the box (the files are trimmed to the logo's edges), as large as fits without cropping or stretching;
+   white logo backgrounds melt into the cream */
+.hl-logo img { display: block; width: 100%; height: 100%; min-width: 0; object-fit: contain; object-position: center; mix-blend-mode: multiply; }
+/* a logo that needs breathing room (CPC: logoClass 'is-roomy'): more padding and ~88% of its full size, same box */
+.hl-logo.is-roomy { padding: 14px; }
+.hl-logo.is-roomy img { width: 90%; height: 90%; margin: auto; }
+/* a horizontal lockup (Harvest Time Church): the icon on the left, the name as text on the right, filling the box's
+   height; it scales down with the box rather than wrapping */
+.hl-lockup { display: block; width: 100%; height: 100%; overflow: visible; }
+.hl-lockup-text { font-family: Montserrat, var(--font-body); font-size: 70px; fill: #233d4d; }   /* the wordmark's navy; in the SVG's own units */
+.hl-lockup-main { font-weight: 700; letter-spacing: -0.5px; }
+.hl-lockup-sub { font-weight: 500; }
+.hl-monogram { font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: 1px; color: var(--brass-ink); }
+.hl-org { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 600; line-height: 1.22; color: var(--page-accent); overflow-wrap: break-word; }
+.hl-org-note { margin-top: 3px; font-size: 12.5px; line-height: 1.45; color: var(--page-ink-3); }
+.hl-type { margin-top: 8px; font-size: 10.5px; font-weight: 600; line-height: 1.5; letter-spacing: 1.6px; text-transform: uppercase; color: var(--page-accent); }
+.hl-distinction { margin-top: 6px; font-family: var(--font-display); font-style: italic; font-size: 14px; line-height: 1.4; color: var(--page-accent); }
+.hl-role { max-width: 100%; margin-top: 14px; padding: 3px 12px; border: 1px solid var(--img-line); border-radius: 100px; font-size: 11.5px; line-height: 1.5; color: var(--page-ink-2); }
+.hl-line { margin-top: 12px; max-width: 30rem; font-size: 14px; line-height: 1.6; font-weight: 300; color: var(--page-ink-2); }
+.hl-more { margin-top: auto; padding-top: 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.6px; color: var(--page-accent); }
+.hl-more-arrow { display: inline-block; transition: transform 0.2s ease; }
+.hl-card:hover .hl-more-arrow { transform: translateX(3px); }
+.hl-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 26px; }
+.hl-arrow {
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1px solid var(--img-line); background: transparent; color: var(--page-accent); transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.hl-arrow:hover { border-color: var(--img-line-hover); background: var(--brass-wash); }
+.hl-arrow .i { width: 16px; height: 16px; }
+.hl-arrow:focus-visible, .hl-dot:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.hl-dots { display: flex; gap: 2px; }
+.hl-dot { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; }
+.hl-dot::before { content: ''; width: 6px; height: 6px; border-radius: 3px; background: var(--page-line-strong); transition: width 0.25s ease, background-color 0.25s ease; }
+.hl-dot[aria-current="true"]::before { width: 20px; background: var(--page-accent); }
+@media (max-width: 1024px) { .hl { --hl-w: min(100%, 520px); --hl-shift: 190px; } }   /* tablets: smaller peeks */
+@media (max-width: 640px) {   /* phones: the active card only */
+  .hl { --hl-w: 100%; }
+  .hl-slide[data-pos="-1"], .hl-slide[data-pos="1"] { opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(-50%) scale(0.9); }
+  .hl-heading-row { gap: 0; margin-bottom: 40px; }
+  .hl-orn { display: none; }
+  .impact-highlights-section .impact-highlights { padding-top: 56px; padding-bottom: 8px; }
+  .hl-card { padding: 24px 22px 22px; }
+  .hl-org { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) { .hl-slide, .hl-card, .hl-card > *, .hl-more-arrow, .hl-dot::before, .hl-arrow { transition: none !important; } }
 .hero--page .page-hero-title { margin-bottom: 14px; }
 /* the subtitle under the heading: upright serif at ~46% of the heading */
 .page-hero-subtitle {
@@ -2215,7 +2304,6 @@ dialog { color: inherit; }
   .hero.hero--page { --art-h: 320px; }   /* phones: a ~320px drawing below the text */
   .hero--page .hero-left { padding: calc(var(--nav-h) + 48px) 0 0; }
   .constellation-tip { display: none; }   /* no hover on touch: a tap jumps to the row */
-  .hero--page .hero-left .container::after { left: 24px; right: 24px; }
   .impact-page .section { padding-top: 48px; }
   .impact-timeline { padding-left: 34px; margin-top: 40px; }
   .impact-timeline::before, .impact-timeline .timeline-progress { left: 9px; }
