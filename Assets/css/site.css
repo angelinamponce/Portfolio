@@ -1269,7 +1269,11 @@ header {
 /* ── Impact hero constellation (renderImpactConstellation): the homepage hero motif's dot-and-line style, on the page
    background, so drawn in the page's gold. Lines draw in once (~1s); a dot lights its own lines on hover or focus. ── */
 .page-hero-art { position: relative; }
-.impact-constellation { display: block; width: 100%; height: auto; max-height: 520px; overflow: visible; }
+/* touch-action pan-y: a vertical swipe over the drawing still scrolls the page; only horizontal drags turn the globe */
+.impact-constellation {
+  display: block; width: 100%; height: 100%; overflow: visible;
+  touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
 /* Three line weights: 'main' outlines (hands, globe ring, sprout), 'detail' (fingers, land, veins), 'fine' (globe
    grid, circuit traces). Each line draws on via its stroke dash (pathLength 1); dots: small along a line, medium at
    joints, hollow where a circuit trace ends, large only for the nine entries. */
@@ -1286,6 +1290,25 @@ header {
 .impact-constellation .d-ring { fill: var(--page); stroke: var(--page-accent); stroke-width: 1.1; }
 .impact-constellation .c-flight { fill: none; stroke: none; }
 /* the seed the dove drops: a gold dot that lands between the palms, with a soft glow ring */
+/* the globe (drawGlobe): a sphere turning inside the fixed rim. Grid and coastlines are each drawn as four paths,
+   one per opacity step, so lines fade toward the edge; dots fade the same way and hide on the far side. */
+.c-globe .g-line { fill: none; stroke: var(--page-accent); stroke-linecap: round; stroke-linejoin: round; transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease; }
+.c-globe .g-grid { stroke-width: 0.9; stroke-opacity: 0.42; }
+.c-globe .g-land { stroke-width: 1.1; stroke-opacity: 0.7; }
+.c-globe.is-lit .g-land { stroke-opacity: 1; stroke-width: 1.5; }
+.c-globe .g-dot { fill: var(--page-accent); }
+.c-globe .g-dot.k-grid { fill-opacity: 0.55; }
+.c-globe .g-dot.k-land { fill-opacity: 0.8; }
+/* the drag / keyboard target over the globe: grab cursor once the drawing is done, grabbing while dragging */
+.impact-constellation .globe-hit { fill: transparent; outline: none; pointer-events: none; }
+.impact-constellation.is-globe-live .globe-hit { pointer-events: all; cursor: grab; }
+.impact-constellation .globe-hit:focus-visible { stroke: var(--focus); stroke-width: 1.5; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; }
+html.globe-grabbing, html.globe-grabbing * { cursor: grabbing !important; -webkit-user-select: none !important; user-select: none !important; }
+/* entries pinned to the globe: a small pin at the real place, a leader out to the entry's dot */
+.impact-constellation .c-pin { fill: var(--page-accent); }
+.impact-constellation .c-leader { stroke: var(--page-accent); stroke-width: 0.9; stroke-opacity: 0.75; }
+.impact-constellation .is-globe .c-pin, .impact-constellation .is-globe .c-leader { opacity: 0; transition: opacity 0.4s ease; }
+.impact-constellation.is-settled .is-globe .c-pin, .impact-constellation.is-settled .is-globe .c-leader { opacity: 1; }
 .impact-constellation .c-seed { fill: var(--page-accent); }
 .impact-constellation .c-seed-ring { fill: none; stroke: var(--page-accent); stroke-width: 1.2; vector-effect: non-scaling-stroke; opacity: 0; }
 /* the dove (mountDove): flies in, flapping (its wings fold in and out quickly), then glides and perches on the top
@@ -1400,9 +1423,22 @@ header {
    one hairline under it. Not the homepage's green hero: no mesh, glow, grain or grid. */
 .hero.hero--page { min-height: 0; display: block; background: var(--page); }
 .hero.hero--page::after { display: none; }
-.hero--page .hero-left { min-height: 0; display: block; padding: calc(var(--nav-h) + 88px) 0 0; --focus: var(--page-accent); }
+/* Desktop and tablet: the hero fills the first screen (below the fixed header), text and drawing centred together in
+   it, the hairline under it just below the fold. The hero sits inside .content-zoom, so screen sizes are divided by
+   --content-scale. --art-h is the drawing's height on screen. */
+.hero.hero--page { --art-h: clamp(560px, calc(100svh - var(--nav-h) - 140px), 680px); }
+.hero--page .hero-left {
+  position: relative; display: flex; flex-direction: column; --focus: var(--page-accent);
+  padding: calc(var(--nav-h) / var(--content-scale)) 0 0;
+  min-height: calc((100vh + 8px) / var(--content-scale));
+  min-height: calc((100svh + 8px) / var(--content-scale));
+}
 .hero--page .page-hero-grid {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); column-gap: 56px; align-items: center; padding-bottom: 56px;
+  flex: 1 0 auto; width: 100%; display: grid; grid-template-columns: minmax(0, 45fr) minmax(0, 55fr); column-gap: 48px; align-items: center;
+  padding-top: 24px; padding-bottom: 64px;
+}
+.hero--page .page-hero-art {
+  justify-self: center; width: min(100%, calc(var(--art-h) * 400 / 440 / var(--content-scale))); aspect-ratio: 400 / 440;
 }
 .page-hero-text { min-width: 0; }
 .page-hero-text > :last-child { margin-bottom: 0; }
@@ -1411,17 +1447,42 @@ header {
   content: ''; position: absolute; left: 48px; right: 48px; bottom: 0; height: calc(1px / var(--content-scale)); background: var(--rule);
 }
 .page-hero-title {
-  font-family: var(--font-display); font-size: clamp(44px, 5.2vw, 76px); font-weight: 600; line-height: 1.08;
+  font-family: var(--font-display); font-size: clamp(56px, 7vw, 108px); font-weight: 600; line-height: 1.08;
   letter-spacing: -0.5px; color: var(--page-ink); max-width: 15em; margin-bottom: 28px;
 }
 .hero--page .hero-divider { margin-bottom: 24px; }
 .hero--page .page-hero-title { margin-bottom: 14px; }
-/* the subtitle under the heading: italic serif at ~46% of the heading */
+/* the subtitle under the heading: upright serif at ~46% of the heading */
 .page-hero-subtitle {
-  font-family: var(--font-display); font-style: italic; font-weight: 500; line-height: 1.25;
-  font-size: clamp(22px, 2.4vw, 35px); color: var(--accent-color); letter-spacing: 0.2px; max-width: 28em; margin-bottom: 30px;   /* gold italic, the site's headline-accent style on the page background */
+  font-family: var(--font-display); font-style: normal; font-weight: 500; line-height: 1.25;
+  font-size: clamp(22px, 2.4vw, 35px); color: var(--accent-color); letter-spacing: 0.2px; max-width: 60ch; margin-bottom: 30px;   /* gold upright serif, the site's headline-accent style on the page background */
 }
-.page-hero-sub { font-size: 17px; line-height: 1.7; color: var(--page-ink-2); font-weight: 300; max-width: 640px; letter-spacing: 0.15px; }
+.page-hero-sub { font-size: 17px; line-height: 1.7; color: var(--page-ink-2); font-weight: 300; max-width: 60ch; letter-spacing: 0.15px; }
+/* the scroll cue at the bottom centre of the hero: a gold label and chevron, bobbing; fades once the page scrolls */
+.hero-scroll-cue {
+  position: absolute; left: 50%; bottom: calc(30px / var(--content-scale)); transform: translateX(-50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 500; letter-spacing: 2.2px; text-transform: uppercase; text-decoration: none;
+  color: var(--accent-color); opacity: 0.8; transition: opacity 0.4s ease, visibility 0.4s;
+}
+.hero-scroll-cue:hover { opacity: 1; }
+.hero-scroll-cue svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; animation: cueBob 2.2s ease-in-out infinite; }
+.hero-scroll-cue.is-gone { opacity: 0; visibility: hidden; }
+@keyframes cueBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+@media (prefers-reduced-motion: reduce) { .hero-scroll-cue svg { animation: none; } }
+/* tablet: a smaller drawing, still beside the text */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .hero.hero--page { --art-h: clamp(420px, calc(100svh - var(--nav-h) - 160px), 480px); }
+  .hero--page .page-hero-grid { column-gap: 32px; }
+}
+/* tablet portrait and phones: no forced full height; the text, then the drawing below it; no scroll cue */
+@media (max-width: 900px) {
+  .hero.hero--page { --art-h: 440px; }
+  .hero--page .hero-left { min-height: 0; padding: calc(var(--nav-h) + 64px) 0 0; }
+  .hero--page .page-hero-grid { grid-template-columns: minmax(0, 1fr); padding-top: 0; padding-bottom: 48px; }
+  .hero--page .page-hero-art { margin-top: 36px; }
+  .hero-scroll-cue { display: none; }
+}
 .impact-page .section { padding-top: 72px; }
 .impact-page .impact-grid { margin-top: 0; }
 
@@ -2036,9 +2097,8 @@ dialog { color: inherit; }
   .impact-commit { margin-top: 72px; }
   .impact-commit-grid { margin-top: 40px; }
   .impact-teaser { padding: 48px 0; }
+  .hero.hero--page { --art-h: 320px; }   /* phones: a ~320px drawing below the text */
   .hero--page .hero-left { padding: calc(var(--nav-h) + 48px) 0 0; }
-  .hero--page .page-hero-grid { grid-template-columns: minmax(0, 1fr); padding-bottom: 40px; }
-  .page-hero-art { width: min(100%, 300px); margin-top: 36px; }   /* phones: smaller and static, below the text */
   .constellation-tip { display: none; }   /* no hover on touch: a tap jumps to the row */
   .hero--page .hero-left .container::after { left: 24px; right: 24px; }
   .impact-page .section { padding-top: 48px; }

@@ -340,6 +340,7 @@ function renderImpactCommitments(container, { labelLevel = 2, headingLevel = 3 }
 // Each path below is sampled into evenly spaced dots, and consecutive dots are joined by thin lines. The nine Impact
 // entries are larger "anchor" dots on the drawing: hover or focus one for the organization, click / Enter to jump to
 // its row. Coordinates are in a 400 × 440 box.
+// The globe inside the hands is a real sphere (see globe below): it turns on drag, and four entries are pinned to it.
 const IMPACT_CONSTELLATION = {
   // dot spacing along each line weight (drawing units); joints are always dotted
   spacing: { main: 20, detail: 26, fine: 34 },
@@ -368,16 +369,9 @@ const IMPACT_CONSTELLATION = {
     { d: 'M288.7,305.7 A138,138 0 0,0 337.7,209.6 A5,5 0 0,1 347.6,210.3 A148,148 0 0,1 295.1,313.4 Z', w: 'detail', at: [1770, 1980], closed: true, joints: [[302.9,299.3],[342.9,205.0]] },   // right little finger
     { d: 'M297.7,235.6 A104,104 0 0,0 295,157.7 L303,149.7 L315,149.7', w: 'fine', at: [2650, 2950], kind: 'trace', joints: [[297.7,235.6]], hollowEnd: true },   // right circuit trace (index)
     { d: 'M322.2,244.5 A130,130 0 0,0 327.2,173 L335.2,165 L347.2,165', w: 'fine', at: [2650, 2950], kind: 'trace', joints: [[322.2,244.5]], hollowEnd: true },   // right circuit trace (ring)
-    { d: 'M200,292 A92,92 0 0,1 200,108', w: 'main', at: [1800, 2200] },   // globe, left half
-    { d: 'M200,292 A92,92 0 0,0 200,108', w: 'main', at: [1800, 2200] },   // globe, right half
-    { d: 'M118.1,158 A81.9,13 0 0,0 281.9,158', w: 'fine', at: [2350, 2750], kind: 'grid' },   // globe grid, latitude 1
-    { d: 'M108,200 A92,18 0 0,0 292,200', w: 'fine', at: [2410, 2790], kind: 'grid' },   // globe grid, latitude 2
-    { d: 'M118.1,242 A81.9,13 0 0,0 281.9,242', w: 'fine', at: [2470, 2830], kind: 'grid' },   // globe grid, latitude 3
-    { d: 'M200,108 A46,92 0 0,0 200,292', w: 'fine', at: [2400, 2850], kind: 'grid' },   // globe grid, meridian west
-    { d: 'M200,108 A46,92 0 0,1 200,292', w: 'fine', at: [2400, 2850], kind: 'grid' },   // globe grid, meridian east
-    { d: 'M130,146 C131.2,142.5 135.7,135.7 140,133 C144.3,130.3 151,131.2 156,130 C161,128.8 165.3,127 170,126 C174.7,125 180.3,123.2 184,124 C187.7,124.8 191.7,128.2 192,131 C192.3,133.8 188,137.8 186,141 C184,144.2 181.3,146.8 180,150 C178.7,153.2 179.5,157 178,160 C176.5,163 172.2,165 171,168 C169.8,171 172,177 171,178 C170,179 167.2,174.2 165,174 C162.8,173.8 159.2,175 158,177 C156.8,179 157.2,183.3 158,186 C158.8,188.7 160.7,191.5 163,193 C165.3,194.5 168.7,193.5 172,195 C175.3,196.5 180.5,199.2 183,202 C185.5,204.8 187.2,208 187,212 C186.8,216 184.5,221.3 182,226 C179.5,230.7 175,235 172,240 C169,245 166,255 164,256 C162,257 160.8,250.3 160,246 C159.2,241.7 159.5,235.3 159,230 C158.5,224.7 157,218.8 157,214 C157,209.2 159.5,204 159,201 C158.5,198 156,198.5 154,196 C152,193.5 148.8,189.7 147,186 C145.2,182.3 144.5,178 143,174 C141.5,170 139.7,165.3 138,162 C136.3,158.7 134.3,156.7 133,154 C131.7,151.3 128.8,149.5 130,146 Z', w: 'detail', at: [2100, 2500], closed: true },   // the Americas
-    { d: 'M214,170 C217,168.2 221.7,165.7 226,165 C230.3,164.3 235.7,165.2 240,166 C244.3,166.8 249,167.7 252,170 C255,172.3 255.3,176.7 258,180 C260.7,183.3 267.3,187 268,190 C268.7,193 263.7,194 262,198 C260.3,202 259.7,208.7 258,214 C256.3,219.3 254.3,224.7 252,230 C249.7,235.3 246.7,243.3 244,246 C241.3,248.7 238.3,248.3 236,246 C233.7,243.7 231.7,237.3 230,232 C228.3,226.7 227.7,218.7 226,214 C224.3,209.3 222.7,206.7 220,204 C217.3,201.3 212.3,201 210,198 C207.7,195 206.3,189.7 206,186 C205.7,182.3 206.7,178.7 208,176 C209.3,173.3 211,171.8 214,170 Z', w: 'detail', at: [2150, 2500], closed: true },   // Africa
-    { d: 'M214,150 C215,147 217.7,142.7 220,140 C222.3,137.3 225.3,136.7 228,134 C230.7,131.3 233.7,126.2 236,124 C238.3,121.8 239.7,120.7 242,121 C244.3,121.3 249.3,123.5 250,126 C250.7,128.5 245,133.7 246,136 C247,138.3 253.3,137.7 256,140 C258.7,142.3 263,147.3 262,150 C261,152.7 253.7,155 250,156 C246.3,157 243,155.3 240,156 C237,156.7 235,159.7 232,160 C229,160.3 225,158.3 222,158 C219,157.7 215.3,159.3 214,158 C212.7,156.7 213,153 214,150 Z', w: 'detail', at: [2200, 2480], closed: true },   // Europe
+    { d: 'M200,292 A92,92 0 0,1 200,108', w: 'main', at: [1800, 2200], kind: 'limb' },   // globe rim, left half (fixed: the globe turns inside it)
+    { d: 'M200,292 A92,92 0 0,0 200,108', w: 'main', at: [1800, 2200], kind: 'limb' },   // globe rim, right half
+    { globe: true },   // the turning globe (IMPACT_CONSTELLATION.globe) is drawn here, between the hands and the sprout
     { d: 'M200,108 C198,90 202,66 200,44', w: 'main', at: [2500, 2650], joints: [[200,108]] },   // sprout stem
     { d: 'M200,86 C195.8,70 174,62.1 160,64 C166,76.9 184.2,91 200,86 Z', w: 'main', at: [2600, 2820], closed: true, joints: [[160,64]] },   // left leaf
     { d: 'M197.6,84.7 L168,68.4', w: 'detail', at: [2720, 2880] },   // left leaf vein
@@ -387,16 +381,31 @@ const IMPACT_CONSTELLATION = {
     { d: 'M200,42.1 L200,18.4', w: 'detail', at: [2800, 2960] },   // top leaf vein
   ],
   seed: [200, 302],   // where the dove's seed lands, between the palms
-  anchors: {   // where each entry sits (snapped to the nearest dot on a main or detail line)
-    'cpc': [178, 150],
-    'stackhacks': [258, 214],
-    'pathways-inc': [236, 124],
-    'code-with-claude': [240, 52],
+  anchors: {   // where each entry sits on the hands (snapped to the nearest dot on a main or detail line)
     'grace-community': [104.1, 159.8],
     'greenwich-first-selectman': [295.9, 159.8],
     'mothers-for-others': [57.1, 205],
     'harvest-time-vbs': [342.9, 205],
     'operation-smile': [174.4, 348.3],
+  },
+  // The globe: a sphere in orthographic projection that turns inside the fixed rim. Drag (or the arrow keys) turns it;
+  // idle, it turns once every revSeconds. rot0 is the longitude (degrees west) facing the viewer at rest, tilt0 the
+  // latitude at the centre of the view (dragging vertically tilts it within ±tiltMax). Lines: latitudes every 30°,
+  // meridians every 30°, and the coastlines below, with a dot every landStep degrees along the coast.
+  globe: {
+    cx: 200, cy: 200, r: 92, rot0: 95, tilt0: 22, tiltMax: 25, revSeconds: 75, landStep: 9,
+    // land outlines: Natural Earth 1:110m land (public domain, naturalearthdata.com), islands under ~8 sq° dropped,
+    // simplified (Douglas-Peucker, 1°) and rounded to whole degrees. Lines are separated by ';', each a flat list
+    // of lon,lat pairs.
+    land: '-45,-78,-43,-80,-54,-81,-45,-78;-68,-71,-71,-73,-75,-72,-72,-71,-70,-69,-68,-71;-151,-84,-157,-81,-147,-80,-155,-79,-158,-77,-151,-77,-145,-75,-114,-74,-101,-75,-104,-73,-75,-74,-67,-72,-68,-67,-58,-63,-66,-68,-62,-71,-61,-74,-71,-77,-77,-77,-74,-78,-78,-79,-58,-83,-29,-80,-36,-79,-35,-78,-18,-75,-15,-73,-7,-71,27,-70,34,-69,39,-70,55,-66,61,-68,69,-68,70,-69,68,-72,70,-72,74,-70,88,-66,96,-67,103,-66,106,-67,114,-66,120,-67,135,-65,137,-67,145,-67,171,-72,164,-76,167,-79,162,-79,160,-81,169,-84;-180,-17,179,-16,-180,-17;50,-14,47,-25,44,-25,44,-16,49,-12,50,-14;144,-14,153,-26,153,-31,150,-37,146,-39,141,-38,138,-34,137,-35,138,-33,136,-35,131,-31,118,-35,115,-34,116,-32,113,-26,114,-22,121,-20,126,-14,130,-15,132,-11,136,-12,135,-15,140,-18,142,-11,144,-14;109,-7,116,-8,108,-8,105,-7,109,-7;134,-1,135,-3,138,-2,145,-4,151,-11,145,-8,143,-9,138,-8,138,-5,133,-4,132,-3,134,-2,131,-1,134,-1;125,1,120,0,121,-1,123,-1,122,-2,123,-5,121,-3,119,-5,120,1,125,1;106,-6,103,-4,95,5,104,0,106,-3,106,-6;118,2,119,1,116,-4,110,-3,109,0,110,2,113,3,117,7,119,5,117,3,118,2;126,8,125,6,124,8,122,7,125,10,126,8;121,19,123,17,122,14,124,13,120,15,121,19;141,37,140,35,136,33,135,35,131,34,132,33,130,31,129,33,139,38,140,41,142,40,141,37;-15,66,-14,65,-19,63,-24,66,-15,66;-180,69,-170,66,-173,64,-179,66,-180,65,180,65,177,65,179,62,170,60,164,60,162,58,163,58,162,55,157,51,156,57,164,63,160,61,157,61,154,60,155,59,142,59,135,55,140,54,141,52,138,46,128,40,129,35,126,34,125,40,121,39,122,41,118,39,119,37,122,37,119,35,122,32,122,28,116,23,110,20,109,22,106,20,109,13,109,12,105,9,100,13,99,9,103,6,104,1,101,3,98,8,97,17,94,16,91,23,87,21,80,16,80,10,78,8,73,21,70,21,66,25,57,26,56,27,52,28,50,30,48,30,52,24,56,26,57,24,60,22,55,17,43,13,43,17,35,30,34,28,32,30,37,19,43,12,45,10,51,12,51,11,48,4,39,-5,41,-15,35,-20,35,-24,33,-26,32,-29,28,-33,20,-35,12,-18,14,-11,12,-5,9,-1,9,4,6,4,4,6,-9,5,-17,12,-17,22,-6,36,10,37,11,37,10,34,19,30,22,33,34,31,36,37,28,37,26,39,34,42,38,41,42,42,37,45,39,47,35,46,36,45,34,44,32,45,33,46,31,47,28,43,29,41,23,40,24,38,22,36,20,42,13,46,13,44,18,40,17,40,16,38,15,40,9,44,3,43,-2,37,-9,37,-9,43,-1,44,-1,46,-5,49,-2,49,-2,50,8,54,9,57,11,58,10,55,11,54,20,54,22,57,24,57,23,59,29,60,21,61,22,63,25,65,22,66,18,63,17,61,19,60,16,56,13,55,10,59,6,59,6,63,19,70,25,71,40,68,41,67,40,66,33,67,37,64,37,65,44,66,43,69,46,68,46,67,54,69,60,68,61,70,69,68,67,71,69,73,73,73,72,71,74,68,71,66,72,66,75,68,73,71,75,73,76,71,81,72,81,74,104,78,114,76,109,74,127,74,131,71,140,71,139,72,140,73,159,71,161,69,179,69,-180,69;-180,72,180,71,-180,72;-91,69,-87,67,-86,70,-83,70,-81,68,-93,62,-95,59,-92,57,-82,55,-80,51,-79,53,-80,55,-77,57,-79,59,-77,60,-78,62,-74,62,-70,61,-68,58,-65,60,-62,56,-57,55,-56,52,-60,50,-66,50,-71,47,-65,49,-64,46,-61,47,-60,46,-65,44,-66,44,-64,45,-67,45,-71,43,-70,42,-76,39,-76,37,-76,39,-76,36,-81,31,-80,25,-84,30,-94,30,-97,28,-98,22,-96,19,-92,19,-90,21,-87,22,-89,16,-83,15,-84,11,-81,9,-77,9,-72,12,-72,9,-70,12,-68,11,-62,11,-57,6,-51,4,-50,0,-45,-3,-40,-3,-36,-5,-35,-7,-39,-13,-41,-22,-48,-25,-49,-29,-54,-34,-58,-34,-57,-37,-62,-39,-63,-41,-65,-41,-63,-43,-67,-46,-66,-48,-69,-51,-68,-52,-71,-54,-75,-52,-76,-49,-74,-47,-76,-47,-73,-42,-74,-43,-70,-20,-76,-15,-81,-6,-80,-3,-81,-1,-77,4,-78,8,-80,9,-81,7,-86,10,-87,13,-103,18,-114,32,-115,30,-109,23,-112,25,-117,33,-121,35,-124,40,-125,48,-123,47,-123,49,-127,51,-134,58,-147,61,-152,59,-151,61,-158,56,-165,54,-157,59,-162,59,-166,61,-161,65,-168,66,-162,66,-167,68,-157,71,-137,69,-128,70,-109,67,-106,69,-101,68,-98,69,-96,67,-94,69,-96,70,-95,72,-91,69;-114,73,-108,72,-108,73,-107,73,-101,70,-102,69,-116,69,-117,70,-112,70,-119,72,-114,73;-87,73,-82,74,-81,72,-72,72,-68,70,-67,69,-69,69,-62,67,-64,65,-68,66,-65,63,-69,64,-66,62,-75,65,-78,64,-78,65,-74,65,-73,68,-79,70,-89,70,-90,72,-87,73;-100,74,-97,74,-97,72,-102,73,-100,74;-120,71,-126,72,-124,74,-125,74,-118,74,-116,73,-120,71;145,76,137,75,145,76;-108,76,-106,76,-106,75,-118,75,-115,76,-108,76;58,71,52,71,56,75,69,77,58,74,55,72,58,71;-95,77,-80,75,-92,75,-97,77,-95,77;18,80,22,79,16,77,10,80,18,80;25,80,17,80,25,80;100,79,91,80,96,81,100,79;-87,80,-91,78,-97,80,-92,81,-87,80;-68,83,-62,82,-77,79,-75,79,-81,76,-89,76,-88,78,-85,78,-88,78,-85,79,-87,80,-82,80,-92,82,-68,83;-27,84,-21,83,-31,82,-12,81,-20,80,-18,80,-20,79,-18,77,-22,77,-19,74,-25,72,-22,71,-26,71,-26,70,-22,70,-40,65,-43,60,-48,61,-52,64,-54,67,-51,70,-55,70,-54,71,-51,71,-56,72,-55,73,-59,76,-69,76,-71,77,-67,77,-73,78,-66,79,-68,80,-63,82,-27,84',
+  },
+  // entries pinned to the globe at their real coordinates [lat, lon]. The three New York-area places are a few miles
+  // apart, so each pin carries its dot out on a short leader by off (drawing units, on screen) to keep them apart.
+  globeAnchors: {
+    'cpc': { at: [40.71, -74.01], off: [4, 17] },   // Community Preservation Corporation, New York City
+    'stackhacks': { at: [42.10, -75.91], off: [-16, -10] },   // StackHacks, Binghamton NY
+    'pathways-inc': { at: [41.03, -73.63], off: [16, -10] },   // Pathways Inc., Greenwich CT
+    'code-with-claude': { at: [37.77, -122.42], off: [0, 0] },   // Anthropic's hackathon, San Francisco
   },
 };
 // The constellation's grow-in, in ms (scaled down on phones). A small vector dove (the nav logo's dove) flies in from
@@ -432,18 +441,21 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', 'Impact entries drawn as hands holding a globe: choose one to jump to it');
   const mk = (tag, cls, parent = svg) => { const n = document.createElementNS(NS, tag); if (cls) n.setAttribute('class', cls); parent.appendChild(n); return n; };
   holder.appendChild(svg);
+  const clamp01 = x => Math.max(0, Math.min(1, x));
 
   // 1. the lines: each part of the drawing is a smooth path, drawn on by its stroke dash during the grow-in, with dots
   //    spaced along it by line weight, medium joint nodes (knuckles, fingertips, leaf tips) and a hollow node where a
-  //    circuit trace ends. Each part is one group, so the idle drift moves a line and its dots together. Phones leave
-  //    out the faint globe grid and the circuit traces.
-  const parts = C.paths.filter(p => !(phone && (p.kind === 'grid' || p.kind === 'trace')));
+  //    circuit trace ends. Each part is one group, so the idle drift moves a line and its dots together (not the globe's
+  //    rim, which holds still around the turning globe). Phones leave out the circuit traces.
+  const parts = C.paths.filter(p => !(phone && p.kind === 'trace'));
   const pts = [], groups = [];
+  let globeG = null;
   parts.forEach(p => {
+    if (p.globe) { globeG = mk('g', 'c-globe'); return; }
     const g = mk('g', 'c-part w-' + p.w + (p.kind ? ' k-' + p.kind : ''));
     const path = mk('path', 'c-path', g); path.setAttribute('d', p.d); path.setAttribute('pathLength', '1');
     const len = path.getTotalLength();
-    const grp = { el: g, path, t0: p.at[0], t1: p.at[1], tf: '' };
+    const grp = { el: g, path, t0: p.at[0], t1: p.at[1], tf: '', fixed: p.kind === 'limb' };
     groups.push(grp);
     const along = (x, y) => {   // how far along the path (0–1) a point sits: the nearest of 240 samples
       let best = 0, bd = Infinity;
@@ -469,39 +481,194 @@ function buildConstellation(holder, { forceStill = false } = {}) {
     });
   });
   const [SX, SY] = C.seed;
+  const pop = x => x <= 0 ? 0 : x >= 1 ? 1 : 1 + 1.7 * Math.pow(x - 1, 3) + 0.7 * Math.pow(x - 1, 2);   // 0 → 1, a small overshoot
 
-  // 2. anchors: each entry takes the nearest free dot on a main or detail line
+  // 2. the globe: unit vectors for every line point and dot, rotated about the vertical axis (rot), tilted about the
+  //    horizontal one (tilt) and projected orthographically. A point faces the viewer when z > 0; it fades out over the
+  //    last stretch before the edge (z < FADE) so the sphere reads as round, and is hidden behind it.
+  const G = C.globe, DEG = Math.PI / 180, FADE = 0.32;
+  const vec = (lat, lon) => { const f = lat * DEG, l = lon * DEG; return [Math.cos(f) * Math.sin(l), Math.sin(f), Math.cos(f) * Math.cos(l)]; };
+  const angle = (a, b) => Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])));
+  const densify = (vs, maxStep) => {   // extra points along each great-circle step, so no step is longer than maxStep
+    const out = [vs[0]];
+    for (let i = 1; i < vs.length; i++) {
+      const a = vs[i - 1], b = vs[i], n = Math.ceil(angle(a, b) / maxStep);
+      for (let k = 1; k <= n; k++) {
+        const u = k / n, v = [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u], m = Math.hypot(...v);
+        out.push([v[0] / m, v[1] / m, v[2] / m]);
+      }
+    }
+    return out;
+  };
+  const gLines = [], gDots = [];
+  for (let lat = -60; lat <= 60; lat += 30) { const vs = []; for (let lon = -180; lon <= 180; lon += 4) vs.push(vec(lat, lon)); gLines.push({ kind: 'grid', vs }); }
+  for (let lon = -180; lon < 180; lon += 30) { const vs = []; for (let lat = -90; lat <= 90; lat += 4) vs.push(vec(lat, lon)); gLines.push({ kind: 'grid', vs }); }
+  for (let lat = -60; lat <= 60; lat += 30) for (let lon = -180; lon < 180; lon += 30) gDots.push({ kind: 'grid', v: vec(lat, lon), r: 1.1, appear: 2350 + 450 * ((lon + 180) / 360) });
+  const coasts = G.land.split(';').map(line => { const n = line.split(',').map(Number), vs = []; for (let i = 0; i < n.length; i += 2) vs.push(vec(n[i + 1], n[i])); return densify(vs, 3 * DEG); });
+  coasts.forEach((vs, li) => {
+    gLines.push({ kind: 'land', vs });
+    let acc = G.landStep * DEG;   // a dot at the start of each coastline, then every landStep degrees along it
+    for (let i = 0; i < vs.length; i++) {
+      if (i) acc += angle(vs[i - 1], vs[i]);
+      if (acc >= G.landStep * DEG) { acc = 0; gDots.push({ kind: 'land', v: vs[i], r: 1.35, appear: 2050 + 450 * (li / coasts.length) }); }
+    }
+  });
+  // layers: grid lines, grid dots, coast lines, coast dots; each kind's lines are four paths, one per opacity step
+  const BUCKETS = [0.25, 0.5, 0.75, 1];
+  const gPaths = {};
+  ['grid', 'land'].forEach(kind => {
+    gPaths[kind] = BUCKETS.map(() => mk('path', 'g-line g-' + kind, globeG));
+    gDots.filter(d => d.kind === kind).forEach(d => { d.el = mk('circle', 'g-dot k-' + kind, globeG); d.o = {}; });
+  });
+  const gHit = mk('circle', 'globe-hit', globeG);   // the drag and keyboard target (focusable once the drawing is done)
+  gHit.setAttribute('cx', G.cx); gHit.setAttribute('cy', G.cy); gHit.setAttribute('r', G.r + 2);
+  gHit.setAttribute('role', 'slider'); gHit.setAttribute('aria-label', 'Interactive globe. Use arrow keys or drag to rotate.');
+  gHit.setAttribute('aria-valuemin', '-180'); gHit.setAttribute('aria-valuemax', '180'); gHit.setAttribute('tabindex', '-1');
+  // the view: rotation and tilt (radians), and the projection's centre and radius (they grow from the seed in the intro)
+  const view = { cr: 1, sr: 0, ct: 1, st: 0, cx: G.cx, cy: G.cy, R: G.r };
+  const setView = (rot, tilt, cx, cy, R) => Object.assign(view, { cr: Math.cos(rot), sr: Math.sin(rot), ct: Math.cos(tilt), st: Math.sin(tilt), cx, cy, R });
+  const proj = (v, o) => {
+    const x = v[0] * view.cr + v[2] * view.sr, z0 = v[2] * view.cr - v[0] * view.sr;
+    const y = v[1] * view.ct - z0 * view.st;
+    o.z = v[1] * view.st + z0 * view.ct; o.x = view.cx + view.R * x; o.y = view.cy - view.R * y;
+    o.a = o.z <= 0 ? 0 : o.z >= FADE ? 1 : (u => u * u * (3 - 2 * u))(o.z / FADE);
+    return o;
+  };
+  const setAttr = (el, cache, k, v) => { if (cache[k] !== v) { el.setAttribute(k, v); cache[k] = v; } };
+  // the interactive state: rot/tilt now, the spin left over from a drag (vel, radians per ms), a keyboard turn still to
+  // ease out (keyLeft), and when the idle turn may resume
+  const AUTO = still ? 0 : Math.PI * 2 / (G.revSeconds * 1000);   // radians per ms
+  const TILT_MAX = G.tiltMax * DEG;
+  const gs = { rot: G.rot0 * DEG, tilt: G.tilt0 * DEG, vel: 0, keyLeft: 0, dragging: false, hover: false, focus: false, resumeAt: 0, autoK: 0, dirty: false };
+  let globeLive = false;   // draggable and focusable once the intro is done
+  const gAnchors = [];   // entries pinned to the globe (step 3)
+  let tipOwner = null;
+  function drawGlobe(t) {
+    // the intro: the globe grows out of the seed (centre rising from the seed, radius growing), spinning into place;
+    // coastlines fade in, then the grid
+    const live = t >= S.total, u = live ? 1 : clamp01((t - S.globe[0]) / 700), e = 1 - Math.pow(1 - u, 3);
+    const spin = live ? 0 : (1 - (u => 1 - Math.pow(1 - u, 3))(clamp01((t - S.globe[0]) / 1500))) * 1.7;
+    const R = G.r * (0.08 + 0.92 * e);
+    setView(live ? gs.rot : G.rot0 * DEG - spin, live ? gs.tilt : G.tilt0 * DEG, G.cx, SY + (G.cy - SY) * e, R);
+    const kindA = { land: live ? 1 : clamp01((t - 2000) / 450), grid: live ? 1 : clamp01((t - 2300) / 500) };
+    globeG.style.visibility = t >= S.globe[0] ? 'visible' : 'hidden';
+    const q = {}, p0 = {};
+    ['grid', 'land'].forEach(kind => {
+      const d = BUCKETS.map(() => []), A = kindA[kind];
+      gLines.forEach(L => {
+        if (L.kind !== kind) return;
+        let lastB = -1;
+        L.vs.forEach((v, i) => {
+          proj(v, q);
+          if (i) {
+            const a = Math.min(p0.a, q.a);
+            if (a > 0.04) {
+              const b = a > 0.75 ? 3 : a > 0.5 ? 2 : a > 0.25 ? 1 : 0;
+              if (b !== lastB) d[b].push(`M${p0.x.toFixed(1)} ${p0.y.toFixed(1)}`);
+              d[b].push(`L${q.x.toFixed(1)} ${q.y.toFixed(1)}`);
+              lastB = b;
+            } else lastB = -1;
+          }
+          p0.x = q.x; p0.y = q.y; p0.a = q.a;
+        });
+      });
+      gPaths[kind].forEach((path, b) => { path.setAttribute('d', d[b].join('') || 'M0 0'); path.style.opacity = (BUCKETS[b] * A).toFixed(2); });
+    });
+    gDots.forEach(dot => {
+      proj(dot.v, q);
+      const a = q.a * kindA[dot.kind], sc = live ? 1 : pop((t - dot.appear) / 180);
+      if (a < 0.03 || sc <= 0) { setAttr(dot.el, dot.o, 'visibility', 'hidden'); return; }
+      setAttr(dot.el, dot.o, 'visibility', 'visible');
+      setAttr(dot.el, dot.o, 'cx', q.x.toFixed(1)); setAttr(dot.el, dot.o, 'cy', q.y.toFixed(1));
+      setAttr(dot.el, dot.o, 'r', (dot.r * sc).toFixed(2)); setAttr(dot.el, dot.o, 'opacity', a.toFixed(2));
+    });
+    gAnchors.forEach(p => {   // pinned entries: placed, faded near the edge; clickable and in the tab order only on the near side
+      proj(p.v, q);
+      p.x = q.x + p.off[0]; p.y = q.y + p.off[1];
+      setAttr(p.pin, p.c, 'cx', q.x.toFixed(1)); setAttr(p.pin, p.c, 'cy', q.y.toFixed(1));
+      if (p.leader) { setAttr(p.leader, p.c, 'x1', q.x.toFixed(1)); setAttr(p.leader, p.c, 'y1', q.y.toFixed(1)); setAttr(p.leader, p.c, 'x2', p.x.toFixed(1)); setAttr(p.leader, p.c, 'y2', p.y.toFixed(1)); }
+      ['hit', 'node'].forEach(k => { setAttr(p[k], p.c[k] || (p.c[k] = {}), 'cx', p.x.toFixed(1)); setAttr(p[k], p.c[k], 'cy', p.y.toFixed(1)); });
+      setAttr(p.link, p.c, 'opacity', q.a.toFixed(2));
+      setAttr(p.link, p.c, 'visibility', q.a > 0.02 ? 'visible' : 'hidden');
+      const near = live && globeLive && q.z > 0.2;
+      if (near !== p.near) {
+        p.near = near;
+        p.link.style.pointerEvents = near ? '' : 'none';
+        if (near) p.link.removeAttribute('tabindex'); else p.link.setAttribute('tabindex', '-1');
+        if (!near && document.activeElement === p.link) gHit.focus({ preventScroll: true });   // never leave focus on a hidden pin
+      }
+      if (tipOwner === p) { if (near) { tip.style.left = (p.x / W * 100) + '%'; tip.style.top = (p.y / H * 100) + '%'; } else hideTip(); }
+    });
+    if (live) {   // the slider's value: the longitude facing the viewer
+      const lon = Math.round((((-gs.rot / DEG) % 360) + 540) % 360 - 180);
+      if (lon !== gs.lon) {
+        gs.lon = lon; gHit.setAttribute('aria-valuenow', lon);
+        gHit.setAttribute('aria-valuetext', `Centred on longitude ${Math.abs(lon)}° ${lon < 0 ? 'west' : lon > 0 ? 'east' : ''}`.trim());
+      }
+    }
+  }
+  // advances the interactive state by dt ms; true when the globe moved
+  function stepGlobe(dt, now) {
+    let moved = gs.dirty; gs.dirty = false;
+    if (gs.dragging) return moved;
+    if (gs.keyLeft) {
+      const d = still ? gs.keyLeft : gs.keyLeft * Math.min(1, dt / 110);
+      gs.rot += d; gs.keyLeft -= d; if (Math.abs(gs.keyLeft) < 1e-4) gs.keyLeft = 0; moved = true;
+    }
+    if (gs.vel) { gs.rot += gs.vel * dt; gs.vel *= Math.exp(-dt / 320); if (Math.abs(gs.vel) < 3e-6) gs.vel = 0; moved = true; }
+    const autoOn = AUTO && !gs.hover && !gs.focus && now >= gs.resumeAt;
+    gs.autoK = autoOn ? Math.min(1, gs.autoK + dt / 1500) : 0;   // eases back in when it resumes
+    if (gs.autoK) { gs.rot += AUTO * gs.autoK * gs.autoK * dt; moved = true; }
+    return moved;
+  }
+  const globeBusy = () => globeLive && (gs.dragging || gs.dirty || !!gs.vel || !!gs.keyLeft || !!AUTO);
+
+  // 3. anchors: entries on the hands take the nearest free dot on a main or detail line; entries on the globe are pinned
+  //    at their coordinates and turn with it
   const rows = [...IMPACT.map(r => ({ ...r, anchor: 'impact-' + r.id })), ...IMPACT_COMMITMENTS.map(r => ({ ...r, anchor: 'commit-' + r.id }))];
-  const taken = new Set();
+  const taken = new Set(), placed = [];
   rows.forEach(r => {
+    const ga = C.globeAnchors[r.id];
+    if (ga) {
+      const off = ga.off || [0, 0];
+      placed.push({ row: r, globe: true, v: vec(ga.at[0], ga.at[1]), off, x: G.cx, y: G.cy, group: { el: globeG }, c: {}, near: null, hasLeader: Math.hypot(off[0], off[1]) > 1 });
+      return;
+    }
     const at = C.anchors[r.id]; if (!at) return;
     let best = -1, bd = Infinity;
     pts.forEach((p, i) => { if (!p.canAnchor || taken.has(i)) return; const d = (p.x - at[0]) ** 2 + (p.y - at[1]) ** 2; if (d < bd) { bd = d; best = i; } });
-    if (best >= 0) { taken.add(best); pts[best].row = r; }
+    if (best >= 0) { taken.add(best); pts[best].row = r; placed.push(pts[best]); }
   });
 
-  // 3. the seed, then the anchors as links above the drawing (hovering one lights its line)
+  // 4. the seed, then the anchors as links above the drawing (hovering one lights its line)
   const seedRing = mk('circle', 'c-seed-ring'), seed = mk('circle', 'c-seed');
   seed.setAttribute('r', 3.4); seedRing.setAttribute('r', 3.4);
   const tip = impactEl('div', 'constellation-tip'); tip.setAttribute('aria-hidden', 'true');
   holder.appendChild(tip);
+  const hideTip = () => { if (tipOwner) tipOwner.group.el.classList.remove('is-lit'); tipOwner = null; tip.classList.remove('is-on'); };
   const anchors = [];
-  pts.forEach(p => {
-    if (!p.row) return;
-    const r = p.row, a = mk('a', 'constellation-node');
-    p.el.style.display = 'none';   // the anchor's large dot stands in for the small one
+  placed.forEach(p => {
+    const r = p.row, a = mk('a', 'constellation-node' + (p.globe ? ' is-globe' : ''));
     a.setAttribute('href', '#' + r.anchor); a.setAttribute('aria-label', `${r.org}: jump to its ${r.since !== undefined ? 'commitment' : 'case study'}`);
-    p.hit = mk('circle', 'node-hit', a); p.hit.setAttribute('r', 14); p.hit.setAttribute('cx', p.x.toFixed(1)); p.hit.setAttribute('cy', p.y.toFixed(1));
+    if (p.globe) {   // the pin at the real coordinates, and a leader out to the entry's dot
+      if (p.hasLeader) p.leader = mk('line', 'c-leader', a);
+      p.pin = mk('circle', 'c-pin', a); p.pin.setAttribute('r', 1.9);
+      gAnchors.push(p);
+    } else p.el.style.display = 'none';   // the anchor's large dot stands in for the small one
+    p.hit = mk('circle', 'node-hit', a); p.hit.setAttribute('r', p.globe ? 9 : 14); p.hit.setAttribute('cx', p.x.toFixed(1)); p.hit.setAttribute('cy', p.y.toFixed(1));
     p.node = mk('circle', 'node-dot', a); p.node.setAttribute('r', (4.2 + 0.9 * Math.sqrt(Math.max(0, r.years || 0))).toFixed(1));
     p.node.setAttribute('cx', p.x.toFixed(1)); p.node.setAttribute('cy', p.y.toFixed(1));
     p.node.style.animationDelay = (anchors.length * 45) + 'ms';
     p.link = a;
     const show = on => {
-      p.group.el.classList.toggle('is-lit', on);
-      tip.classList.toggle('is-on', on);
-      if (on) { tip.textContent = r.org; tip.style.left = (p.x / W * 100) + '%'; tip.style.top = (p.y / H * 100) + '%'; }
+      if (!on) { if (tipOwner === p) hideTip(); return; }
+      if (gs.dragging || (p.globe && !p.near)) return;
+      hideTip(); tipOwner = p;
+      p.group.el.classList.add('is-lit'); tip.classList.add('is-on');
+      tip.textContent = r.org; tip.style.left = (p.x / W * 100) + '%'; tip.style.top = (p.y / H * 100) + '%';
     };
-    a.addEventListener('mouseenter', () => show(true)); a.addEventListener('mouseleave', () => show(false));
+    a.addEventListener('mouseenter', () => { show(true); if (p.globe) gs.hover = true; });   // the globe holds still under the pointer
+    a.addEventListener('mouseleave', () => { show(false); if (p.globe) gs.hover = false; });
     a.addEventListener('focus', () => show(true)); a.addEventListener('blur', () => show(false));
     a.addEventListener('click', e => {
       e.preventDefault(); show(false);
@@ -510,10 +677,14 @@ function buildConstellation(holder, { forceStill = false } = {}) {
     });
     anchors.push(a);
   });
-  // the anchors join the tab order only once the drawing is complete
-  const setAnchorsLive = live => anchors.forEach(a => { if (live) a.removeAttribute('tabindex'); else a.setAttribute('tabindex', '-1'); });
+  // the anchors (and the globe) join the tab order only once the drawing is complete; pins on the globe's far side stay out
+  const setAnchorsLive = live => {
+    globeLive = live; svg.classList.toggle('is-globe-live', live);
+    gHit.setAttribute('tabindex', live ? '0' : '-1');
+    placed.forEach(p => { if (p.globe) p.near = null; else if (live) p.link.removeAttribute('tabindex'); else p.link.setAttribute('tabindex', '-1'); });
+  };
 
-  // 4. the dove: the nav logo's vector dove, positioned over the drawing in the drawing's own units
+  // 5. the dove: the nav logo's vector dove, positioned over the drawing in the drawing's own units
   const bird = document.createElement('button');
   bird.type = 'button'; bird.className = 'const-bird';
   bird.setAttribute('aria-label', 'Replay the constellation animation');
@@ -527,7 +698,6 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   const PERCH = [tops.reduce((a, q) => a + q.x, 0) / tops.length, topY - 5], HOVER = [SX, C.seed[1] - 58], HOLD = [PERCH[0] + 34, PERCH[1] - 34];
   const ease = { out: x => 1 - Math.pow(1 - x, 3), inOut: x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2, in2: x => x * x,
     back: x => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); } };
-  const clamp01 = x => Math.max(0, Math.min(1, x));
   // the flight in: an invisible path from the hero's left edge to the hover point above the palms
   const flight = mk('path', 'c-flight');
   const flightPath = () => {
@@ -549,15 +719,14 @@ function buildConstellation(holder, { forceStill = false } = {}) {
     if (doveSvg) doveSvg.classList.toggle('is-flapping', !!flap);
   };
 
-  // 5. one frame of the sequence at time t (ms of the sequence, unscaled)
-  const pop = x => x <= 0 ? 0 : x >= 1 ? 1 : 1 + 1.7 * Math.pow(x - 1, 3) + 0.7 * Math.pow(x - 1, 2);   // 0 → 1, a small overshoot
+  // 6. one frame of the sequence at time t (ms of the sequence, unscaled; S.total and after is the finished drawing)
   let drift = 0, tIdle = 0;
   function render(t) {
     groups.forEach(gp => {   // each line draws on; while idle, each part drifts as a whole
       const u = clamp01((t - gp.t0) / (gp.t1 - gp.t0));
       gp.path.style.strokeDashoffset = (1 - u).toFixed(4);
       gp.path.style.visibility = u > 0 ? 'visible' : 'hidden';
-      const tf = drift ? `translate(${(Math.sin(tIdle * gp.w + gp.ph) * drift).toFixed(2)} ${(Math.cos(tIdle * gp.w * 1.3 + gp.ph) * drift).toFixed(2)})` : '';
+      const tf = drift && !gp.fixed ? `translate(${(Math.sin(tIdle * gp.w + gp.ph) * drift).toFixed(2)} ${(Math.cos(tIdle * gp.w * 1.3 + gp.ph) * drift).toFixed(2)})` : '';
       if (tf !== gp.tf) { gp.el.setAttribute('transform', tf); gp.tf = tf; }
     });
     pts.forEach(p => {   // dots pop in as their line reaches them
@@ -565,6 +734,7 @@ function buildConstellation(holder, { forceStill = false } = {}) {
       if (sc !== p.sc) { p.el.setAttribute('r', (p.r * sc).toFixed(2)); p.sc = sc; }
       if (p.link && p.group.tf !== p.ltf) { p.link.setAttribute('transform', p.group.tf); p.ltf = p.group.tf; }
     });
+    drawGlobe(t);
     // the seed: falls with gravity, a small bounce, a glow ring, then fades into the globe
     let sy = -999, so = 0;
     if (t >= S.seedFall[0]) {
@@ -598,14 +768,14 @@ function buildConstellation(holder, { forceStill = false } = {}) {
     svg.classList.toggle('is-settled', t >= S.anchors[0]);
   }
 
-  // 6. run: the sequence (or the finished state), then idle; paused while hidden or off screen
+  // 7. run: the sequence (or the finished state), then idle; paused while hidden or off screen
   const rnd = (a, b) => a + Math.random() * (b - a);
   groups.forEach(gp => { gp.ph = rnd(0, Math.PI * 2); gp.w = rnd(0.0006, 0.0011); });
   const idleMotion = !still && !phone;
   let seqT = 0, mode = 'idle', last = null, raf = 0, onScreen = true, nextTwinkle = 0, perched = false;
   const finishState = () => {
     seqT = S.total; mode = 'idle'; drift = 0;
-    render(S.total); svg.classList.add('is-settled'); setAnchorsLive(true);
+    setAnchorsLive(true); render(S.total); svg.classList.add('is-settled');
     bird.classList.add('is-perched'); bird.tabIndex = 0;
     if (still) svg.classList.add('is-still');
   };
@@ -617,14 +787,18 @@ function buildConstellation(holder, { forceStill = false } = {}) {
         render(Math.min(seqT, S.total));
         if (!perched && seqT >= S.perch[1]) { perched = true; if (dove) dove.flutter(); }   // a small fold on landing
         if (seqT >= S.total) { mode = 'idle'; finishState(); }
-      } else if (idleMotion) {
-        tIdle += dt; drift = Math.min(1, tIdle / 800) * 1.5; render(S.total);
-        if (tIdle > nextTwinkle) {
-          nextTwinkle = tIdle + rnd(1100, 2200);
-          const plain = pts.filter(p => !p.row && p.size !== 'ring');
-          for (let n = 0; n < 2; n++) { const p = plain[Math.floor(Math.random() * plain.length)]; p.el.classList.remove('twinkle'); void p.el.getBBox; p.el.classList.add('twinkle'); setTimeout(() => p.el.classList.remove('twinkle'), 1600); }
-        }
-      } else { raf = 0; return; }
+      } else {
+        const turned = globeLive && stepGlobe(dt, now);
+        if (idleMotion) {
+          tIdle += dt; drift = Math.min(1, tIdle / 800) * 1.5; render(S.total);
+          if (tIdle > nextTwinkle) {
+            nextTwinkle = tIdle + rnd(1100, 2200);
+            const plain = pts.filter(p => !p.row && p.size !== 'ring');
+            for (let n = 0; n < 2; n++) { const p = plain[Math.floor(Math.random() * plain.length)]; p.el.classList.remove('twinkle'); void p.el.getBBox; p.el.classList.add('twinkle'); setTimeout(() => p.el.classList.remove('twinkle'), 1600); }
+          }
+        } else if (turned) drawGlobe(S.total);
+        if (!idleMotion && !globeBusy()) { raf = 0; return; }
+      }
       raf = requestAnimationFrame(frame);
     } catch (e) { console.error('Constellation animation failed; showing it finished', e); finishState(); raf = 0; }
   };
@@ -632,9 +806,71 @@ function buildConstellation(holder, { forceStill = false } = {}) {
   const stop = () => { cancelAnimationFrame(raf); raf = 0; };
   new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; onScreen ? run() : stop(); }).observe(svg);
   document.addEventListener('visibilitychange', () => document.hidden ? stop() : run());
+
+  // 8. turning the globe: drag (mouse, pen or a horizontal touch drag; vertical swipes still scroll the page, see
+  //    touch-action in the CSS), with a little spin left over on release; arrow keys when it's focused. The idle turn
+  //    pauses while dragging and resumes ~3s after.
+  const fit = () => {   // the drawing's scale on screen (px per drawing unit) and its top-left corner
+    const b = svg.getBoundingClientRect(), k = Math.min(b.width / W, b.height / H);
+    return { k, left: b.left + (b.width - W * k) / 2, top: b.top + (b.height - H * k) / 2 };
+  };
+  let drag = null, suppressClickUntil = 0;
+  const endDrag = e => {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    if (drag.moved) {
+      const stale = e && e.type === 'pointerup' && performance.now() - drag.t > 90;   // held still before letting go: no spin
+      gs.vel = still || stale || !e || e.type === 'pointercancel' ? 0 : Math.max(-0.008, Math.min(0.008, drag.v));
+      gs.dragging = false; gs.resumeAt = performance.now() + 3000;
+      suppressClickUntil = performance.now() + 300;   // the click that ends a drag doesn't open a pin
+      document.documentElement.classList.remove('globe-grabbing'); svg.classList.remove('is-grabbing');
+      run();
+    }
+    drag = null;
+  };
+  svg.addEventListener('pointerdown', e => {
+    if (!globeLive || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const f = fit(), x = (e.clientX - f.left) / f.k, y = (e.clientY - f.top) / f.k;
+    if (Math.hypot(x - G.cx, y - G.cy) > G.r + 6) return;   // only on the globe
+    drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: performance.now(), k: f.k, moved: false, v: 0 };
+    if (e.pointerType === 'mouse') e.preventDefault();   // no text selection
+  });
+  window.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.moved) {
+      if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 4) return;   // a tap or click, not a drag (yet)
+      drag.moved = true; gs.dragging = true; gs.vel = 0; gs.keyLeft = 0; gs.autoK = 0; hideTip();
+      document.documentElement.classList.add('globe-grabbing'); svg.classList.add('is-grabbing');
+      try { svg.setPointerCapture(e.pointerId); } catch (err) {}
+      run();
+    }
+    const now = performance.now(), per = 1 / (G.r * drag.k);   // radians per screen px: the surface follows the pointer
+    const dRot = (e.clientX - drag.x) * per, dt = Math.max(1, now - drag.t);
+    gs.rot += dRot;
+    gs.tilt = Math.max(-TILT_MAX, Math.min(TILT_MAX, gs.tilt + (e.clientY - drag.y) * per));
+    drag.v = drag.v * 0.5 + (dRot / dt) * 0.5;
+    drag.x = e.clientX; drag.y = e.clientY; drag.t = now;
+    gs.dirty = true; run();
+  });
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+  window.addEventListener('blur', () => endDrag(null));
+  svg.addEventListener('click', e => { if (performance.now() < suppressClickUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
+  svg.addEventListener('dragstart', e => e.preventDefault());
+  gHit.addEventListener('keydown', e => {
+    if (!globeLive || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+    gs.keyLeft += (e.key === 'ArrowRight' ? 1 : -1) * 15 * DEG; gs.vel = 0; gs.resumeAt = performance.now() + 3000;
+    gs.dirty = true; run();
+  });
+  // the idle turn holds while anything in the drawing has keyboard focus
+  svg.addEventListener('focusin', () => { gs.focus = true; });
+  svg.addEventListener('focusout', () => setTimeout(() => { gs.focus = svg.contains(document.activeElement); if (!gs.focus) { gs.resumeAt = performance.now() + 1000; run(); } }, 0));
+
   const play = () => {
     if (still) return finishState();
+    endDrag(null); hideTip();
     seqT = 0; perched = false; mode = 'seq'; svg.classList.remove('is-settled'); setAnchorsLive(false);
+    gs.rot = G.rot0 * DEG; gs.tilt = G.tilt0 * DEG; gs.vel = 0; gs.keyLeft = 0; gs.autoK = 0; gs.resumeAt = 0;
     bird.classList.remove('is-perched'); bird.tabIndex = -1;
     stop(); run();
   };

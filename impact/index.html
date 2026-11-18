@@ -38,7 +38,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/Assets/css/site.css?v=37">
+  <link rel="stylesheet" href="/Assets/css/site.css?v=38">
 </head>
 <body>
 
@@ -112,6 +112,8 @@
       <!-- one dot per Impact entry (renderImpactConstellation in Assets/js/impact.js) -->
       <div class="page-hero-art hero-enter hero-enter-3" id="impactConstellation"></div>
     </div>
+    <!-- scroll cue: hidden on phones, fades once the page scrolls (script below) -->
+    <a class="hero-scroll-cue" id="heroScrollCue" href="#case-studies" aria-label="Scroll to the case studies">Scroll<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></a>
   </div>
 </section>
 
@@ -156,7 +158,7 @@
   </div>
 </footer>
 
-<script src="/Assets/js/impact.js?v=30"></script>
+<script src="/Assets/js/impact.js?v=31"></script>
 <script src="/Assets/js/site.js?v=22"></script>
 <script>
 renderImpactHero();
@@ -172,6 +174,13 @@ Site.search.push(() => impactSearchItems(id => {
   if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
   el.focus({ preventScroll: true });
 }));
+// The scroll cue fades out once the page has scrolled, and back in at the top; a click scrolls to the first row
+(() => {
+  const cue = document.getElementById('heroScrollCue'); if (!cue) return;
+  const sync = () => cue.classList.toggle('is-gone', window.scrollY > 40);
+  window.addEventListener('scroll', sync, { passive: true }); sync();
+  cue.addEventListener('click', e => { e.preventDefault(); scrollToSection(document.getElementById('case-studies'), 0); });
+})();
 // The header settles and the hero text rises in once the page is ready (see .hero-enter)
 document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => { document.documentElement.classList.remove('hero-pending'); document.body.classList.add('page-loaded'); }));
 </script>
