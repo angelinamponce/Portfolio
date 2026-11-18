@@ -305,6 +305,153 @@ function initTimeline(tl) {
   update();
 }
 
+// ── ASCII bird (homepage hero): a dove with an olive branch (the image in the canvas's data-src, black on white),
+//   sampled once into a character grid and drawn on a canvas. initAsciiBird(canvas) returns { start }; the page calls
+//   start() when its hero enters.
+//   - Intro: characters start as faint dots scattered around the area and ease into place from the centre outward,
+//     each resolving "." → its glyph.
+//   - Eye: a small pocket of blank cells in the head, outlined by the characters around it. A blink fills it with "-"
+//     for 150ms, every 4–8s (sometimes twice).
+//   - Wing flutter: the two raised wings fold in toward the body and back out (keyframe grids re-sampled from the image
+//     with the wings squeezed horizontally toward their root at 100% / 85% / 70%), every 10–20s, and once on hover.
+//   Reduced motion draws the finished bird with no animation. Idle timers pause while the tab is hidden.
+function initAsciiBird(canvas) {
+  if (!canvas || !canvas.dataset.src) return null;
+  const RAMP = ' .:-=+*#%@';
+  const COLS = 56, CHAR_ASPECT = 0.6;               // character cell width ÷ height
+  const EMPTY = 0.08;                               // cells less inked than this are background
+  const GAMMA = 2.2;                                // contrast curve: partly inked cells (feather gaps) drop to lighter glyphs
+  const EYE = [0.719, 0.443];                       // the eye, as a share of the image's width / height
+  const FOLDS = [1, 0.85, 0.7];                     // wing keyframes: horizontal scale toward the wing root
+  // the wings: left of their root on the body, above the belly. The root runs down the shoulder (x 0.56) and bends
+  // in to where the front wing meets the belly (x 0.40 at y 0.665); each row of wing folds toward its own root.
+  const WING_BOTTOM = 0.665;
+  const rootX = y => y < 0.55 ? 0.56 : 0.56 - (y - 0.55) / (WING_BOTTOM - 0.55) * 0.16;
+  const ctx = canvas.getContext('2d');
+  let ROWS = 30, frames = [], ready = false, wantStart = false, started = false;
+  let mode = 'hidden', t0 = 0, raf = 0, blinkUntil = 0, flutterAt = -1, timers = [];
+
+  // 1. sample: an ink map of the image (white = 0), then one character grid per wing keyframe
+  const img = new Image();
+  img.onload = () => {
+    ROWS = Math.round(COLS * (img.naturalHeight / img.naturalWidth) * CHAR_ASPECT);
+    const OW = COLS * 10, OH = Math.round(OW * img.naturalHeight / img.naturalWidth);
+    const off = document.createElement('canvas'); off.width = OW; off.height = OH;
+    const o = off.getContext('2d'); o.fillStyle = '#fff'; o.fillRect(0, 0, OW, OH); o.drawImage(img, 0, 0, OW, OH);
+    const px = o.getImageData(0, 0, OW, OH).data, base = new Float32Array(OW * OH);
+    for (let i = 0; i < base.length; i++) base[i] = 1 - (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
+    // a keyframe's ink map: the wing pixels of each row squeezed toward that row's root; what they leave is blank
+    const folded = s => {
+      if (s === 1) return base;
+      const m = base.slice();
+      for (let y = 0; y < OH; y++) {
+        const ny = y / OH; if (ny >= WING_BOTTOM) break;
+        const rx = Math.round(rootX(ny) * OW), row = y * OW;
+        for (let x = 0; x < rx; x++) m[row + x] = 0;
+        for (let x = 0; x < rx; x++) { const v = base[row + x]; if (!v) continue; const nx = Math.round(rx - (rx - x) * s); if (v > m[row + nx]) m[row + nx] = v; }
+      }
+      return m;
+    };
+    const cw = OW / COLS, ch = OH / ROWS;
+    const eyeR = Math.floor(EYE[1] * ROWS), eyeC = Math.round(EYE[0] * COLS);   // the eye pocket: the two cells around its centre
+    const isEye = (r, c) => r === eyeR && (c === eyeC - 1 || c === eyeC);
+    const grid = m => {
+      const out = [];
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+        if (isEye(r, c)) { out.push({ r, c, ch: ' ', eye: true }); continue; }
+        let sum = 0, n = 0;
+        for (let y = Math.floor(r * ch); y < Math.floor((r + 1) * ch); y++) for (let x = Math.floor(c * cw); x < Math.floor((c + 1) * cw); x++) { sum += m[y * OW + x]; n++; }
+        const ink = sum / n;
+        if (ink >= EMPTY) out.push({ r, c, ch: RAMP[Math.min(RAMP.length - 1, 1 + Math.floor(Math.pow(ink, GAMMA) * (RAMP.length - 1)))] });
+      }
+      return out;
+    };
+    frames = FOLDS.map(s => grid(folded(s)));
+    const midR = ROWS / 2, midC = COLS / 2, maxD = Math.hypot(midR, midC * CHAR_ASPECT);
+    frames[0].forEach(k => { k.d = Math.hypot(k.r - midR, (k.c - midC) * CHAR_ASPECT) / maxD; k.sx = Math.random(); k.sy = Math.random(); });
+    ready = true; resize();
+    if (wantStart) start();
+  };
+  img.src = canvas.dataset.src;
+
+  // 2. canvas size follows its CSS height (crisp on high-DPI screens)
+  let cellW = 0, cellH = 0, font = '';
+  function resize() {
+    const h = canvas.clientHeight || 200, dpr = window.devicePixelRatio || 1;
+    cellH = h / ROWS; cellW = cellH * CHAR_ASPECT;
+    canvas.style.width = (cellW * COLS) + 'px';
+    canvas.width = Math.round(cellW * COLS * dpr); canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    font = `${(cellH * 1.05).toFixed(2)}px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace`;
+    if (mode !== 'hidden' && mode !== 'intro') draw(performance.now());
+  }
+  window.addEventListener('resize', () => { if (ready) resize(); });
+
+  // 3. drawing: every character in the bird's one colour (the canvas's CSS color)
+  const easeOut = x => 1 - Math.pow(1 - x, 3);
+  const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const INTRO = 1800, FLUTTER = 560;
+  function draw(now) {
+    const ink = getComputedStyle(canvas).color, W = cellW * COLS, H = cellH * ROWS;
+    ctx.clearRect(0, 0, W, H); ctx.font = font; ctx.textBaseline = 'top'; ctx.textAlign = 'center'; ctx.fillStyle = ink;
+    const tIntro = mode === 'intro' ? now - t0 : INTRO;
+    // wing flutter: out → in → out; the fold follows an eased arc and picks the nearest keyframe
+    let frame = frames[0];
+    if (flutterAt >= 0 && tIntro >= INTRO) {
+      const p = (now - flutterAt) / FLUTTER;
+      if (p >= 1) flutterAt = -1;
+      else frame = frames[Math.round(easeInOut(p < 0.5 ? p * 2 : 2 - p * 2) * (frames.length - 1))];
+    }
+    const blinking = now < blinkUntil;
+    for (const k of frame) {
+      let x = (k.c + 0.5) * cellW, y = k.r * cellH, glyph = k.ch, alpha = 1;
+      if (k.eye) { if (!blinking || tIntro < INTRO) continue; glyph = '-'; }   // the eye is a gap; a blink fills it
+      if (tIntro < INTRO) {
+        const p = easeOut(Math.max(0, Math.min(1, (tIntro - k.d * 700) / 1000)));
+        x = k.sx * W + (x - k.sx * W) * p; y = k.sy * H + (y - k.sy * H) * p;
+        const idx = RAMP.indexOf(glyph);
+        glyph = p < 0.35 ? '.' : RAMP[Math.max(1, Math.round(idx * Math.min(1, (p - 0.35) / 0.5)))];
+        alpha = 0.3 + 0.7 * p;
+      }
+      ctx.globalAlpha = alpha; ctx.fillText(glyph, x, y);
+    }
+    ctx.globalAlpha = 1;
+  }
+  // 4. animation loop: runs only while something is moving
+  const loop = now => {
+    draw(now);
+    if (mode === 'intro' && now - t0 >= INTRO) { mode = 'idle'; schedule(); }
+    raf = (mode === 'intro' || flutterAt >= 0 || now < blinkUntil) ? requestAnimationFrame(loop) : 0;
+  };
+  const kick = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function blink() {
+    blinkUntil = performance.now() + 150; kick();
+    if (Math.random() < 0.25) timers.push(setTimeout(() => { blinkUntil = performance.now() + 150; kick(); }, 300));   // a double blink
+    timers.push(setTimeout(blink, rnd(4000, 8000)));
+  }
+  function flutter() { if (flutterAt < 0) { flutterAt = performance.now(); kick(); } }
+  function idleFlutter() { flutter(); timers.push(setTimeout(idleFlutter, rnd(10000, 20000))); }
+  function schedule() {
+    if (reduceMotion || document.hidden || mode !== 'idle') return;
+    timers.push(setTimeout(blink, rnd(4000, 8000)), setTimeout(idleFlutter, rnd(10000, 20000)));
+  }
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+  document.addEventListener('visibilitychange', () => { clearTimers(); if (!document.hidden) schedule(); });
+  canvas.addEventListener('mouseenter', () => { if (mode === 'idle' && !reduceMotion) flutter(); });
+  // redraw when the theme changes (the colour comes from CSS)
+  new MutationObserver(() => { if (mode === 'idle') draw(performance.now()); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  function start() {
+    if (!ready) { wantStart = true; return; }
+    if (started) return;
+    started = true;
+    if (reduceMotion) { mode = 'idle'; draw(performance.now()); return; }
+    mode = 'intro'; t0 = performance.now(); kick();
+  }
+  return { start };
+}
+
 // ── Command palette (⌘K / Ctrl+K, or the header's search button): jump to a section, feature a project, find an
 // event or an Impact case study, or run an action. Typing filters by every word; ↑/↓ move, Enter runs, Esc closes.
 // Order: Sections (the header nav), then whatever the page registered in Site.search, then Actions.

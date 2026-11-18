@@ -358,6 +358,10 @@ header:not(.scrolled):not(.header--plain) .recruiter-pill:hover { background: tr
   writing-mode: vertical-rl;
 }
 
+/* ASCII dove above the name (initAsciiBird in Assets/js/site.js, from Assets/img/abuelas-blessing.png): cream characters; the eye is a gap. The hero is green in
+   both themes, so the characters stay cream in both. Its width is set by the script from the height. */
+.ascii-bird { display: block; height: 196px; margin: 0 0 18px -4px; color: var(--cream); opacity: 0.92; }
+@media (max-width: 768px) { .ascii-bird { height: 128px; margin-bottom: 12px; } }
 .hero-content { position: relative; z-index: 3; width: 100%; max-width: 640px; margin-inline: auto; }
 
 /* Both words share one solid style. The fill is a plain colour (no background-clip: text), so every
