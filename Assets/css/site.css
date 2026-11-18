@@ -358,10 +358,22 @@ header:not(.scrolled):not(.header--plain) .recruiter-pill:hover { background: tr
   writing-mode: vertical-rl;
 }
 
-/* ASCII dove above the name (initAsciiBird in Assets/js/site.js, from Assets/img/abuelas-blessing.png): cream characters; the eye is a gap. The hero is green in
-   both themes, so the characters stay cream in both. Its width is set by the script from the height. */
-.ascii-bird { display: block; height: 196px; margin: 0 0 18px -4px; color: var(--cream); opacity: 0.92; }
-@media (max-width: 768px) { .ascii-bird { height: 128px; margin-bottom: 12px; } }
+/* The hero dove above the name (initAsciiBird in Assets/js/site.js): cream ASCII on the green hero, hovering with a
+   slow upward bob (never toward the name), blinking and folding its wings now and then. The <pre> is the same dove as
+   plain text, shown only until the canvas draws (so it is there even without scripts). During the intro the slot is
+   hidden and still, and the intro's dove lands in it. */
+.hero-bird { --bird-h: 196px; --bob: -3.5px; position: relative; height: var(--bird-h); margin: 0 0 18px -4px; animation: heroBirdBob 4s ease-in-out infinite; }
+@keyframes heroBirdBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--bob)); } }
+.hero-dove { display: block; height: var(--bird-h); color: var(--cream); }
+.hero-bird-static {
+  position: absolute; left: 0; top: 0; margin: 0; color: var(--cream); white-space: pre;
+  font: calc(var(--bird-h) / 30) / calc(var(--bird-h) / 30) ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+.hero-bird.is-live .hero-bird-static { display: none; }
+.intro-on .hero-bird { visibility: hidden; animation: introBirdFailsafe 0s linear 4s forwards; }
+@keyframes introBirdFailsafe { to { visibility: visible; } }
+@media (max-width: 768px) { .hero-bird { --bird-h: 128px; --bob: -2px; margin-bottom: 12px; } }
+@media (prefers-reduced-motion: reduce) { .hero-bird { animation: none; } }
 .hero-content { position: relative; z-index: 3; width: 100%; max-width: 640px; margin-inline: auto; }
 
 /* Both words share one solid style. The fill is a plain colour (no background-clip: text), so every
@@ -465,13 +477,15 @@ header:not(.scrolled):not(.header--plain) .recruiter-pill:hover { background: tr
   --shot-w: clamp(240px, 27vw, 430px);
 }
 
+/* Hero entrance. Everything is visible by default; it only waits hidden while <html> has .hero-pending (added by the
+   head script, removed by startHero / the page's reveal, or by the head's 4s fail-safe), so a page whose scripts never
+   run still shows everything. The CSS fail-safe below reveals it too, in case even that never happens. */
 .hero-enter {
-  opacity: 0;
-  transform: translateY(22px);
   transition: opacity 0.85s cubic-bezier(.22,1,.36,1),
               transform 0.85s cubic-bezier(.22,1,.36,1);
 }
-body.page-loaded .hero-enter { opacity: 1; transform: none; }
+.hero-pending .hero-enter { opacity: 0; transform: translateY(22px); animation: heroRevealFailsafe 0.4s ease 4.5s forwards; }
+@keyframes heroRevealFailsafe { to { opacity: 1; transform: none; } }
 
 .hero-enter-1  { transition-delay: 0.05s; }
 .hero-enter-2  { transition-delay: 0.18s; }
@@ -480,20 +494,17 @@ body.page-loaded .hero-enter { opacity: 1; transform: none; }
 .hero-enter-5  { transition-delay: 0.50s; }
 
 header {
-  transform: translateY(-8px);
   transition: transform 0.7s cubic-bezier(.22,1,.36,1) 0.05s,
               background 0.4s ease,
               box-shadow 0.3s ease;
 }
-body.page-loaded header { transform: none; }
+.hero-pending header { transform: translateY(-8px); }
 
 .hero-right-enter {
-  opacity: 0;
-  transform: translateX(16px);
   transition: opacity 0.9s cubic-bezier(.22,1,.36,1) 0.35s,
               transform 0.9s cubic-bezier(.22,1,.36,1) 0.35s;
 }
-body.page-loaded .hero-right-enter { opacity: 1; transform: none; }
+.hero-pending .hero-right-enter { opacity: 0; transform: translateX(16px); animation: heroRevealFailsafe 0.4s ease 4.5s forwards; }
 
 /* Portrait block: the brass frame and the stat cards share one wrapper and one width, so they line up at every
    breakpoint. Inside the frame, the photo sits on its own layer that is clipped only at the frame's left, right and
@@ -1259,11 +1270,26 @@ body.page-loaded .hero-right-enter { opacity: 1; transform: none; }
    background, so drawn in the page's gold. Lines draw in once (~1s); a dot lights its own lines on hover or focus. ── */
 .page-hero-art { position: relative; }
 .impact-constellation { display: block; width: 100%; height: auto; max-height: 520px; overflow: visible; }
+/* lines draw by their end points (the script grows each from its earlier dot); dots pop in as a line reaches them */
 .impact-constellation .c-line {
   stroke: var(--page-accent); stroke-width: 1; stroke-opacity: 0.42; vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 0.5s ease, stroke-opacity 0.25s ease, stroke-width 0.25s ease;
+  transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease;
 }
-.impact-constellation.is-drawn .c-line { stroke-dashoffset: 0; }
+.impact-constellation .c-flight { fill: none; stroke: none; }
+/* the seed the dove drops: a gold dot that lands between the palms, with a soft glow ring */
+.impact-constellation .c-seed { fill: var(--page-accent); }
+.impact-constellation .c-seed-ring { fill: none; stroke: var(--page-accent); stroke-width: 1.2; vector-effect: non-scaling-stroke; opacity: 0; }
+/* the dove (mountDove): flies in, flapping (its wings fold in and out quickly), then glides and perches on the top
+   leaf; once perched it's a button that replays the animation. It never takes clicks while flying over the text. */
+.const-bird {
+  position: absolute; left: 0; top: 0; z-index: 2; padding: 0; border: 0; background: none; color: var(--page-accent);
+  pointer-events: none; will-change: transform;
+}
+.const-bird.is-perched { pointer-events: auto; cursor: pointer; }
+.const-bird:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: 4px; }
+.const-bird .dove { display: block; width: 100%; height: 100%; overflow: visible; }
+.dove.is-flapping .dove-wings { animation: doveFold 0.3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .dove.is-flapping .dove-wings { animation: none; } }
 .impact-constellation .c-line.is-lit { stroke-opacity: 1; stroke-width: 1.8; }
 .impact-constellation .c-dot { fill: var(--page-accent); fill-opacity: 0.75; transform-box: fill-box; transform-origin: center; }
 .impact-constellation .c-ring { fill: var(--page); stroke: var(--page-accent); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
@@ -2067,48 +2093,64 @@ dialog { color: inherit; }
   .js .reveal { transform: none; }
 }
 
-/* ── Intro overlay (first visit in a tab, ~2s): the AP monogram draws in brass, the name fades up, a brass rule
-   draws, then the overlay lifts away. It is decorative (aria-hidden, nothing focusable) and never locks scrolling;
-   the hero renders underneath from the start. If the script never runs, the CSS failsafe clears it after 3s. ── */
+/* ── Intro overlay (runDoveIntro in Assets/js/site.js; first visit in a session, ~3s). Decorative and aria-hidden;
+   it never locks scrolling and the hero renders underneath from the start. Layers: the hero's green ground with its
+   grid (.intro-bg, which fades to reveal the page), the ASCII dove on a full-screen canvas, the name (a copy of the
+   hero name, so it can land exactly on it) and the role. If the script never runs, the CSS failsafe clears it. ── */
 #intro { display: none; }
 .intro-on #intro {
-  display: flex; align-items: center; justify-content: center;
-  position: fixed; inset: 0; z-index: 9980; /* under the grain layer so texture matches */
-  overflow: hidden; cursor: pointer;
-  background: var(--hero-bg);
-  animation: introFailsafe 0.4s ease 3s forwards;
+  display: block; position: fixed; inset: 0; z-index: 9980; overflow: hidden;
+  animation: introFailsafe 0.4s ease 4s forwards;
 }
 @keyframes introFailsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
-/* the hero's mesh, grid and brass glow, so the lift reveals the same canvas */
-#intro::before, #intro::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
-#intro::before {
+.intro-bg { position: absolute; inset: 0; background: var(--hero-bg); }
+.intro-bg::before, .intro-bg::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+.intro-bg::before {
   background:
-    radial-gradient(circle at 50% 46%, rgba(212,181,125,0.14) 0%, rgba(184,150,92,0.05) 26%, transparent 52%),
+    radial-gradient(circle at 50% 46%, rgba(212,181,125,0.12) 0%, rgba(184,150,92,0.05) 26%, transparent 52%),
     radial-gradient(ellipse 80% 60% at 20% 30%, rgba(26,48,36,0.55) 0%, transparent 60%),
     radial-gradient(ellipse 100% 100% at 50% 100%, rgba(7,16,11,0.6) 0%, transparent 70%);
 }
-#intro::after {
-  background-image:
-    linear-gradient(rgba(245,239,227,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(245,239,227,0.035) 1px, transparent 1px);
+.intro-bg::after {
+  background-image: linear-gradient(rgba(245,239,227,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(245,239,227,0.035) 1px, transparent 1px);
   background-size: 60px 60px;
 }
-.intro-stage { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
-.intro-mark { width: clamp(84px, 9vw, 112px); height: auto; overflow: visible; }
-.intro-mark path, .intro-mark rect { fill: none; stroke: var(--brass-hi); stroke-linecap: round; stroke-linejoin: round; }
-.intro-mark .m-frame { stroke-width: 1.25; stroke: var(--brass); }
-.intro-mark .m-letter { stroke-width: 3; }
-.intro-name {
-  margin-top: 26px;
-  font-family: var(--font-display); font-size: clamp(26px, 3vw, 36px); font-weight: 600;
-  letter-spacing: 0.06em; color: var(--cream); line-height: 1.1;
+.intro-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#intro .intro-name {
+  position: absolute; left: 0; top: 0; margin: 0; width: max-content; white-space: nowrap;
+  transform-origin: 0 0; opacity: 0; will-change: transform;
 }
-.intro-rule {
-  display: block; width: clamp(120px, 14vw, 180px); height: 1px; margin-top: 18px;
-  background: linear-gradient(90deg, transparent, var(--brass-hi) 20%, var(--brass-hi) 80%, transparent);
-  transform-origin: center;
+.intro-role {
+  position: absolute; left: 0; top: 0; margin: 0; opacity: 0; white-space: nowrap;
+  font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--on-dark-2);
 }
-/* before the script animates them: drawn-out strokes, hidden name and rule */
-.intro-on .intro-mark path, .intro-on .intro-mark rect { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.intro-on .intro-name { opacity: 0; }
-.intro-on .intro-rule { transform: scaleX(0); }
+.intro-skip-btn {
+  position: absolute;   /* (not .intro-skip: that class is set on <html> when the intro is skipped) */ right: 24px; bottom: 24px; padding: 8px 16px; border-radius: 100px; opacity: 0;
+  border: 1px solid var(--line-dark-strong); background: transparent; color: var(--on-dark-2);
+  font: 600 11px var(--font-body); letter-spacing: 1.4px; text-transform: uppercase; cursor: pointer;
+}
+.intro-skip-btn:hover { color: var(--cream); border-color: var(--brass-hi); }
+/* while the intro runs, the hero name waits in place (no entrance) for the intro's copy to land on it; the header
+   rests where it ends up, so the dove flies to the right spot */
+.intro-on #hero .hero-name { opacity: 0; transform: none; transition: none; animation: introNameFailsafe 0.3s ease 4s forwards; }
+@keyframes introNameFailsafe { to { opacity: 1; } }
+.intro-done #hero .hero-name { opacity: 1; transform: none; transition: none; }
+.intro-on header, .intro-done header { transform: none; }
+
+/* ── The dove (mountDove in Assets/js/site.js): the nav logo on every page, a vector traced from the same image as
+   the ASCII doves. Blink: a disc closes the eye for 150ms. Flutter: the wings fold toward their root and back. ── */
+.logo-dove { display: block; }
+
+.logo-dove svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dove { fill: currentColor; }
+.dove .dove-eye { fill: currentColor; opacity: 0; }
+.dove.is-blinking .dove-eye { animation: doveBlink 0.15s steps(1, end); }
+@keyframes doveBlink { 0% { opacity: 1; } 100% { opacity: 1; } }
+.dove .dove-wings { transform-box: view-box; transform-origin: 836px 0; }
+.dove.is-folding .dove-wings { animation: doveFold 0.56s cubic-bezier(.65,0,.35,1); }
+@keyframes doveFold { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.7); } }
+@media (prefers-reduced-motion: reduce) { .dove .dove-eye, .dove .dove-wings { animation: none !important; } }
+
+/* the footer's sign-off: the ASCII dove, ~120px */
+.footer-dove { display: block; height: 120px; margin: 0 auto 18px; color: var(--cream); opacity: 0.85; }
+@media (max-width: 768px) { .footer-dove { height: 96px; } }
